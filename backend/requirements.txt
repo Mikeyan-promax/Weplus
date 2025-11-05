@@ -10,9 +10,7 @@ alembic==1.12.1
 pgvector==0.2.4
 
 # 向量存储和RAG相关
-langchain==0.1.0
-langchain-community==0.0.10
-sentence-transformers==2.2.2
+# 已切换为云端嵌入与pgvector，移除未用的本地向量库依赖
 
 # 文档处理
 pypdf2==3.0.1
@@ -28,7 +26,6 @@ pydantic==2.5.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
-pandas==2.1.4
 numpy==1.24.3
 
 # 邮件发送和认证相关
@@ -37,10 +34,10 @@ redis==5.0.1
 bcrypt==4.1.2
 PyJWT==2.8.0
 
-# 开发工具
-pytest==7.4.3
-black==23.11.0
-flake8==6.1.0
+# 开发工具（生产镜像不安装，提升构建速度与镜像体积）
+# pytest==7.4.3
+# black==23.11.0
+# flake8==6.1.0
 
 # 可选可观测性与监控（根据配置启用）
 sentry-sdk[fastapi]==2.43.0

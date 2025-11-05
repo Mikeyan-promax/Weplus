@@ -21,13 +21,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 WORKDIR /app
-# 安装构建所需系统依赖（cryptography 等）
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libffi-dev \
-    openssl \
-    ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+# 依赖库使用预编译wheel，加速构建（无需安装构建工具链）
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --prefer-binary -r /app/requirements.txt
 COPY backend/ /app
