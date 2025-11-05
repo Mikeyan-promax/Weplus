@@ -312,6 +312,13 @@ async def healthz():
     """
     return {"ok": True, "app": settings.APP_NAME, "version": settings.APP_VERSION}
 
+@app.get("/api/healthz")
+async def api_healthz():
+    """健康检查端点（API前缀别名）
+    Railway/Nginx 会请求 `/api/healthz`，与 `/healthz` 返回一致结构。
+    """
+    return {"ok": True, "app": settings.APP_NAME, "version": settings.APP_VERSION}
+
 
 @app.get("/readyz")
 async def readyz():
