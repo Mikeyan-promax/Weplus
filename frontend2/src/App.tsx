@@ -26,7 +26,6 @@ import ResourceDetail from './components/ResourceDetail';
 import './App.css';
 import './components/Auth.css';
 import OtherTools from './components/OtherTools';
-import ScrollToTop from './components/ScrollToTop';
 
 // 主应用组件（需要登录后才能访问）
 const MainApp = () => (
@@ -57,8 +56,6 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        {/* 路由级滚动复位组件：保证每次路由切换后回到页面顶部 */}
-        <ScrollToTop />
         <Routes>
           {/* 默认首页 - HelloPage欢迎页面 */}
           <Route path="/" element={<HelloPage />} />

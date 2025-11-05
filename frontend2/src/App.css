@@ -35,11 +35,12 @@ body {
   margin-left: 280px; /* 为固定侧边栏预留空间，避免覆盖 */
   border-radius: 0;
   box-shadow: none;
-  /* 让页面使用窗口滚动，避免在此创建额外滚动容器 */
-  overflow: visible;
+  /* 统一使用主内容容器滚动，避免窗口与容器双滚动 */
+  height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* 移动端惯性滚动 */
+  touch-action: pan-y; /* 明确允许垂直滚动手势 */
   transition: all 0.3s ease;
-  min-height: 100vh;
-  height: auto;
 }
 
 /* 页面占位符 */
@@ -68,6 +69,7 @@ body {
     margin: 0;
     margin-left: 260px; /* 与平板端侧边栏宽度保持一致 */
     border-radius: 0;
+    height: 100vh; /* 维持统一滚动策略 */
   }
   
   .page-placeholder {
@@ -86,7 +88,7 @@ body {
     margin: 0;
     margin-left: 0; /* 手机端不保留侧边栏空间 */
     border-radius: 0;
-    min-height: calc(100vh - 20px);
+    height: 100vh; /* 主内容容器滚动在移动端保持一致 */
   }
   
   .page-placeholder {

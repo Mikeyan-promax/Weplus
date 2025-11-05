@@ -29,6 +29,7 @@ body {
   min-height: 100vh;
   display: block; /* 不再使用 flex，避免与内部容器产生额外滚动上下文 */
   overflow-x: hidden;
+  overflow-y: hidden; /* 统一由主内容容器滚动，避免双滚动条 */
   -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
   touch-action: pan-y; /* 允许垂直滚动手势 */
 }

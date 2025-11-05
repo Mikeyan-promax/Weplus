@@ -67,8 +67,6 @@ const RAGChat: React.FC = () => {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // 首次加载标记：用于避免初次加载时自动滚动到底部
-  const hasInitializedRef = useRef<boolean>(false);
 
   // 自动调整文本框高度
   const adjustTextareaHeight = () => {
@@ -84,24 +82,17 @@ const RAGChat: React.FC = () => {
   };
 
   useEffect(() => {
-    // 首次加载：保持页面滚动在顶部，满足“默认置顶”的要求
-    if (!hasInitializedRef.current) {
-      hasInitializedRef.current = true;
-      try {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-      } catch (e) {}
-    } else {
-      // 非首次（用户发送消息或AI流式输出）：滚动到底部以显示最新内容
-      scrollToBottom();
-    }
-
+    scrollToBottom();
     // 保存聊天历史
     saveChatHistory(messages);
   }, [messages]);
 
   // 发送消息 - 使用RAG API
+  /**
+   * handleSendMessage
+   * 功能：发送用户消息并启动流式AI回答；在发送后将右侧按钮切换为“停止”形态
+   * 约束：发送期间仅点击“停止”按钮可中断；按下Enter不会停止当前回答
+   */
   const handleSendMessage = async () => {
     if (!inputValue.trim() || isLoading) return;
 
@@ -207,7 +198,11 @@ const RAGChat: React.FC = () => {
     }
   };
 
-  // 停止AI回答
+  /**
+   * handleStopResponse
+   * 功能：主动停止当前AI回答（通过AbortController），并在最后一条AI消息追加“已停止”标记
+   * 触发：仅当用户点击“停止”按钮时触发；按Enter不触发停止
+   */
   const handleStopResponse = () => {
     if (abortController) {
       abortController.abort();
@@ -262,16 +257,17 @@ const RAGChat: React.FC = () => {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
+                // 需求：在生成中（canStop为true）按Enter不停止也不触发再次发送，保持输出不中断
                 if (canStop) {
-                  handleStopResponse();
-                } else {
-                  handleSendMessage();
+                  return; // 忽略本次Enter
                 }
+                // 非生成中，按Enter触发发送
+                handleSendMessage();
               }
             }}
             placeholder="输入您的问题... (Shift+Enter 换行)"
             className="message-input"
-            disabled={isLoading && !canStop}
+            disabled={false /* 输入框不禁用；按Enter在生成中被忽略，不会停止 */}
             rows={1}
           />
           
