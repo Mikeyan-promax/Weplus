@@ -1,0 +1,239 @@
+railway部署界面报错
+
+
+Weplus
+/
+cccf259b
+Failed
+
+Nov 5, 2025, 10:49 AM
+Get Help
+Details
+Build Logs
+Deploy Logs
+Search build logs
+
+You reached the start of the range
+Nov 5, 2025, 10:49 AM
+ 
+[Region: asia-southeast1]
+=========================
+Using Detected Dockerfile
+=========================
+
+context: gwfv-Z84R
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for docker.io/library/python:3.11-slim
+2s
+
+internal
+load metadata for docker.io/library/node:18-alpine
+2s
+
+auth
+library/python:pull token for registry-1.docker.io
+0ms
+
+auth
+library/node:pull token for registry-1.docker.io
+0ms
+
+internal
+load .dockerignore
+0ms
+
+internal
+load build context
+0ms
+
+backend-build
+FROM docker.io/library/python:3.11-slim@sha256:fa9b525a0be0c5ae5e6f2209f4be6fdc5a15a36fed0222144d98ac0d08f876d4
+17ms
+
+frontend-build
+FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
+15ms
+
+frontend-build
+WORKDIR /app
+35ms
+
+frontend-build
+COPY frontend2/package.json frontend2/package-lock.json* frontend2/pnpm-lock.yaml* /app/
+36ms
+
+frontend-build
+RUN npm ci --silent || npm install --legacy-peer-deps --silent
+7s
+
+backend-build
+WORKDIR /app
+50ms
+
+runtime
+RUN apt-get update && apt-get install -y --no-install-recommends     nginx     supervisor   && rm -rf /var/lib/apt/lists/*
+10s
+Processing triggers for libc-bin (2.41-12) ...
+
+backend-build
+RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     libffi-dev     openssl     ca-certificates   && rm -rf /var/lib/apt/lists/*
+10s
+Processing triggers for libc-bin (2.41-12) ...
+
+frontend-build
+COPY frontend2/ /app/
+182ms
+
+frontend-build
+RUN npm run build
+6s
+> frontend2@0.0.0 build
+> tsc -b && vite build
+src/components/ChatUITest.tsx(143,13): error TS2322: Type '{ key: string; content: string; isUser: boolean; timestamp: string; }' is not assignable to type 'IntrinsicAttributes & ChatMessageProps'.
+
+  Property 'content' does not exist on type 'IntrinsicAttributes & ChatMessageProps'.
+src/components/ChatUITest.tsx(151,11): error TS2322: Type '{ content: string; isUser: boolean; timestamp: string; isTyping: boolean; }' is not assignable to type 'IntrinsicAttributes & ChatMessageProps'.
+
+  Property 'content' does not exist on type 'IntrinsicAttributes & ChatMessageProps'.
+src/components/OtherTools.tsx(6,20): error TS7016: Could not find a declaration file for module 'qrcode'. '/app/node_modules/qrcode/lib/index.js' implicitly has an 'any' type.
+
+  Try `npm i --save-dev @types/qrcode` if it exists or add a new declaration (.d.ts) file containing `declare module 'qrcode';`
+src/components/OtherTools.tsx(8,29): error TS7016: Could not find a declaration file for module 'turndown'. '/app/node_modules/turndown/lib/turndown.cjs.js' implicitly has an 'any' type.
+
+  Try `npm i --save-dev @types/turndown` if it exists or add a new declaration (.d.ts) file containing `declare module 'turndown';`
+src/components/OtherTools.tsx(39,95): error TS2503: Cannot find namespace 'JSX'.
+
+src/components/OtherTools.tsx(584,20): error TS6133: 'e' is declared but its value is never read.
+
+src/components/OtherTools.tsx(1097,47): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'.
+
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+          Types of property '[Symbol.toStringTag]' are incompatible.
+            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
+src/components/OtherTools.tsx(1140,47): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'.
+
+  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
+    Types of property 'buffer' are incompatible.
+      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
+        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
+          Types of property '[Symbol.toStringTag]' are incompatible.
+            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
+src/components/RatingModal.tsx(13,3): error TS6133: 'resourceId' is declared but its value is never read.
+
+src/components/TestUserDataIsolation.tsx(43,11): error TS2322: Type '{ children: string; onClick: () => Promise<void>; disabled: boolean; style: { backgroundColor: string; color: string; padding: string; border: string; borderRadius: string; cursor: string; }; }' is not assignable to type 'IntrinsicAttributes & AnimatedButtonProps'.
+
+  Property 'style' does not exist on type 'IntrinsicAttributes & AnimatedButtonProps'.
+src/components/admin/DocumentManagement.tsx(134,15): error TS18046: 'error' is of type 'unknown'.
+
+src/components/admin/DocumentManagement.tsx(135,18): error TS18046: 'error' is of type 'unknown'.
+
+src/components/admin/DocumentManagement.tsx(136,16): error TS18046: 'error' is of type 'unknown'.
+
+src/components/admin/UserManagement.tsx(50,10): error TS6133: 'stats' is declared but its value is never read.
+
+src/components/admin/UserManagement.tsx(53,10): error TS6133: 'roleFilter' is declared but its value is never read.
+
+src/components/admin/UserManagement.tsx(53,22): error TS6133: 'setRoleFilter' is declared but its value is never read.
+
+src/components/admin/UserManagement.tsx(81,10): error TS6133: 'totalUsers' is declared but its value is never read.
+
+src/components/common/CommentForm.tsx(13,3): error TS6133: 'resourceId' is declared but its value is never read.
+
+src/components/common/CommentList.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
+
+src/components/common/CommentList.tsx(27,3): error TS6133: 'resourceId' is declared but its value is never read.
+
+src/contexts/AuthContext.tsx(6,65): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+
+src/contexts/AuthContext.tsx(32,9): error TS2304: Cannot find name 'clearAuthTokens'.
+
+src/contexts/AuthContext.tsx(63,5): error TS2322: Type '(userData: User) => void' is not assignable to type '(credentials: LoginCredentials) => Promise<boolean>'.
+
+  Types of parameters 'userData' and 'credentials' are incompatible.
+    Type 'LoginCredentials' is missing the following properties from type 'User': id, username, is_active, is_verified, created_at
+src/utils/functionalityTest.ts(132,11): error TS6133: 'hasHashRouter' is declared but its value is never read.
+
+src/utils/testUserDataIsolation.ts(82,31): error TS2339: Property 'theme' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(83,31): error TS2339: Property 'language' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(84,31): error TS2339: Property 'theme' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(85,31): error TS2339: Property 'language' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(126,44): error TS2339: Property 'length' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(127,44): error TS2339: Property 'length' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(128,20): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
+
+  Property '0' does not exist on type '{}'.
+src/utils/testUserDataIsolation.ts(129,20): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
+
+  Property '0' does not exist on type '{}'.
+src/utils/testUserDataIsolation.ts(176,44): error TS2339: Property 'messageNotifications' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(177,44): error TS2339: Property 'activityReminders' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(178,44): error TS2339: Property 'messageNotifications' does not exist on type '{}'.
+
+src/utils/testUserDataIsolation.ts(179,44): error TS2339: Property 'activityReminders' does not exist on type '{}'.
+
+
+backend-build
+COPY backend/requirements.txt /app/requirements.txt
+59ms
+
+backend-build
+RUN pip install --no-cache-dir --prefer-binary -r /app/requirements.txt
+3s
+Collecting fastapi==0.104.1 (from -r /app/requirements.txt (line 2))
+  Downloading fastapi-0.104.1-py3-none-any.whl.metadata (24 kB)
+Collecting uvicorn==0.24.0 (from uvicorn[standard]==0.24.0->-r /app/requirements.txt (line 3))
+  Downloading uvicorn-0.24.0-py3-none-any.whl.metadata (6.4 kB)
+Collecting sqlalchemy==2.0.23 (from -r /app/requirements.txt (line 6))
+  Downloading SQLAlchemy-2.0.23-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.6 kB)
+Collecting psycopg2-binary==2.9.9 (from -r /app/requirements.txt (line 7))
+  Downloading psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
+Collecting asyncpg==0.29.0 (from -r /app/requirements.txt (line 8))
+  Downloading asyncpg-0.29.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
+Collecting alembic==1.12.1 (from -r /app/requirements.txt (line 9))
+  Downloading alembic-1.12.1-py3-none-any.whl.metadata (7.3 kB)
+Collecting pgvector==0.2.4 (from -r /app/requirements.txt (line 10))
+  Downloading pgvector-0.2.4-py2.py3-none-any.whl.metadata (9.8 kB)
+Collecting langchain==0.1.0 (from -r /app/requirements.txt (line 13))
+  Downloading langchain-0.1.0-py3-none-any.whl.metadata (13 kB)
+Collecting langchain-community==0.0.10 (from -r /app/requirements.txt (line 14))
+  Downloading langchain_community-0.0.10-py3-none-any.whl.metadata (7.3 kB)
+Collecting sentence-transformers==2.2.2 (from -r /app/requirements.txt (line 15))
+  Downloading sentence-transformers-2.2.2.tar.gz (85 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 86.0/86.0 kB 306.2 MB/s eta 0:00:00
+  Preparing metadata (setup.py): started
+  Preparing metadata (setup.py): finished with status 'done'
+Collecting pypdf2==3.0.1 (from -r /app/requirements.txt (line 18))
+  Downloading pypdf2-3.0.1-py3-none-any.whl.metadata (6.8 kB)
+Collecting python-docx==1.1.0 (from -r /app/requirements.txt (line 19))
+  Downloading python_docx-1.1.0-py3-none-any.whl.metadata (2.0 kB)
+Collecting python-multipart==0.0.6 (from -r /app/requirements.txt (line 20))
+  Downloading python_multipart-0.0.6-py3-none-any.whl.metadata (2.5 kB)
+Collecting openai==1.3.7 (from -r /app/requirements.txt (line 23))
+  Downloading openai-1.3.7-py3-none-any.whl.metadata (17 kB)
+Collecting httpx==0.25.2 (from -r /app/requirements.txt (line 24))
+  Downloading httpx-0.25.2-py3-none-any.whl.metadata (6.9 kB)
+Dockerfile:16
+-------------------
+14 |     # 复制源码并构建
+15 |     COPY frontend2/ /app/
+16 | >>> RUN npm run build
+17 |
+18 |     # === Backend Build ===
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
