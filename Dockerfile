@@ -33,6 +33,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y --no-install-recommends \
     nginx \
     supervisor \
+    gettext-base \
   && rm -rf /var/lib/apt/lists/*
 
 # 复制后端依赖与源码
@@ -43,8 +44,8 @@ COPY --from=backend-build /app /app
 # 复制前端构建产物到 Nginx 静态根目录
 COPY --from=frontend-build /app/dist /usr/share/nginx/html
 
-# 复制运行时配置
-COPY deploy/nginx.railway.conf /etc/nginx/nginx.conf
+# 复制运行时配置（使用模板，启动时渲染为实际配置）
+COPY deploy/nginx.railway.conf.template /etc/nginx/nginx.conf.template
 COPY deploy/supervisord.railway.conf /etc/supervisord.conf
 
 # 缺省环境变量（避免解析报错，实际值建议在 Railway 仪表盘设置）
