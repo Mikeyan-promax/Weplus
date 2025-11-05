@@ -18,9 +18,12 @@ http {
     tcp_nodelay on;
     keepalive_timeout 65;
     types_hash_max_size 4096;
+    # 将访问与错误日志输出到容器标准流，便于在 Railway 面板查看
+    access_log /dev/stdout;
+    error_log /dev/stderr info;
 
     server {
-        listen ${PORT};
+        listen ${PORT} default_server;
         server_name _;
 
         # 前端静态资源
@@ -43,4 +46,3 @@ http {
         }
     }
 }
-
