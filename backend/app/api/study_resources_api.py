@@ -39,6 +39,90 @@ router = APIRouter(prefix="/api/study-resources", tags=["学习资源管理"])
 UPLOAD_DIR = Path(__file__).parent.parent.parent / "data" / "study_resources"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
+# 引入全局配置，提供额外的回退目录支持
+try:
+    from app.core.config import settings
+except Exception:
+    settings = None
+
+# 可能的回退目录集合（按优先级）
+FALLBACK_DIRS = []
+if settings and getattr(settings, 'UPLOAD_DIR', None):
+    # 使用全局上传目录下的 study_resources 子目录作为回退
+    FALLBACK_DIRS.append(Path(getattr(settings, 'UPLOAD_DIR')) / 'study_resources')
+    # 同时加入全局上传目录本身作为次级回退（防止只存了文件名）
+    FALLBACK_DIRS.append(Path(getattr(settings, 'UPLOAD_DIR')))
+
+# 支持通过环境变量覆盖（Railway/容器环境可注入）
+env_dir = os.getenv('STUDY_RESOURCES_DIR') or os.getenv('WEPLUS_STUDY_RESOURCES_DIR')
+if env_dir:
+    FALLBACK_DIRS.insert(0, Path(env_dir))
+
+def _get_media_type(file_path: Path) -> str:
+    """根据文件扩展名获取媒体类型（MIME）
+    - 统一由后端返回合理的类型，前端根据 Blob.type 渲染
+    """
+    media_type_map = {
+        '.pdf': 'application/pdf',
+        '.txt': 'text/plain',
+        '.md': 'text/markdown',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.png': 'image/png',
+        '.gif': 'image/gif',
+        '.mp4': 'video/mp4',
+        '.mp3': 'audio/mpeg',
+        '.doc': 'application/msword',
+        '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        '.ppt': 'application/vnd.ms-powerpoint',
+        '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        '.xls': 'application/vnd.ms-excel',
+        '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    }
+    return media_type_map.get(file_path.suffix.lower(), 'application/octet-stream')
+
+def _resolve_resource_file_path(resource: Any) -> Path:
+    """解析并定位资源文件的真实路径（容错解析）
+    函数级注释：
+    - 输入：StudyResource 实例或字典，内含 file_path 字段（可能为绝对/相对路径或仅文件名）
+    - 逻辑：
+      1) 优先尝试原始路径；
+      2) 若不存在，则以原始路径的文件名在主目录 UPLOAD_DIR 下查找；
+      3) 再依次在 FALLBACK_DIRS 中查找；
+    - 输出：存在的 Path 对象；若无法定位则返回最可能的候选（用于错误日志）
+    """
+    # 提取原始路径字符串
+    raw_path = None
+    if isinstance(resource, dict):
+        raw_path = resource.get('file_path')
+    else:
+        raw_path = getattr(resource, 'file_path', None)
+
+    if not raw_path:
+        return UPLOAD_DIR / "__missing__"
+
+    primary = Path(str(raw_path))
+    if primary.exists():
+        return primary
+
+    # 以文件名为准进行回退查找
+    basename = Path(str(raw_path)).name
+
+    candidates = [
+        UPLOAD_DIR / basename,
+    ] + [d / basename for d in FALLBACK_DIRS]
+
+    for cand in candidates:
+        try:
+            if cand.exists():
+                return cand
+        except Exception:
+            # 某些平台路径解析异常时忽略
+            continue
+
+    # 所有候选均不存在，返回主目录下的候选用于错误提示
+    return UPLOAD_DIR / basename
+
 # HTTP Bearer认证
 security = HTTPBearer()
 
@@ -637,44 +721,24 @@ async def get_resource(resource_id: int):
 
 @router.get("/{resource_id}/preview", summary="预览资源文件")
 async def preview_resource(resource_id: int):
-    """预览资源文件"""
+    """预览资源文件
+    函数级注释：
+    - 根据资源ID定位文件（含容错回退），返回内联 FileResponse 用于前端预览。
+    - 失败场景：资源不存在或文件无法找到时返回 404。
+    """
     try:
         # 获取资源信息
         resource = StudyResource.get_by_id(resource_id)
         if not resource:
             raise HTTPException(status_code=404, detail="资源不存在")
-        
-        # 如果resource是字典，使用字典访问；如果是对象，使用属性访问
-        if isinstance(resource, dict):
-            file_path = Path(resource['file_path'])
-        else:
-            file_path = Path(resource.file_path)
-            
+        # 统一使用容错解析定位文件
+        file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="文件不存在")
-        
+
         # 根据文件类型返回适当的媒体类型
-        media_type_map = {
-            '.pdf': 'application/pdf',
-            '.txt': 'text/plain',
-            '.md': 'text/markdown',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.mp4': 'video/mp4',
-            '.mp3': 'audio/mpeg',
-            '.doc': 'application/msword',
-            '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-            '.ppt': 'application/vnd.ms-powerpoint',
-            '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-            '.xls': 'application/vnd.ms-excel',
-            '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        }
-        
-        file_extension = file_path.suffix.lower()
-        media_type = media_type_map.get(file_extension, 'application/octet-stream')
-        
+        media_type = _get_media_type(file_path)
+
         return FileResponse(
             path=str(file_path),
             media_type=media_type,
@@ -689,29 +753,34 @@ async def preview_resource(resource_id: int):
 
 @router.get("/{resource_id}/download", summary="下载资源文件")
 async def download_resource(resource_id: int):
-    """下载资源文件"""
+    """下载资源文件
+    函数级注释：
+    - 根据资源ID定位文件（含容错回退），以附件形式返回 FileResponse。
+    - 下载文件名优先使用资源标题 + 原始扩展名，避免出现双点扩展名。
+    """
     try:
         resource = StudyResource.get_by_id(resource_id)
         if not resource:
             raise HTTPException(status_code=404, detail="资源不存在")
-        
-        # 如果resource是字典，使用字典访问；如果是对象，使用属性访问
+        # 容错解析文件路径
         if isinstance(resource, dict):
-            file_path = Path(resource['file_path'])
-            title = resource['title']
+            title = resource.get('title', 'resource')
         else:
-            file_path = Path(resource.file_path)
-            title = resource.title
-            
+            title = getattr(resource, 'title', 'resource')
+
+        file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
             raise HTTPException(status_code=404, detail="文件不存在")
-        
+
         # 增加下载次数 - 暂时跳过，因为需要实现
         # await resource.increment_download_count()
-        
+        # 规范化下载文件名：标题 + 扩展名（不带双点）
+        safe_suffix = file_path.suffix  # 例如 .pdf
+        download_name = f"{title}{safe_suffix}"
+
         return FileResponse(
             path=str(file_path),
-            filename=f"{title}.{file_path.suffix}",
+            filename=download_name,
             media_type='application/octet-stream'
         )
         
