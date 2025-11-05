@@ -1,13 +1,16 @@
 """
 邮件服务模块
 实现邮件发送和验证码功能
+
+说明：
+- 原有实现在模块导入时立即初始化 FastMail/ConnectionConfig（依赖 fastapi-mail 与 Pydantic 版本兼容）。
+- 为避免在应用启动阶段因依赖不兼容或缺失环境变量导致崩溃，这里改为惰性初始化：仅在实际发送邮件时才初始化并捕获异常。
 """
 
 import random
 import string
 import asyncio
 from typing import Optional
-from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
 from pydantic import EmailStr
 import os
 from datetime import datetime, timedelta
@@ -22,6 +25,12 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     def __init__(self):
+        """初始化邮件服务（惰性初始化，不在导入阶段触发外部依赖）。
+
+        - 仅加载环境变量并准备内存存储结构；
+        - 不立即创建 ConnectionConfig/FastMail，避免因 fastapi-mail 与 Pydantic 不兼容或环境变量缺失导致应用启动失败；
+        - 真正需要发送邮件时再执行初始化，并做好异常捕获与降级。
+        """
         # 邮件配置
         self.mail_username = os.getenv("MAIL_USERNAME")
         self.mail_password = os.getenv("MAIL_PASSWORD")
@@ -33,26 +42,54 @@ class EmailService:
         self.mail_ssl_tls = os.getenv("MAIL_SSL_TLS", "False").lower() == "true"
         # 开发模式开关（来自全局配置）
         self.debug_mode = bool(getattr(settings, "DEBUG", False))
-        
+
         # 内存存储验证码和冷却时间
         self.verification_codes = {}  # {email_purpose: {"code": str, "expires": datetime}}
         self.cooldown_times = {}      # {email_purpose: datetime}
-        
-        # 配置FastMail
-        self.conf = ConnectionConfig(
-            MAIL_USERNAME=self.mail_username,
-            MAIL_PASSWORD=self.mail_password,
-            MAIL_FROM=self.mail_from,
-            MAIL_PORT=self.mail_port,
-            MAIL_SERVER=self.mail_server,
-            MAIL_FROM_NAME=self.mail_from_name,
-            MAIL_STARTTLS=self.mail_starttls,
-            MAIL_SSL_TLS=self.mail_ssl_tls,
-            USE_CREDENTIALS=True,
-            VALIDATE_CERTS=True
-        )
-        
-        self.fastmail = FastMail(self.conf)
+
+        # 惰性初始化相关标记与对象
+        self.conf = None
+        self.fastmail = None
+        self.init_error: Optional[str] = None
+
+    def ensure_mail_client(self) -> bool:
+        """确保邮件客户端已初始化（惰性初始化）。
+
+        返回：
+        - True：初始化成功，可以正常发送邮件
+        - False：初始化失败，错误信息保存在 self.init_error
+
+        说明：
+        - 这里采用内部延迟导入 fastapi_mail，避免其在与 Pydantic v2 不兼容时影响应用启动；
+        - 初始化失败时仅影响邮件发送功能，不影响整个应用的健康检查与运行。
+        """
+        if self.fastmail is not None:
+            return True
+        try:
+            # 内部延迟导入，避免不兼容导致模块级崩溃
+            from fastapi_mail import FastMail, ConnectionConfig
+
+            self.conf = ConnectionConfig(
+                MAIL_USERNAME=self.mail_username,
+                MAIL_PASSWORD=self.mail_password,
+                MAIL_FROM=self.mail_from,
+                MAIL_PORT=self.mail_port,
+                MAIL_SERVER=self.mail_server,
+                MAIL_FROM_NAME=self.mail_from_name,
+                MAIL_STARTTLS=self.mail_starttls,
+                MAIL_SSL_TLS=self.mail_ssl_tls,
+                USE_CREDENTIALS=True,
+                VALIDATE_CERTS=True
+            )
+            self.fastmail = FastMail(self.conf)
+            self.init_error = None
+            return True
+        except Exception as e:
+            # 捕获初始化错误，记录并降级
+            self.fastmail = None
+            self.init_error = str(e)
+            logger.error(f"初始化邮件客户端失败: {self.init_error}")
+            return False
     
     def generate_verification_code(self, length: int = 6) -> str:
         """生成验证码"""
@@ -184,8 +221,20 @@ class EmailService:
                     }
                 }
 
-            # 非调试模式：正常发送邮件
+            # 非调试模式：尝试初始化邮件客户端并发送
+            if not self.ensure_mail_client():
+                # 初始化失败，返回可解释的错误信息，不抛出异常以保证接口稳定
+                return {
+                    "success": False,
+                    "message": "邮件服务初始化失败，请稍后重试",
+                    "code": "INIT_FAILED",
+                    "error": self.init_error
+                }
+
             try:
+                # 延迟导入消息类型定义
+                from fastapi_mail import MessageSchema, MessageType
+
                 message = MessageSchema(
                     subject=f"WePlus 校园助手 - {purpose_text}验证码",
                     recipients=[email],

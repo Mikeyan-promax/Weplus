@@ -45,8 +45,15 @@ class LoggingService:
     """日志服务类"""
     
     def __init__(self):
+        """初始化日志服务（不在导入阶段触发数据库连接）。
+
+        说明：
+        - 仅设置文件/控制台日志；
+        - 移除导入时对数据库的访问，避免在应用启动阶段因数据库不可达导致健康检查失败；
+        - 若需要，可由外部在应用启动完成后显式调用 initialize() 以确保日志表存在。
+        """
         self.setup_logging()
-        self.ensure_log_tables()
+        self._initialized = False
 
     # 内部工具：检查列是否存在
     def _column_exists(self, cursor, table_name: str, column_name: str) -> bool:
@@ -240,6 +247,21 @@ class LoggingService:
         finally:
             if conn:
                 conn.close()
+    
+    def initialize(self):
+        """初始化数据库相关资源（可在应用启动完成后调用）。
+
+        - 调用 ensure_log_tables()，若失败则记录错误但不抛出异常，避免影响主流程；
+        - 仅执行一次初始化。
+        """
+        if getattr(self, "_initialized", False):
+            return
+        try:
+            self.ensure_log_tables()
+        except Exception as e:
+            self.logger.error(f"日志服务初始化失败: {str(e)}")
+        finally:
+            self._initialized = True
     
     def log_system_event(
         self,
