@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import type { User, AuthContextType } from '../types/auth';
-import { isAuthenticated, getUserInfo, logout as authLogout, clearAuthTokens } from '../utils/auth';
+import { isAuthenticated, getUserInfo, logout as authLogout } from '../utils/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,14 +18,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   // 初始化用户状态
-  /**
-   * initializeAuth
-   * 功能：在应用启动时从 localStorage 恢复用户登录状态与基本信息。
-   * 过程：
-   * - 检查是否已认证（存在 token 与 user_info）；
-   * - 若存在则解析并设置到全局 user 状态；
-   * - 异常时清理认证信息以避免脏数据；
-   */
   useEffect(() => {
     const initializeAuth = () => {
       try {
@@ -46,11 +38,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initializeAuth();
   }, []);
 
-  /**
-   * login
-   * 功能：在登录成功后将后端返回的用户对象写入全局状态，供各页面使用。
-   * 注意：网络请求与 token 写入由 Login 组件完成，此处只负责状态同步。
-   */
   const login = (userData: User) => {
     setUser(userData);
   };

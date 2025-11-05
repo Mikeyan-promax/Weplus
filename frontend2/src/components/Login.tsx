@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
 interface LoginFormData {
@@ -10,7 +9,6 @@ interface LoginFormData {
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
   const [formData, setFormData] = useState<LoginFormData>({
     email: '',
     password: ''
@@ -18,10 +16,6 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  /**
-   * handleInputChange
-   * 功能：处理输入框变更，实时更新登录表单数据，并在用户重新输入时清除错误提示。
-   */
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -32,15 +26,6 @@ const Login: React.FC = () => {
     if (error) setError('');
   };
 
-  /**
-   * handleSubmit
-   * 功能：提交登录请求；
-   * 过程：
-   * - 调用后端登录接口；
-   * - 保存 token 与用户信息到 localStorage；
-   * - 调用 AuthContext.login(user) 同步全局用户状态；
-   * - 跳转到主应用页面 /app。
-   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -62,9 +47,6 @@ const Login: React.FC = () => {
         localStorage.setItem('access_token', data.access_token);
         localStorage.setItem('refresh_token', data.refresh_token);
         localStorage.setItem('user_info', JSON.stringify(data.user));
-
-        // 同步到全局认证上下文，确保页面（如用户信息）立即可读取用户名/邮箱
-        login(data.user);
         
         // 登录成功后跳转到主应用页面
         navigate('/app', { replace: true });
