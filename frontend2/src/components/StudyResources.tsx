@@ -47,10 +47,11 @@ const StudyResources: React.FC = () => {
   const [previewResource, setPreviewResource] = useState<Resource | null>(null);
   const [ratingResource, setRatingResource] = useState<Resource | null>(null);
 
-  // 获取分类列表
+  // 获取分类列表（使用相对路径以适配代理/生产环境）
+  // 说明：改为调用 `/api/study-resources/categories`，避免硬编码 localhost，便于通过 Vite/Nginx 代理转发。
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/study-resources/categories');
+      const response = await fetch('/api/study-resources/categories');
       const data = await response.json();
       
       if (data.success) {
@@ -61,7 +62,8 @@ const StudyResources: React.FC = () => {
     }
   };
 
-  // 获取资源列表
+  // 获取资源列表（使用相对路径，以免跨域/环境差异）
+  // 说明：请求路径改为 `/api/study-resources/resources` 并保留查询参数构建逻辑。
   const fetchResources = async () => {
     try {
       setLoading(true);
@@ -78,7 +80,7 @@ const StudyResources: React.FC = () => {
         params.append('category_id', selectedCategory.toString());
       }
 
-      const response = await fetch(`http://localhost:8000/api/study-resources/resources?${params}`);
+      const response = await fetch(`/api/study-resources/resources?${params}`);
       const data = await response.json();
       
       if (data.success) {
@@ -98,12 +100,13 @@ const StudyResources: React.FC = () => {
     }
   };
 
-  // 提交评分
+  // 提交评分（使用相对路径，避免硬编码域名）
+  // 说明：评分接口改为 `/api/study-resources/rate/:id`，以适配不同部署环境。
   const handleRatingSubmit = async (rating: number, comment?: string) => {
     if (!ratingResource) return;
 
     try {
-      const response = await fetch(`http://localhost:8000/api/study-resources/rate/${ratingResource.id}`, {
+      const response = await fetch(`/api/study-resources/rate/${ratingResource.id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,13 +148,15 @@ const StudyResources: React.FC = () => {
     }
   }, [categories, selectedCategory, searchTerm, currentPage]);
 
+  // 触发资源下载（改为相对路径，前端同域直连）
+  // 说明：使用 `window.open('/api/study-resources/:id/download')`，由浏览器发起下载，避免跨域问题。
   const handleDownload = (resourceId: number) => {
     try {
       // 显示下载开始提示
       console.log('开始下载资源:', resourceId);
       
       // 使用window.open直接下载，这样会自动处理认证和文件名
-      window.open(`http://localhost:8000/api/study-resources/${resourceId}/download`, '_blank');
+      window.open(`/api/study-resources/${resourceId}/download`, '_blank');
       
       console.log('下载已启动:', resourceId);
       

@@ -55,7 +55,8 @@ const StudyResourcesManagement: React.FC = () => {
     file: null
   });
 
-  // 获取资源列表
+  // 获取资源列表（管理员视图，使用相对路径）
+  // 说明：路径改为 `/api/study-resources/admin/resources`，通过管理员Token鉴权。
   const fetchResources = async () => {
     try {
       setLoading(true);
@@ -83,7 +84,7 @@ const StudyResourcesManagement: React.FC = () => {
 
       console.log('使用管理员Token:', adminToken);
       
-      const response = await fetch(`http://localhost:8000/api/study-resources/admin/resources?${params}`, {
+      const response = await fetch(`/api/study-resources/admin/resources?${params}`, {
         headers: {
           'Authorization': `Bearer ${adminToken}`
         }
@@ -101,10 +102,11 @@ const StudyResourcesManagement: React.FC = () => {
     }
   };
 
-  // 获取分类列表
+  // 获取分类列表（相对路径）
+  // 说明：调用 `/api/study-resources/categories`，适配本地与生产环境代理。
   const fetchCategories = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/study-resources/categories');
+      const response = await fetch('/api/study-resources/categories');
       const data = await response.json();
       
       if (data.success) {
@@ -115,7 +117,8 @@ const StudyResourcesManagement: React.FC = () => {
     }
   };
 
-  // 上传文件
+  // 上传学习资源文件（管理员接口，使用相对路径）
+  // 说明：改为 `/api/study-resources/admin/upload`，由服务端处理文件保存。
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -141,7 +144,7 @@ const StudyResourcesManagement: React.FC = () => {
         return;
       }
 
-      const response = await fetch('http://localhost:8000/api/study-resources/admin/upload', {
+      const response = await fetch('/api/study-resources/admin/upload', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${adminToken}`
@@ -173,14 +176,14 @@ const StudyResourcesManagement: React.FC = () => {
     }
   };
 
-  // 删除资源
+  // 删除资源（管理员接口，相对路径）
   const handleDelete = async (resourceId: number) => {
     if (!confirm('确定要删除这个资源吗？此操作不可恢复。')) {
       return;
     }
 
     try {
-      const response = await fetch(`http://localhost:8000/api/study-resources/${resourceId}`, {
+      const response = await fetch(`/api/study-resources/${resourceId}`, {
         method: 'DELETE'
       });
 
@@ -369,7 +372,7 @@ const StudyResourcesManagement: React.FC = () => {
                           </button>
                           <button 
                             className="download-btn"
-                            onClick={() => window.open(`http://localhost:8000/api/study-resources/${resource.id}/download`, '_blank')}
+                            onClick={() => window.open(`/api/study-resources/${resource.id}/download`, '_blank')}
                           >
                             📥 下载
                           </button>

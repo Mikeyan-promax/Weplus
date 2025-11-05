@@ -39,7 +39,8 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
         setError('');
         
         // 获取文件预览URL
-        const response = await fetch(`http://localhost:8000/api/study-resources/${resourceId}/preview`, {
+        // 使用相对路径以适配不同环境
+        const response = await fetch(`/api/study-resources/${resourceId}/preview`, {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
@@ -156,7 +157,7 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
         <div className="preview-error">
           <div className="error-icon">⚠️</div>
           <p>{error}</p>
-          <button onClick={() => window.open(`http://localhost:8000/api/study-resources/${resourceId}/download`, '_blank')}>
+          <button onClick={() => window.open(`/api/study-resources/${resourceId}/download`, '_blank')}>
             下载文件
           </button>
         </div>
@@ -255,7 +256,7 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
         </div>
         <button 
           className="download-btn"
-          onClick={() => window.open(`http://localhost:8000/api/study-resources/${resourceId}/download`, '_blank')}
+          onClick={() => window.open(`/api/study-resources/${resourceId}/download`, '_blank')}
         >
           下载文件
         </button>
@@ -279,7 +280,7 @@ const ResourcePreview: React.FC<ResourcePreviewProps> = ({
           <div className="preview-actions">
             <button 
               className="action-btn download-btn"
-              onClick={() => window.open(`http://localhost:8000/api/study-resources/${resourceId}/download`, '_blank')}
+              onClick={() => window.open(`/api/study-resources/${resourceId}/download`, '_blank')}
               title="下载文件"
             >
               📥

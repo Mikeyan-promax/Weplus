@@ -26,6 +26,20 @@ interface DocumentStats {
   total_vectors: number;
 }
 
+/**
+ * 将未知错误规范化为 Error 对象，避免 TS 在 catch 子句中将错误类型标记为 unknown 导致的属性访问报错。
+ * 返回一个始终可用的 Error，便于统一日志与提示。
+ */
+const normalizeError = (err: unknown): Error => {
+  if (err instanceof Error) return err;
+  if (typeof err === 'string') return new Error(err);
+  try {
+    return new Error(JSON.stringify(err));
+  } catch {
+    return new Error('未知错误');
+  }
+};
+
 const DocumentManagement: React.FC = () => {
   const navigate = useNavigate();
   const [documents, setDocuments] = useState<Document[]>([]);
@@ -60,15 +74,20 @@ const DocumentManagement: React.FC = () => {
     loadDocuments();
   }, [navigate]);
 
+  /**
+   * 加载文档列表
+   * - 使用相对路径 `/api/rag/documents` 以同源代理（避免硬编码 localhost:8000）
+   * - 统一错误处理，避免 TS `catch` 的 `unknown` 报错
+   */
   const loadDocuments = async () => {
     setLoading(true);
     try {
       console.log('开始加载文档列表...');
-      console.log('请求URL: http://localhost:8000/api/rag/documents');
+      console.log('请求URL: /api/rag/documents');
       console.log('认证Token:', localStorage.getItem('admin_token') ? '存在' : '不存在');
       
       // 调用真实的RAG API获取文档列表
-      const response = await fetch('http://localhost:8000/api/rag/documents', {
+      const response = await fetch('/api/rag/documents', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -129,11 +148,12 @@ const DocumentManagement: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error('Failed to load documents:', error);
+      const e = normalizeError(error);
+      console.error('Failed to load documents:', e);
       console.error('错误详情:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
+        name: e.name,
+        message: e.message,
+        stack: e.stack
       });
       // 出错时设置空数据
       setDocuments([]);
@@ -152,6 +172,11 @@ const DocumentManagement: React.FC = () => {
 
 
 
+  /**
+   * 处理文件上传（多文件）
+   * - 走 `/api/rag/documents/upload` 相对路径
+   * - 使用管理员 Token 认证
+   */
   const handleFileUpload = async (files: FileList) => {
     if (!files || files.length === 0) return;
 
@@ -163,7 +188,7 @@ const DocumentManagement: React.FC = () => {
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch('http://localhost:8000/api/rag/documents/upload', {
+        const response = await fetch('/api/rag/documents/upload', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
@@ -220,6 +245,11 @@ const DocumentManagement: React.FC = () => {
     }
   };
 
+  /**
+   * 处理文档操作（重新处理、删除、批量操作）
+   * - 所有接口统一使用 `/api/...` 相对路径
+   * - 对错误进行规范化处理（部分场景）
+   */
   const handleDocumentAction = async (action: string, documentId?: number) => {
     switch (action) {
       case 'reprocess':
@@ -228,7 +258,7 @@ const DocumentManagement: React.FC = () => {
             const document = documents.find(d => d.id === documentId);
             if (document) {
               // 调用RAG API重新处理文档
-              const response = await fetch(`http://localhost:8000/api/rag/documents/${document.filename}/reprocess`, {
+              const response = await fetch(`/api/rag/documents/${document.filename}/reprocess`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
@@ -261,7 +291,7 @@ const DocumentManagement: React.FC = () => {
                 console.log(loadingMessage);
                 
                 // 调用RAG API删除文档
-                const response = await fetch(`http://localhost:8000/api/rag/documents/${document.rag_document_id || document.filename}`, {
+                const response = await fetch(`/api/rag/documents/${document.rag_document_id || document.filename}`, {
                   method: 'DELETE',
                   headers: {
                     'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
@@ -285,7 +315,7 @@ const DocumentManagement: React.FC = () => {
               }
             } catch (error) {
               console.error('Delete document error:', error);
-              const errorMessage = error instanceof Error ? error.message : '未知错误';
+              const errorMessage = normalizeError(error).message;
               alert(`❌ 删除文档时发生网络错误！\n错误详情: ${errorMessage}`);
             }
           }
@@ -299,16 +329,16 @@ const DocumentManagement: React.FC = () => {
               
               const selectedDocs = documents.filter(d => selectedDocuments.includes(d.id));
               const deletePromises = selectedDocs.map(doc => 
-                fetch(`http://localhost:8000/api/rag/documents/${doc.rag_document_id || doc.filename}`, {
-                  method: 'DELETE',
-                  headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
-                  }
-                }).then(response => ({
-                  doc,
-                  response,
-                  success: response.ok
-                }))
+              fetch(`/api/rag/documents/${doc.rag_document_id || doc.filename}`, {
+                method: 'DELETE',
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+                }
+              }).then(response => ({
+                doc,
+                response,
+                success: response.ok
+              }))
               );
 
               const results = await Promise.allSettled(deletePromises);
@@ -362,7 +392,7 @@ const DocumentManagement: React.FC = () => {
           try {
             const selectedDocs = documents.filter(d => selectedDocuments.includes(d.id));
             const reprocessPromises = selectedDocs.map(doc => 
-              fetch(`http://localhost:8000/api/rag/documents/${doc.filename}/reprocess`, {
+              fetch(`/api/rag/documents/${doc.filename}/reprocess`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
