@@ -6,7 +6,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User, AuthContextType, LoginCredentials } from '../types/auth';
-import { isAuthenticated, getUserInfo, getAccessToken, logout as authLogout, clearAuthTokens, saveAuthTokens } from '../utils/auth';
+import { getUserInfo, getAccessToken, logout as authLogout, clearAuthTokens, saveAuthTokens } from '../utils/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
