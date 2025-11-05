@@ -23,10 +23,12 @@ httpx==0.25.2
 
 # 工具库
 pydantic==2.5.0
+pydantic-settings==2.4.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 python-dotenv==1.0.0
 numpy==1.24.3
+psutil==5.9.8
 
 # 邮件发送和认证相关
 fastapi-mail==1.4.1
