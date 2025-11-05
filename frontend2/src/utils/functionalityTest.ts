@@ -129,7 +129,6 @@ function testRoutingSystem(): FunctionalityTestResult {
     // 检查当前URL和路由状态
     const currentPath = window.location.pathname;
     const hasHistory = typeof window.history !== 'undefined';
-    const hasHashRouter = window.location.hash.length > 0;
     
     // 检查是否有路由相关的DOM元素
     const hasRouterElements = document.querySelector('[data-testid*="route"], .main-content, .sidebar');

@@ -10,7 +10,7 @@ interface RatingModalProps {
 }
 
 const RatingModal: React.FC<RatingModalProps> = ({
-  resourceId,
+  resourceId: _resourceId,
   resourceTitle,
   onClose,
   onRatingSubmit

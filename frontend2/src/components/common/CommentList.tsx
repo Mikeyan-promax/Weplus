@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 import './CommentList.css';
@@ -23,8 +23,13 @@ interface CommentListProps {
   loading?: boolean;
 }
 
+/**
+ * 评论列表组件：
+ * - 展示评论与回复；支持加载更多与提交回复
+ * - resourceId 当前未直接使用，预留给后续筛选/加载
+ */
 const CommentList: React.FC<CommentListProps> = ({
-  resourceId,
+  resourceId: _resourceId,
   comments,
   onReply,
   onLoadMore,

@@ -9,8 +9,13 @@ interface CommentFormProps {
   loading?: boolean;
 }
 
+/**
+ * 评论表单组件：
+ * - 输入并提交评论内容；支持快捷键 Ctrl+Enter
+ * - resourceId 当前未使用，预留扩展，避免告警
+ */
 const CommentForm: React.FC<CommentFormProps> = ({
-  resourceId,
+  resourceId: _resourceId,
   onSubmit,
   placeholder = "写下你的评论...",
   buttonText = "发布评论",

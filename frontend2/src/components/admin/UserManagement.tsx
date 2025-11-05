@@ -47,10 +47,9 @@ const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [stats, setStats] = useState<UserStats | null>(null);// 搜索和过滤状态
+  const [_stats, setStats] = useState<UserStats | null>(null); // 统计数据（当前未直接用于渲染）
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
-  const [roleFilter, setRoleFilter] = useState('');
   const [verificationFilter, setVerificationFilter] = useState('');
   const [registrationDateFrom, setRegistrationDateFrom] = useState('');
   const [registrationDateTo, setRegistrationDateTo] = useState('');
@@ -78,7 +77,7 @@ const UserManagement: React.FC = () => {
   const [deleteUsername, setDeleteUsername] = useState('');
   const [deleteUserEmail, setDeleteUserEmail] = useState('');
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const [, setTotalUsers] = useState(0); // 总用户数当前未直接用于渲染，仅用于计算分页
   const itemsPerPage = 10;
 
   // 返回管理系统主页

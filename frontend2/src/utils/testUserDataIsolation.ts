@@ -12,6 +12,27 @@ interface TestResult {
   message: string;
 }
 
+// 类型定义：用户偏好、聊天消息、通知设置
+interface UserPreferences {
+  theme: string;
+  language: string;
+}
+
+interface ChatMessage {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant';
+  timestamp: number;
+}
+
+interface NotificationSettings {
+  messageNotifications: boolean;
+  activityReminders: boolean;
+  emailNotifications: boolean;
+  profileVisibility: boolean;
+  dataSharing: boolean;
+}
+
 // 模拟用户信息
 const testUsers: TestUser[] = [
   { id: 'user1', name: '张三' },
@@ -73,11 +94,11 @@ function testBasicDataIsolation(): TestResult {
     
     // 验证用户1的数据
     currentTestUser = testUsers[0];
-    const user1Data = getUserData(USER_DATA_TYPES.USER_PREFERENCES);
+    const user1Data = getUserData<UserPreferences>(USER_DATA_TYPES.USER_PREFERENCES);
     
     // 验证用户2的数据
     currentTestUser = testUsers[1];
-    const user2Data = getUserData(USER_DATA_TYPES.USER_PREFERENCES);
+    const user2Data = getUserData<UserPreferences>(USER_DATA_TYPES.USER_PREFERENCES);
     
     const passed = user1Data?.theme === 'dark' && 
                    user1Data?.language === 'zh' &&
@@ -118,10 +139,10 @@ function testChatHistoryIsolation(): TestResult {
     
     // 验证隔离
     currentTestUser = testUsers[0];
-    const retrievedUser1Messages = getUserData(USER_DATA_TYPES.CHAT_HISTORY);
+    const retrievedUser1Messages = getUserData<ChatMessage[]>(USER_DATA_TYPES.CHAT_HISTORY, []);
     
     currentTestUser = testUsers[1];
-    const retrievedUser2Messages = getUserData(USER_DATA_TYPES.CHAT_HISTORY);
+    const retrievedUser2Messages = getUserData<ChatMessage[]>(USER_DATA_TYPES.CHAT_HISTORY, []);
     
     const passed = retrievedUser1Messages?.length === 2 &&
                    retrievedUser2Messages?.length === 2 &&
@@ -168,10 +189,10 @@ function testUserSettingsIsolation(): TestResult {
     
     // 验证隔离
     currentTestUser = testUsers[0];
-    const retrievedUser1Settings = getUserData(USER_DATA_TYPES.NOTIFICATION_SETTINGS);
+    const retrievedUser1Settings = getUserData<NotificationSettings>(USER_DATA_TYPES.NOTIFICATION_SETTINGS);
     
     currentTestUser = testUsers[1];
-    const retrievedUser2Settings = getUserData(USER_DATA_TYPES.NOTIFICATION_SETTINGS);
+    const retrievedUser2Settings = getUserData<NotificationSettings>(USER_DATA_TYPES.NOTIFICATION_SETTINGS);
     
     const passed = retrievedUser1Settings?.messageNotifications === true &&
                    retrievedUser1Settings?.activityReminders === false &&
@@ -203,8 +224,8 @@ function testDataClearing(): TestResult {
     clearUserData();
     
     // 验证数据已清理
-    const preferences = getUserData(USER_DATA_TYPES.USER_PREFERENCES);
-    const chatHistory = getUserData(USER_DATA_TYPES.CHAT_HISTORY);
+    const preferences = getUserData<UserPreferences>(USER_DATA_TYPES.USER_PREFERENCES);
+    const chatHistory = getUserData<ChatMessage[]>(USER_DATA_TYPES.CHAT_HISTORY);
     
     const passed = preferences === null && chatHistory === null;
     

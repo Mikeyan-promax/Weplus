@@ -1,20 +1,26 @@
 import React from 'react';
 import ChatMessage from './ChatMessage';
+import type { Message } from '../types/Message';
 import './RAGChat.css';
 
 const ChatUITest: React.FC = () => {
-  const testMessages = [
+  /**
+   * 测试消息数据：
+   * - 使用 Message 类型，满足 ChatMessageProps 要求
+   * - timestamp 为 Date 类型，sender 为 'user' | 'assistant'
+   */
+  const testMessages: Message[] = [
     {
       id: '1',
       content: '你好！我是WePlus智能助手，有什么可以帮助您的吗？',
-      isUser: false,
-      timestamp: new Date(Date.now() - 300000).toISOString()
+      sender: 'assistant',
+      timestamp: new Date(Date.now() - 300000)
     },
     {
       id: '2',
       content: '请帮我介绍一下Markdown的基本语法',
-      isUser: true,
-      timestamp: new Date(Date.now() - 240000).toISOString()
+      sender: 'user',
+      timestamp: new Date(Date.now() - 240000)
     },
     {
       id: '3',
@@ -85,14 +91,14 @@ print(fibonacci(10))
 > > 嵌套引用
 
 希望这个介绍对您有帮助！`,
-      isUser: false,
-      timestamp: new Date(Date.now() - 180000).toISOString()
+      sender: 'assistant',
+      timestamp: new Date(Date.now() - 180000)
     },
     {
       id: '4',
       content: '太棒了！能再展示一些数学公式的例子吗？',
-      isUser: true,
-      timestamp: new Date(Date.now() - 120000).toISOString()
+      sender: 'user',
+      timestamp: new Date(Date.now() - 120000)
     },
     {
       id: '5',
@@ -118,14 +124,14 @@ c & d
 $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
 
 这些公式在学术和工程领域都很常用！`,
-      isUser: false,
-      timestamp: new Date(Date.now() - 60000).toISOString()
+      sender: 'assistant',
+      timestamp: new Date(Date.now() - 60000)
     },
     {
       id: '6',
       content: '非常感谢！这个聊天界面看起来很棒 👍',
-      isUser: true,
-      timestamp: new Date().toISOString()
+      sender: 'user',
+      timestamp: new Date()
     }
   ];
 
@@ -138,20 +144,18 @@ $$\\sum_{i=1}^{n} i = \\frac{n(n+1)}{2}$$
       
       <div className="messages-container">
         {testMessages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            content={message.content}
-            isUser={message.isUser}
-            timestamp={message.timestamp}
-          />
+          <ChatMessage key={message.id} message={message} />
         ))}
         
         {/* 打字指示器测试 */}
         <ChatMessage
-          content=""
-          isUser={false}
-          timestamp={new Date().toISOString()}
-          isTyping={true}
+          message={{
+            id: 'typing',
+            content: '',
+            sender: 'assistant',
+            timestamp: new Date(),
+            isTyping: true
+          }}
         />
       </div>
     </div>

@@ -36,7 +36,8 @@ const OtherTools: React.FC = () => {
   /**
    * 工具注册表：集中管理标签、描述、分类与渲染组件
    */
-  const tools: { key: ToolKey; label: string; desc: string; category: Category; render: () => JSX.Element; keywords?: string }[] = [
+  // 修正类型：不依赖 JSX 命名空间，改用 React.ReactNode
+  const tools: { key: ToolKey; label: string; desc: string; category: Category; render: () => React.ReactNode; keywords?: string }[] = [
     { key: 'json', label: 'JSON 工具', desc: '格式化、校验与压缩 JSON 文本', category: '文本与编码', render: () => <JSONTool /> },
     { key: 'timestamp', label: '时间戳转换', desc: '秒/毫秒时间戳与日期互转', category: '转换与计算', render: () => <TimestampTool /> },
     { key: 'image', label: '图片压缩', desc: '浏览器端压缩图片并下载', category: '媒体处理', render: () => <ImageCompressorTool /> },
@@ -581,7 +582,7 @@ function readImageFromFile(file: File): Promise<HTMLImageElement> {
       URL.revokeObjectURL(url);
       resolve(img);
     };
-    img.onerror = (e) => reject(new Error('图片加载失败'));
+    img.onerror = () => reject(new Error('图片加载失败'));
     img.src = url;
   });
 }
@@ -1094,7 +1095,8 @@ const PDFTools: React.FC = () => {
       pages.forEach((p) => out.addPage(p));
     }
     const pdfBytes = await out.save();
-    const url = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' }));
+    // 修正类型：显式使用 ArrayBuffer 以满足 BlobPart 要求
+    const url = URL.createObjectURL(new Blob([pdfBytes.buffer as ArrayBuffer], { type: 'application/pdf' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = 'merged.pdf';
@@ -1137,7 +1139,8 @@ const PDFTools: React.FC = () => {
     const copied = await out.copyPages(doc, pages);
     copied.forEach((p) => out.addPage(p));
     const bytes = await out.save();
-    const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
+    // 修正类型：显式使用 ArrayBuffer 以满足 BlobPart 要求
+    const url = URL.createObjectURL(new Blob([bytes.buffer as ArrayBuffer], { type: 'application/pdf' }));
     const a = document.createElement('a');
     a.href = url;
     a.download = 'split.pdf';

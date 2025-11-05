@@ -11,8 +11,15 @@ interface AnimatedButtonProps {
   icon?: string;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  // 允许外部传入内联样式，提升灵活性
+  style?: React.CSSProperties;
 }
 
+/**
+ * AnimatedButton 组件：
+ * - 提供带动效的按钮；支持 variant/size/禁用/加载态等
+ * - 新增 style 属性，允许传入内联样式
+ */
 const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   children,
   onClick,
@@ -22,7 +29,8 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
   loading = false,
   icon,
   className = '',
-  type = 'button'
+  type = 'button',
+  style
 }) => {
   const [isClicked, setIsClicked] = useState(false);
 
@@ -53,6 +61,7 @@ const AnimatedButton: React.FC<AnimatedButtonProps> = ({
       className={buttonClass}
       onClick={handleClick}
       disabled={disabled || loading}
+      style={style}
     >
       <span className="btn-content">
         {loading && (
