@@ -4,7 +4,7 @@
 """
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import os
@@ -18,6 +18,7 @@ import json
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from datetime import datetime
+from urllib.parse import urlparse
 
 # 导入数据库模型和配置
 from database.study_resources_models import (
@@ -101,6 +102,15 @@ historical_default = Path(__file__).parent.parent.parent / "data" / "study_resou
 if historical_default != UPLOAD_DIR:
     FALLBACK_DIRS.append(historical_default)
 
+# 追加历史常用目录（旧版本可能写入到 uploads 而非 study_resources）
+old_uploads_dir_1 = Path(__file__).parent.parent.parent / "data" / "uploads"
+old_uploads_dir_2 = Path(__file__).parent.parent.parent / "uploads"
+for d in [old_uploads_dir_1, old_uploads_dir_2]:
+    try:
+        FALLBACK_DIRS.append(d)
+    except Exception:
+        pass
+
 def _get_media_type(file_path: Path) -> str:
     """根据文件扩展名获取媒体类型（MIME）
     - 统一由后端返回合理的类型，前端根据 Blob.type 渲染
@@ -171,6 +181,8 @@ def _resolve_resource_file_path(resource: Any) -> Path:
         # 容器常用持久化卷路径（Railway Volumes 挂载点）
         common_data_dir = Path('/data/study_resources')
         extra_fallbacks.append(common_data_dir)
+        # 历史容器路径（旧构建可能落在 /data/uploads）
+        extra_fallbacks.append(Path('/data/uploads'))
     except Exception:
         pass
 
@@ -800,7 +812,7 @@ async def preview_resource(resource_id: int):
     """预览资源文件
     函数级注释：
     - 根据资源ID定位文件（含容错回退），返回内联 FileResponse 用于前端预览。
-    - 失败场景：资源不存在或文件无法找到时返回 404。
+    - 失败场景：资源不存在或文件无法找到；若存在有效的 source_url，则安全重定向到该URL。
     """
     try:
         # 获取资源信息
@@ -810,6 +822,13 @@ async def preview_resource(resource_id: int):
         # 统一使用容错解析定位文件
         file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
+            # 文件缺失时，尝试使用 source_url 安全重定向兜底
+            src_url = getattr(resource, 'source_url', None) if not isinstance(resource, dict) else resource.get('source_url')
+            if src_url:
+                parsed = urlparse(src_url)
+                if parsed.scheme in ('http', 'https'):
+                    logger.warning(f"资源文件缺失，重定向到 source_url: id={resource_id}, url={src_url}")
+                    return RedirectResponse(url=src_url, status_code=302)
             raise HTTPException(status_code=404, detail="文件不存在")
 
         # 根据文件类型返回适当的媒体类型
@@ -833,6 +852,7 @@ async def download_resource(resource_id: int):
     函数级注释：
     - 根据资源ID定位文件（含容错回退），以附件形式返回 FileResponse。
     - 下载文件名优先使用资源标题 + 原始扩展名，避免出现双点扩展名。
+    - 若文件缺失且存在有效的 source_url，则重定向到该URL作为兜底下载。
     """
     try:
         resource = StudyResource.get_by_id(resource_id)
@@ -846,6 +866,13 @@ async def download_resource(resource_id: int):
 
         file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
+            # 文件缺失时，尝试使用 source_url 安全重定向兜底
+            src_url = getattr(resource, 'source_url', None) if not isinstance(resource, dict) else resource.get('source_url')
+            if src_url:
+                parsed = urlparse(src_url)
+                if parsed.scheme in ('http', 'https'):
+                    logger.warning(f"资源文件缺失，下载重定向到 source_url: id={resource_id}, url={src_url}")
+                    return RedirectResponse(url=src_url, status_code=302)
             raise HTTPException(status_code=404, detail="文件不存在")
 
         # 增加下载次数 - 暂时跳过，因为需要实现
