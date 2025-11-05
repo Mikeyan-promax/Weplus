@@ -13,6 +13,7 @@ import shutil
 import logging
 import hashlib
 from pathlib import Path
+from pathlib import PureWindowsPath, PurePosixPath
 import json
 import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
@@ -143,16 +144,43 @@ def _resolve_resource_file_path(resource: Any) -> Path:
     if not raw_path:
         return UPLOAD_DIR / "__missing__"
 
-    primary = Path(str(raw_path))
+    # 统一规范化原始路径，兼容 Windows 与 POSIX
+    raw_str = str(raw_path)
+    primary = Path(raw_str)
     if primary.exists():
         return primary
 
-    # 以文件名为准进行回退查找
-    basename = Path(str(raw_path)).name
+    # 以文件名为准进行回退查找（双重兼容）
+    basename_candidates = []
+    try:
+        basename_candidates.append(PureWindowsPath(raw_str).name)
+    except Exception:
+        pass
+    try:
+        basename_candidates.append(PurePosixPath(raw_str.replace('\\', '/')).name)
+    except Exception:
+        pass
+    # 去重并剔除空值
+    basename_candidates = [b for i, b in enumerate(basename_candidates) if b and b not in basename_candidates[:i]]
+    if not basename_candidates:
+        basename_candidates = [Path(raw_str).name]
 
-    candidates = [
-        UPLOAD_DIR / basename,
-    ] + [d / basename for d in FALLBACK_DIRS]
+    # 追加候选目录（主目录 + 回退目录 + 常见容器持久化目录）
+    extra_fallbacks = []
+    try:
+        # 容器常用持久化卷路径（Railway Volumes 挂载点）
+        common_data_dir = Path('/data/study_resources')
+        extra_fallbacks.append(common_data_dir)
+    except Exception:
+        pass
+
+    candidates: List[Path] = []
+    for bn in basename_candidates:
+        candidates.append(UPLOAD_DIR / bn)
+        for d in FALLBACK_DIRS:
+            candidates.append(d / bn)
+        for d in extra_fallbacks:
+            candidates.append(d / bn)
 
     for cand in candidates:
         try:
@@ -163,10 +191,11 @@ def _resolve_resource_file_path(resource: Any) -> Path:
             continue
 
     # 所有候选均不存在，返回主目录下的候选用于错误提示
-    missing = UPLOAD_DIR / basename
+    missing = UPLOAD_DIR / basename_candidates[0]
     logger.warning(
         f"资源文件定位失败，resource_id={getattr(resource, 'id', None) or (resource.get('id') if isinstance(resource, dict) else None)}, "
-        f"原始路径={raw_path}, 尝试目录={[str(c) for c in candidates]}, 返回候选={missing}"
+        f"原始路径={raw_path}, 主目录={UPLOAD_DIR}, 回退目录={[str(d) for d in FALLBACK_DIRS + extra_fallbacks]}, "
+        f"候选文件名={basename_candidates}, 尝试路径样本={str(candidates[:6])}, 返回候选={missing}"
     )
     return missing
 

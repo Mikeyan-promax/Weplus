@@ -34,6 +34,9 @@ http {
             try_files $uri $uri/ /index.html;
         }
 
+        # 上传大小限制（预览/上传文件）
+        client_max_body_size 50m;
+
         # 后端 API 反向代理
         # 去掉 proxy_pass 末尾斜杠以保留 /api 前缀
         location /api/ {
@@ -43,6 +46,12 @@ http {
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
+            # 提高流式与长请求的超时，避免 499/502
+            proxy_read_timeout 300;
+            proxy_send_timeout 300;
+            proxy_connect_timeout 60;
+            # SSE/流式响应优化（禁用缓冲）
+            proxy_buffering off;
         }
     }
 }

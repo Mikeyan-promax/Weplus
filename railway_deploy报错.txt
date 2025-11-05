@@ -1,38 +1,27 @@
-You reached the start of the range
-Nov 5, 2025, 2:58 PM
-Starting Container
-2025-11-05 06:58:37,016 CRIT Supervisor is running as root.  Privileges were not dropped because no user is specified in the config file.  If you intend to run as root, you can set user=root in the config file to avoid this message.
-2025-11-05 06:58:37,018 INFO supervisord started with pid 1
-2025-11-05 06:58:38,021 INFO spawned: 'backend' with pid 2
-2025-11-05 06:58:38,024 INFO spawned: 'nginx' with pid 3
-[startup] ENV PORT=8080
-[startup] Rendering /etc/nginx/nginx.conf from template
-[startup] Rendered nginx.conf (first 200 lines):
-## Nginx 配置模板（Railway 单容器，动态端口）
-## - 静态站点：/usr/share/nginx/html
-## - 反向代理：/api/ -> 127.0.0.1:8000（Uvicorn）
-## - 端口：使用环境变量 8080
 worker_processes auto;
-http {
-            try_files $uri $uri/ /index.html;
+    tcp_nopush on;
+    types_hash_max_size 4096;
+    sendfile on;
+2025-11-05 14:26:24,710 INFO spawned: 'backend' with pid 2
+    # 将访问与错误日志输出到容器标准流，便于在 Railway 面板查看
+    access_log /dev/stdout;
 events {
+    tcp_nodelay on;
+    keepalive_timeout 65;
     include /etc/nginx/mime.types;
     worker_connections 1024;
     default_type application/octet-stream;
-        }
 }
-    sendfile on;
-    tcp_nopush on;
-    tcp_nodelay on;
-    keepalive_timeout 65;
-    types_hash_max_size 4096;
+http {
     server {
-        listen 8080;
+        listen 8080 default_server;
         server_name _;
         # 前端静态资源
         root /usr/share/nginx/html;
         index index.html;
         location / {
+            try_files $uri $uri/ /index.html;
+        }
         # 后端 API 反向代理
         # 去掉 proxy_pass 末尾斜杠以保留 /api 前缀
         location /api/ {
@@ -49,10 +38,12 @@ events {
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 [startup] Nginx will listen on PORT=8080
-2025/11/05 06:58:38 [error] 8#8: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 100.64.0.2, server: _, request: "GET /api/healthz HTTP/1.1", upstream: "http://127.0.0.1:8000/api/healthz", host: "healthcheck.railway.app"
-2025-11-05 06:58:39,137 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
-2025-11-05 06:58:39,137 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
-2025/11/05 06:58:39 [error] 9#9: *3 connect() failed (111: Connection refused) while connecting to upstream, client: 100.64.0.2, server: _, request: "GET /api/healthz HTTP/1.1", upstream: "http://127.0.0.1:8000/api/healthz", host: "healthcheck.railway.app"
+2025-11-05 14:26:25,712 INFO success: backend entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+2025-11-05 14:26:25,713 INFO success: nginx entered RUNNING state, process has stayed up for > than 1 seconds (startsecs)
+100.64.0.2 - - [05/Nov/2025:14:26:25 +0000] "GET /api/healthz HTTP/1.1" 502 157 "-" "RailwayHealthCheck/1.0"
+2025/11/05 14:26:25 [error] 8#8: *1 connect() failed (111: Connection refused) while connecting to upstream, client: 100.64.0.2, server: _, request: "GET /api/healthz HTTP/1.1", upstream: "http://127.0.0.1:8000/api/healthz", host: "healthcheck.railway.app"
+2025/11/05 14:26:26 [error] 9#9: *3 connect() failed (111: Connection refused) while connecting to upstream, client: 100.64.0.2, server: _, request: "GET /api/healthz HTTP/1.1", upstream: "http://127.0.0.1:8000/api/healthz", host: "healthcheck.railway.app"
+100.64.0.2 - - [05/Nov/2025:14:26:26 +0000] "GET /api/healthz HTTP/1.1" 502 157 "-" "RailwayHealthCheck/1.0"
 INFO:app.services.rag_service:RAG服务初始化完成
 INFO:app.services.postgresql_vector_service:PostgreSQL向量存储服务初始化完成
 INFO:app.services.document_service:文档服务初始化完成
@@ -60,6 +51,7 @@ INFO:app.services.rag_service:RAG服务初始化完成
 INFO:app.services.postgresql_vector_service:PostgreSQL向量存储服务初始化完成
 INFO:app.services.postgresql_vector_service:PostgreSQL向量存储服务初始化完成
 INFO:app.services.rag_service:RAG服务初始化完成
+INFO:app.api.study_resources_api:使用全局设置的学习资源目录: uploads/study_resources
 INFO:     Started server process [2]
 INFO:     Waiting for application startup.
 🚀 WePlus RAG Campus Assistant API 启动中...
@@ -68,5 +60,109 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 INFO:     100.64.0.2:0 - "GET /api/healthz HTTP/1.1" 200 OK
-INFO:     100.64.0.3:54836 - "GET / HTTP/1.1" 200 OK
-INFO:     100.64.0.3:54836 - "GET /favicon.ico HTTP/1.1" 404 Not Found
+100.64.0.2 - - [05/Nov/2025:14:26:29 +0000] "GET /api/healthz HTTP/1.1" 200 48 "-" "RailwayHealthCheck/1.0"
+100.64.0.3 - - [05/Nov/2025:14:27:10 +0000] "GET / HTTP/1.1" 200 456 "https://weplus-production.up.railway.app/app/profile" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+100.64.0.3 - - [05/Nov/2025:14:27:10 +0000] "GET /assets/index-DidCKKLk.css HTTP/1.1" 200 190439 "https://weplus-production.up.railway.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+100.64.0.3 - - [05/Nov/2025:14:27:10 +0000] "GET /assets/index-CVv8KagV.js HTTP/1.1" 200 1966575 "https://weplus-production.up.railway.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+100.64.0.3 - - [05/Nov/2025:14:27:16 +0000] "GET /vite.svg HTTP/1.1" 200 1497 "https://weplus-production.up.railway.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+同步数据库连接池创建成功
+(trapped) error reading bcrypt version
+INFO:     100.64.0.3:0 - "POST /api/auth/login HTTP/1.1" 200 OK
+100.64.0.3 - - [05/Nov/2025:14:27:56 +0000] "POST /api/auth/login HTTP/1.1" 200 734 "https://weplus-production.up.railway.app/login" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+100.64.0.3 - - [05/Nov/2025:14:28:02 +0000] "GET / HTTP/1.1" 304 0 "https://weplus-production.up.railway.app/app/profile" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+100.64.0.3 - - [05/Nov/2025:14:28:02 +0000] "GET /assets/index-CVv8KagV.js HTTP/1.1" 304 0 "https://weplus-production.up.railway.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+100.64.0.3 - - [05/Nov/2025:14:28:02 +0000] "GET /assets/index-DidCKKLk.css HTTP/1.1" 304 0 "https://weplus-production.up.railway.app/" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+INFO:     100.64.0.3:0 - "POST /api/auth/login HTTP/1.1" 200 OK
+100.64.0.3 - - [05/Nov/2025:14:28:21 +0000] "POST /api/auth/login HTTP/1.1" 200 734 "https://weplus-production.up.railway.app/login" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+收到流式聊天请求: 海洋与大气学院...
+使用RAG模式进行流式回答
+2025/11/05 14:29:09 [info] 12#12: *8 epoll_wait() reported that client prematurely closed connection, so upstream connection is closed too while sending request to upstream, client: 100.64.0.3, server: _, request: "POST /api/rag/chat/stream HTTP/1.1", upstream: "http://127.0.0.1:8000/api/rag/chat/stream", host: "weplus-production.up.railway.app", referrer: "https://weplus-production.up.railway.app/app/chat"
+100.64.0.3 - - [05/Nov/2025:14:29:09 +0000] "POST /api/rag/chat/stream HTTP/1.1" 499 0 "https://weplus-production.up.railway.app/app/chat" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+2025/11/05 14:29:54 [info] 13#13: *12 epoll_wait() reported that client prematurely closed connection, so upstream connection is closed too while sending request to upstream, client: 100.64.0.4, server: _, request: "POST /api/rag/chat/stream HTTP/1.1", upstream: "http://127.0.0.1:8000/api/rag/chat/stream", host: "weplus-production.up.railway.app", referrer: "https://weplus-production.up.railway.app/app/chat"
+100.64.0.4 - - [05/Nov/2025:14:29:54 +0000] "POST /api/rag/chat/stream HTTP/1.1" 499 0 "https://weplus-production.up.railway.app/app/chat" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+从数据库获取到 14 个文档块
+生成 1 个新嵌入向量
+HTTP Request: POST https://ark.cn-beijing.volces.com/api/v3/embeddings "HTTP/1.1 200 OK"
+PostgreSQL连接池初始化成功: pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com:5432/weplus_db
+嵌入向量生成完成: 1 个文本, 缓存命中: 0
+生成 1 个新嵌入向量
+INFO:     100.64.0.4:0 - "GET /api/study-resources/categories HTTP/1.1" 200 OK
+100.64.0.4 - - [05/Nov/2025:14:30:08 +0000] "GET /api/study-resources/categories HTTP/1.1" 200 3277 "https://weplus-production.up.railway.app/app/study" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+PostgreSQL连接池初始化成功: pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com:5432/weplus_db
+INFO:     100.64.0.4:0 - "GET /api/study-resources/resources?page=1&limit=20 HTTP/1.1" 200 OK
+100.64.0.4 - - [05/Nov/2025:14:30:20 +0000] "GET /api/study-resources/resources?page=1&limit=20 HTTP/1.1" 200 2285 "https://weplus-production.up.railway.app/app/study" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+PostgreSQL连接池初始化成功: pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com:5432/weplus_db
+资源文件定位失败，resource_id=24, 原始路径=C:\Users\MikeYan-PC\Desktop\weplus\backend\data\study_resources\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3, 尝试目录=['uploads/study_resources/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3', 'uploads/study_resources/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3', 'uploads/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3', '/app/data/study_resources/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3'], 返回候选=uploads/study_resources/C:\Users\MikeYan-PC\Desktop\weplus\backend\data\study_resources\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3
+INFO:     100.64.0.4:0 - "GET /api/study-resources/24/preview HTTP/1.1" 404 Not Found
+100.64.0.4 - - [05/Nov/2025:14:30:25 +0000] "GET /api/study-resources/24/preview HTTP/1.1" 404 28 "https://weplus-production.up.railway.app/app/study" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+PostgreSQL连接池初始化成功: pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com:5432/weplus_db
+资源文件定位失败，resource_id=24, 原始路径=C:\Users\MikeYan-PC\Desktop\weplus\backend\data\study_resources\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3, 尝试目录=['uploads/study_resources/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3', 'uploads/study_resources/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3', 'uploads/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3', '/app/data/study_resources/C:\\Users\\MikeYan-PC\\Desktop\\weplus\\backend\\data\\study_resources\\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3'], 返回候选=uploads/study_resources/C:\Users\MikeYan-PC\Desktop\weplus\backend\data\study_resources\60d3c2a6-a5b1-4ce1-ad58-61c06ca0fe45.mp3
+INFO:     100.64.0.4:0 - "GET /api/study-resources/24/download HTTP/1.1" 404 Not Found
+100.64.0.4 - - [05/Nov/2025:14:30:40 +0000] "GET /api/study-resources/24/download HTTP/1.1" 404 28 "https://weplus-production.up.railway.app/app/study" "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36 Edg/142.0.0.0"
+
+
+
+HTTP Logs
+Search HTTP logs e.g. @path:/api/users @httpStatus:200
+You reached the start of the range
+Nov 5, 2025, 10:24 PM
+GET
+/
+200
+173ms
+GET
+/assets/index-DidCKKLk.css
+200
+6ms
+GET
+/assets/index-CVv8KagV.js
+200
+27ms
+GET
+/vite.svg
+200
+1ms
+POST
+/api/auth/login
+200
+29秒
+GET
+/
+304
+1ms
+GET
+/assets/index-CVv8KagV.js
+304
+1ms
+GET
+/assets/index-DidCKKLk.css
+304
+1ms
+POST
+/api/auth/login
+200
+11秒
+POST
+/api/rag/chat/stream
+499
+38秒
+POST
+/api/rag/chat/stream
+499
+41秒
+GET
+/api/study-resources/categories
+200
+11秒
+GET
+/api/study-resources/resources
+200
+11秒
+GET
+/api/study-resources/24/preview
+404
+2秒
+GET
+/api/study-resources/24/download
+404
+13秒
