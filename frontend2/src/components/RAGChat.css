@@ -2,11 +2,11 @@
 .rag-chat {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  /* 使用最小高度，避免强制固定视窗高度导致嵌套滚动 */
+  min-height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: visible;
 }
 
 /* 聊天头部样式已移除，功能已合并到PageHeader */
@@ -48,16 +48,18 @@
 /* 消息容器 */
 .messages-container {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* 交由页面统一滚动，避免内部再创建滚动容器 */
+  overflow: visible;
   position: relative;
   background: rgba(0, 0, 0, 0.3);
-  height: calc(100vh - 200px); /* 增加可用高度，减去顶部导航栏和输入框的高度 */
+  /* 让高度自适应内容 */
+  height: auto;
 }
 
 .messages-list {
-  height: 100%;
-  overflow-y: auto;
+  /* 统一交由外层滚动 */
+  height: auto;
+  overflow: visible;
   padding: 20px;
   scroll-behavior: smooth;
 }

@@ -1,4 +1,4 @@
-/* 侧边栏容器 */
+/* 侧边栏容器（桌面端固定，始终顶到底占满视口高度） */
 .sidebar {
   width: 280px;
   background: rgba(255, 255, 255, 0.95);
@@ -8,8 +8,11 @@
   flex-direction: column;
   box-shadow: 2px 0 20px rgba(0, 0, 0, 0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 100;
+  position: fixed; /* 固定定位，独立于右侧滚动 */
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 100; /* 保持在内容层之上，但低于移动端按钮 */
   height: 100vh;
   min-height: 100vh;
 }
@@ -157,7 +160,7 @@
 
 /* 移动端遮罩层 */
 .sidebar-overlay {
-  display: none;
+  display: none; /* 默认不显示且不拦截点击 */
   position: fixed;
   top: 0;
   left: 0;
@@ -168,10 +171,13 @@
   z-index: 99;
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none; /* 默认不接收事件，避免遮挡点击 */
 }
 
 .sidebar-overlay.active {
+  display: block;
   opacity: 1;
+  pointer-events: auto; /* 仅激活时接收点击以关闭菜单 */
 }
 
 /* 响应式设计 - 平板 */
@@ -208,10 +214,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-  
-  .sidebar-overlay {
-    display: block;
   }
   
   .sidebar {

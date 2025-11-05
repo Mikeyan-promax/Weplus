@@ -17,12 +17,20 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/*
+ * 全局 body 样式（移动端滚动修复）
+ * 目的：避免 body 作为 flex 容器导致与内部容器产生双滚动条；
+ *       保证移动端触屏上下自由滚动与点击输入框正常工作。
+ */
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
+  width: 100%;
   min-width: 320px;
   min-height: 100vh;
+  display: block; /* 不再使用 flex，避免与内部容器产生额外滚动上下文 */
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch; /* iOS 惯性滚动 */
+  touch-action: pan-y; /* 允许垂直滚动手势 */
 }
 
 #root {

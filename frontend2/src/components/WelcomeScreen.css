@@ -5,8 +5,8 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* 页面滚动由窗口承担，避免内部滚动容器导致双滚动条 */
+  overflow: visible;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   padding: 20px 0;
 }

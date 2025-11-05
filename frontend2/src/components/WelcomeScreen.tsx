@@ -4,6 +4,13 @@ import AnimatedButton from './AnimatedButton';
 import LoadingSpinner from './LoadingSpinner';
 import './WelcomeScreen.css';
 
+/**
+ * 欢迎页组件（主应用首页）
+ * 功能：
+ * - 展示问候与功能亮点
+ * - 提供“快速开始”入口（已修正跳转到 /app/* 路由）
+ * - 底部“开始体验 AI 助手”按钮跳转到 /app/chat
+ */
 const WelcomeScreen: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isLoading, setIsLoading] = useState(true);
@@ -57,32 +64,32 @@ const WelcomeScreen: React.FC = () => {
   };
 
   const quickActions = [
-    { 
-      title: 'AI智能助手', 
+    {
+      title: 'AI智能助手',
       description: '与DeepSeek AI对话，获取智能帮助',
-      icon: '🤖', 
-      path: '/chat',
+      icon: '🤖',
+      path: '/app/chat',
       color: 'primary'
     },
-    { 
-      title: '校园地图', 
-      description: '查看校园各个区域和建筑位置',
-      icon: '🗺️', 
-      path: '/map',
+    {
+      title: '学习资源',
+      description: '查看与管理学习资料，支持预览与下载',
+      icon: '📚',
+      path: '/app/study',
       color: 'success'
     },
-    { 
-      title: '用户信息', 
+    {
+      title: '用户信息',
       description: '管理个人资料和偏好设置',
-      icon: '👤', 
-      path: '/profile',
+      icon: '👤',
+      path: '/app/profile',
       color: 'secondary'
     },
-    { 
-      title: '食堂服务', 
-      description: '查看食堂菜单和营养信息',
-      icon: '🍽️', 
-      path: '/dining',
+    {
+      title: '其他功能',
+      description: '探索更多工具与实用功能',
+      icon: '⚙️',
+      path: '/app/other',
       color: 'outline'
     }
   ];
@@ -178,7 +185,7 @@ const WelcomeScreen: React.FC = () => {
             icon="🚀"
             className="glow"
           >
-            <Link to="/chat" style={{ color: 'inherit', textDecoration: 'none' }}>
+            <Link to="/app/chat" style={{ color: 'inherit', textDecoration: 'none' }}>
               开始体验 AI 助手
             </Link>
           </AnimatedButton>

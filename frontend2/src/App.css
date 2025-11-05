@@ -20,7 +20,8 @@ body {
 .app {
   display: flex;
   min-height: 100vh;
-  height: 100vh;
+  /* 移除固定高度，避免与内部滚动产生双滚动条 */
+  height: auto;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
@@ -31,12 +32,14 @@ body {
   flex-direction: column;
   background: #ffffff;
   margin: 0;
+  margin-left: 280px; /* 为固定侧边栏预留空间，避免覆盖 */
   border-radius: 0;
   box-shadow: none;
-  overflow-y: auto;
-  overflow-x: hidden;
+  /* 让页面使用窗口滚动，避免在此创建额外滚动容器 */
+  overflow: visible;
   transition: all 0.3s ease;
-  height: 100vh;
+  min-height: 100vh;
+  height: auto;
 }
 
 /* 页面占位符 */
@@ -63,6 +66,7 @@ body {
 @media (max-width: 1024px) {
   .main-content {
     margin: 0;
+    margin-left: 260px; /* 与平板端侧边栏宽度保持一致 */
     border-radius: 0;
   }
   
@@ -80,6 +84,7 @@ body {
   
   .main-content {
     margin: 0;
+    margin-left: 0; /* 手机端不保留侧边栏空间 */
     border-radius: 0;
     min-height: calc(100vh - 20px);
   }
