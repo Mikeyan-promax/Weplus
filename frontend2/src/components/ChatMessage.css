@@ -1,0 +1,646 @@
+/* 聊天消息样式 - 模仿DeepSeek和ChatGPT */
+
+.chat-message-container {
+  display: flex;
+  margin-bottom: 16px;
+  max-width: 100%;
+  animation: messageSlideIn 0.3s ease-out;
+}
+
+.chat-message-container.user {
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+}
+
+.chat-message-container.assistant {
+  justify-content: flex-start;
+  flex-direction: row;
+}
+
+/* 头像样式 */
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin: 0 8px;
+  position: relative;
+}
+
+.assistant-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.user-avatar {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  box-shadow: 0 2px 8px rgba(79, 172, 254, 0.3);
+}
+
+.avatar-icon {
+  font-size: 16px;
+  color: white;
+  font-weight: 500;
+}
+
+/* 消息气泡包装器 */
+.message-bubble-wrapper {
+  max-width: calc(100% - 80px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-message-container.user .message-bubble-wrapper {
+  align-items: flex-end;
+}
+
+.chat-message-container.assistant .message-bubble-wrapper {
+  align-items: flex-start;
+}
+
+/* 消息气泡 */
+.message-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  position: relative;
+  word-wrap: break-word;
+  word-break: break-word;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.message-bubble:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 用户消息气泡 */
+.user-bubble {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.user-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: -8px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-left-color: #00f2fe;
+  border-bottom: none;
+  border-right: none;
+}
+
+/* 助手消息气泡 */
+.assistant-bubble {
+  background: #ffffff;
+  color: #2d3748;
+  border: 1px solid #e2e8f0;
+  border-bottom-left-radius: 4px;
+}
+
+.assistant-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -8px;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+  border-right-color: #ffffff;
+  border-bottom: none;
+  border-left: none;
+}
+
+.assistant-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: -9px;
+  width: 0;
+  height: 0;
+  border: 9px solid transparent;
+  border-right-color: #e2e8f0;
+  border-bottom: none;
+  border-left: none;
+}
+
+/* 打字气泡 */
+.typing-bubble {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  padding: 16px 20px;
+}
+
+/* 消息内容 */
+.message-content {
+  line-height: 1.5;
+  font-size: 14px;
+}
+
+.user-message-text {
+  font-weight: 500;
+}
+
+/* 时间戳 */
+.message-timestamp {
+  font-size: 11px;
+  color: #a0aec0;
+  margin: 2px 8px 0;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.chat-message-container:hover .message-timestamp {
+  opacity: 1;
+}
+
+.user-timestamp {
+  text-align: right;
+}
+
+.assistant-timestamp {
+  text-align: left;
+}
+
+/* 打字指示器 */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e0;
+  animation: typingPulse 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes typingPulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Markdown 样式 */
+.message-paragraph {
+  margin: 0 0 8px 0;
+}
+
+.message-paragraph:last-child {
+  margin-bottom: 0;
+}
+
+.message-list {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+
+.message-list.ordered {
+  list-style-type: decimal;
+}
+
+.message-list-item {
+  margin: 4px 0;
+}
+
+.message-link {
+  color: #4299e1;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s ease;
+}
+
+.message-link:hover {
+  border-bottom-color: #4299e1;
+}
+
+.user-bubble .message-link {
+  color: rgba(255, 255, 255, 0.9);
+  border-bottom-color: rgba(255, 255, 255, 0.3);
+}
+
+.user-bubble .message-link:hover {
+  border-bottom-color: rgba(255, 255, 255, 0.8);
+}
+
+/* 代码样式 */
+.inline-code {
+  background: #f7fafc;
+  color: #e53e3e;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-bubble .inline-code {
+  background: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.code-block-wrapper {
+  margin: 12px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: #edf2f7;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 12px;
+}
+
+.code-language {
+  color: #4a5568;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.copy-code-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  font-size: 12px;
+}
+
+.copy-code-btn:hover {
+  background: #cbd5e0;
+}
+
+.code-block-wrapper pre {
+  margin: 0;
+  padding: 16px;
+  background: #f8fafc;
+  overflow-x: auto;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.code-block-wrapper code {
+  background: none;
+  padding: 0;
+  border: none;
+  color: inherit;
+}
+
+/* 表格样式 */
+.message-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+
+.message-table-header {
+  background: #f7fafc;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 600;
+  border: 1px solid #e2e8f0;
+}
+
+.message-table-cell {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-bubble .message-table-header {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.user-bubble .message-table-cell {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 动画效果 */
+@keyframes messageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .message-bubble-wrapper {
+    max-width: calc(100% - 60px);
+  }
+  
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    margin: 0 6px;
+  }
+  
+  .avatar-icon {
+    font-size: 14px;
+  }
+  
+  .message-bubble {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+  
+  .message-content {
+    font-size: 14px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .assistant-bubble {
+    background: #2d3748;
+    color: #e2e8f0;
+    border-color: #4a5568;
+  }
+  
+  .assistant-bubble::after {
+    border-right-color: #2d3748;
+  }
+  
+  .assistant-bubble::before {
+    border-right-color: #4a5568;
+  }
+  
+  .typing-bubble {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .message-timestamp {
+    color: #718096;
+  }
+  
+  .typing-dot {
+    background: #718096;
+  }
+  
+  .inline-code {
+    background: #4a5568;
+    color: #fbb6ce;
+    border-color: #718096;
+  }
+  
+  .code-block-wrapper {
+    background: #1a202c;
+    border-color: #4a5568;
+  }
+  
+  .code-block-header {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .code-language {
+    color: #e2e8f0;
+  }
+  
+  .copy-code-btn:hover {
+    background: #4a5568;
+  }
+  
+  .code-block-wrapper pre {
+    background: #1a202c;
+  }
+  
+  .message-table-header {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .message-table-cell {
+    border-color: #4a5568;
+  }
+  
+  .message-link {
+    color: #63b3ed;
+  }
+  
+  .message-link:hover {
+    border-bottom-color: #63b3ed;
+  }
+}
+
+/* 数学公式错误样式 */
+.math-error {
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9em;
+  border: 1px solid #ffcdd2;
+}
+
+.dark-mode .math-error {
+  background-color: #3e2723;
+  color: #ff8a80;
+  border-color: #5d4037;
+}
+
+/* 数学公式容器优化 */
+.math-display {
+  margin: 1.2em 0;
+  text-align: center;
+  overflow-x: auto;
+  padding: 0.5em;
+  background-color: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border-left: 3px solid #2196f3;
+  transition: all 0.2s ease;
+}
+
+.math-display:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .math-display {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-left-color: #64b5f6;
+}
+
+[data-theme="dark"] .math-display:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.math-inline {
+  display: inline;
+  margin: 0 3px;
+  padding: 2px 4px;
+  background-color: rgba(33, 150, 243, 0.1);
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+.math-inline:hover {
+  background-color: rgba(33, 150, 243, 0.15);
+}
+
+[data-theme="dark"] .math-inline {
+  background-color: rgba(100, 181, 246, 0.15);
+}
+
+[data-theme="dark"] .math-inline:hover {
+  background-color: rgba(100, 181, 246, 0.25);
+}
+
+/* KaTeX字体大小优化 */
+.katex {
+  font-size: 1.1em !important;
+}
+
+.math-display .katex {
+  font-size: 1.2em !important;
+}
+
+/* 深色模式下的KaTeX样式优化 */
+[data-theme="dark"] .katex {
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .katex .base {
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .katex .mord {
+  color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .katex .mop {
+  color: #81c784 !important; /* 运算符用绿色 */
+}
+
+[data-theme="dark"] .katex .mrel {
+  color: #64b5f6 !important; /* 关系符用蓝色 */
+}
+
+[data-theme="dark"] .katex .mbin {
+  color: #ffb74d !important; /* 二元运算符用橙色 */
+}
+
+[data-theme="dark"] .katex .mopen,
+[data-theme="dark"] .katex .mclose {
+  color: #f06292 !important; /* 括号用粉色 */
+}
+
+[data-theme="dark"] .katex .mpunct {
+  color: #e0e0e0 !important; /* 标点符号 */
+}
+
+[data-theme="dark"] .katex .mfrac .frac-line {
+  border-bottom-color: #e0e0e0 !important; /* 分数线 */
+}
+
+[data-theme="dark"] .katex .sqrt > .root {
+  border-top-color: #e0e0e0 !important; /* 根号线 */
+}
+
+/* 移动端响应式优化 */
+@media (max-width: 768px) {
+  .math-display {
+    margin: 1em 0;
+    padding: 0.3em;
+    font-size: 0.9em;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .math-display .katex {
+    font-size: 1em !important;
+  }
+  
+  .math-inline {
+    margin: 0 2px;
+    padding: 1px 3px;
+    font-size: 0.95em;
+  }
+  
+  .math-inline .katex {
+    font-size: 0.95em !important;
+  }
+  
+  /* 移动端数学公式复制提示优化 */
+  .math-inline[title] {
+    position: relative;
+  }
+  
+  .math-inline[title]:active::after {
+    content: "已复制";
+    position: absolute;
+    top: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+  }
+  
+  [data-theme="dark"] .math-inline[title]:active::after {
+    background: rgba(255, 255, 255, 0.9);
+    color: black;
+  }
+}
+
+@media (max-width: 480px) {
+  .math-display {
+    margin: 0.8em 0;
+    padding: 0.2em;
+  }
+  
+  .math-display .katex {
+    font-size: 0.9em !important;
+  }
+  
+  .math-inline .katex {
+    font-size: 0.9em !important;
+  }
+}

@@ -1,0 +1,122 @@
+.breadcrumb {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 12px 24px;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 14px;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+}
+
+.breadcrumb-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #666;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.breadcrumb-link:hover {
+  color: #007bff;
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.breadcrumb-link i {
+  font-size: 12px;
+}
+
+.breadcrumb-current {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #333;
+  font-weight: 500;
+  padding: 4px 8px;
+}
+
+.breadcrumb-current i {
+  font-size: 12px;
+  color: #007bff;
+}
+
+.breadcrumb-separator {
+  margin: 0 8px;
+  color: #ccc;
+  font-size: 10px;
+}
+
+.breadcrumb-separator i {
+  font-size: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .breadcrumb {
+    padding: 8px 16px;
+    margin-bottom: 12px;
+  }
+  
+  .breadcrumb-list {
+    font-size: 13px;
+  }
+  
+  .breadcrumb-link span,
+  .breadcrumb-current span {
+    display: none;
+  }
+  
+  .breadcrumb-link i,
+  .breadcrumb-current i {
+    font-size: 14px;
+  }
+  
+  .breadcrumb-separator {
+    margin: 0 6px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .breadcrumb {
+    background: rgba(30, 30, 30, 0.9);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .breadcrumb-link {
+    color: #ccc;
+  }
+  
+  .breadcrumb-link:hover {
+    color: #4dabf7;
+    background-color: rgba(77, 171, 247, 0.1);
+  }
+  
+  .breadcrumb-current {
+    color: #fff;
+  }
+  
+  .breadcrumb-current i {
+    color: #4dabf7;
+  }
+  
+  .breadcrumb-separator {
+    color: #666;
+  }
+}

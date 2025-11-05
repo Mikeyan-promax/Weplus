@@ -1,0 +1,40 @@
+/* 认证页面容器样式 */
+.auth-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* 确保认证页面不显示侧边栏和头部 */
+.auth-container .app {
+  width: 100%;
+  height: 100%;
+}
+
+/* 认证页面的卡片样式调整 */
+.auth-container .login-container,
+.auth-container .register-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 450px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .auth-container {
+    padding: 10px;
+  }
+  
+  .auth-container .login-container,
+  .auth-container .register-container {
+    margin: 0;
+    border-radius: 15px;
+  }
+}

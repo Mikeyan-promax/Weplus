@@ -1,0 +1,109 @@
+{
+  "summary": {
+    "total_tests": 14,
+    "passed_tests": 9,
+    "failed_tests": 5,
+    "success_rate": 64.28571428571429,
+    "test_time": "2025-10-30T18:02:08.077001"
+  },
+  "detailed_results": [
+    {
+      "test_name": "后端健康检查",
+      "success": true,
+      "message": "后端服务正常运行",
+      "timestamp": "2025-10-30T18:01:53.475859",
+      "details": null
+    },
+    {
+      "test_name": "前端可访问性",
+      "success": true,
+      "message": "前端服务正常运行",
+      "timestamp": "2025-10-30T18:01:53.486337",
+      "details": null
+    },
+    {
+      "test_name": "发送验证码",
+      "success": true,
+      "message": "验证码发送成功",
+      "timestamp": "2025-10-30T18:01:56.769006",
+      "details": null
+    },
+    {
+      "test_name": "用户注册",
+      "success": true,
+      "message": "注册成功",
+      "timestamp": "2025-10-30T18:02:06.107911",
+      "details": null
+    },
+    {
+      "test_name": "用户登录",
+      "success": true,
+      "message": "登录成功，获取到访问令牌",
+      "timestamp": "2025-10-30T18:02:06.643494",
+      "details": null
+    },
+    {
+      "test_name": "获取学习资源",
+      "success": true,
+      "message": "学习资源列表为空",
+      "timestamp": "2025-10-30T18:02:06.949066",
+      "details": null
+    },
+    {
+      "test_name": "文档上传",
+      "success": false,
+      "message": "状态码: 500",
+      "timestamp": "2025-10-30T18:02:06.983081",
+      "details": "{\"detail\":\"文档处理失败: 'RAGService' object has no attribute 'process_document'\"}"
+    },
+    {
+      "test_name": "搜索查询: 人工智能是什么",
+      "success": true,
+      "message": "搜索成功但无结果",
+      "timestamp": "2025-10-30T18:02:06.989465",
+      "details": null
+    },
+    {
+      "test_name": "搜索查询: 机器学习",
+      "success": true,
+      "message": "搜索成功但无结果",
+      "timestamp": "2025-10-30T18:02:06.993466",
+      "details": null
+    },
+    {
+      "test_name": "搜索查询: 深度学习的定义",
+      "success": true,
+      "message": "搜索成功但无结果",
+      "timestamp": "2025-10-30T18:02:07.000003",
+      "details": null
+    },
+    {
+      "test_name": "RAG聊天: 什么是人工智能？...",
+      "success": false,
+      "message": "状态码: 500",
+      "timestamp": "2025-10-30T18:02:07.342172",
+      "details": null
+    },
+    {
+      "test_name": "RAG聊天: 机器学习和深度学习有什么区别？...",
+      "success": false,
+      "message": "状态码: 500",
+      "timestamp": "2025-10-30T18:02:07.413409",
+      "details": null
+    },
+    {
+      "test_name": "RAG聊天: 请解释一下AI的应用领域...",
+      "success": false,
+      "message": "状态码: 500",
+      "timestamp": "2025-10-30T18:02:08.063539",
+      "details": null
+    },
+    {
+      "test_name": "获取用户资料",
+      "success": false,
+      "message": "状态码: 404",
+      "timestamp": "2025-10-30T18:02:08.069099",
+      "details": null
+    }
+  ]
+}

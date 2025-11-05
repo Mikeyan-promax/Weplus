@@ -1,0 +1,145 @@
+.rating-stats {
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+.rating-stats--compact {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background: none;
+  margin: 0;
+}
+
+.rating-stats__summary {
+  margin-bottom: 20px;
+}
+
+.rating-stats__average {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.rating-stats__score {
+  font-size: 48px;
+  font-weight: 700;
+  color: #333;
+  line-height: 1;
+}
+
+.rating-stats__total {
+  color: #666;
+  font-size: 14px;
+}
+
+.rating-stats--compact .rating-stats__total {
+  font-size: 12px;
+  color: #999;
+}
+
+.rating-stats__distribution {
+  border-top: 1px solid #e0e0e0;
+  padding-top: 20px;
+}
+
+.rating-stats__distribution-title {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.rating-stats__bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rating-stats__bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rating-stats__star-label {
+  font-size: 14px;
+  color: #666;
+  min-width: 40px;
+  text-align: right;
+}
+
+.rating-stats__bar {
+  flex: 1;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rating-stats__bar-fill {
+  height: 100%;
+  background: #ffc107;
+  transition: width 0.3s ease;
+}
+
+.rating-stats__count {
+  font-size: 12px;
+  color: #666;
+  min-width: 30px;
+  text-align: right;
+}
+
+.rating-stats__empty {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.rating-stats__empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .rating-stats {
+    padding: 16px;
+  }
+  
+  .rating-stats__score {
+    font-size: 36px;
+  }
+  
+  .rating-stats__bar-row {
+    gap: 8px;
+  }
+  
+  .rating-stats__star-label {
+    min-width: 35px;
+    font-size: 13px;
+  }
+  
+  .rating-stats__count {
+    min-width: 25px;
+  }
+}
+
+@media (max-width: 480px) {
+  .rating-stats__average {
+    gap: 6px;
+  }
+  
+  .rating-stats__score {
+    font-size: 32px;
+  }
+  
+  .rating-stats__distribution-title {
+    font-size: 15px;
+  }
+}

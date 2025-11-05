@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>设置管理员Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 100px;
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: green;
+            margin: 10px 0;
+        }
+        .info {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>设置管理员Token</h1>
+        
+        <div class="info">
+            <strong>说明：</strong>这个页面用于将管理员token设置到浏览器的localStorage中，以便前端应用可以进行认证。
+        </div>
+        
+        <label for="tokenInput">管理员Token：</label>
+        <textarea id="tokenInput" placeholder="请粘贴管理员token..."></textarea>
+        
+        <div>
+            <button onclick="setToken()">设置Token</button>
+            <button onclick="clearToken()">清除Token</button>
+            <button onclick="checkToken()">检查当前Token</button>
+        </div>
+        
+        <div id="message"></div>
+        
+        <div class="info">
+            <strong>使用步骤：</strong>
+            <ol>
+                <li>从后端获取管理员token（运行create_admin_token.py脚本）</li>
+                <li>将token粘贴到上面的文本框中</li>
+                <li>点击"设置Token"按钮</li>
+                <li>访问 <a href="/admin/users" target="_blank">/admin/users</a> 页面测试</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        function setToken() {
+            const token = document.getElementById('tokenInput').value.trim();
+            if (!token) {
+                showMessage('请输入token', 'error');
+                return;
+            }
+            
+            localStorage.setItem('admin_token', token);
+            showMessage('Token设置成功！', 'success');
+        }
+        
+        function clearToken() {
+            localStorage.removeItem('admin_token');
+            showMessage('Token已清除', 'success');
+        }
+        
+        function checkToken() {
+            const token = localStorage.getItem('admin_token');
+            if (token) {
+                showMessage(`当前Token: ${token.substring(0, 20)}...`, 'success');
+            } else {
+                showMessage('未找到Token', 'error');
+            }
+        }
+        
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = `<div class="${type}" style="margin: 10px 0; padding: 10px; border-radius: 4px; ${type === 'success' ? 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;' : 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;'}">${text}</div>`;
+        }
+        
+        // 页面加载时检查当前token
+        window.onload = function() {
+            checkToken();
+        }
+    </script>
+</body>
+</html>

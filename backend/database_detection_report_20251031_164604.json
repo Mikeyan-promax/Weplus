@@ -1,0 +1,26 @@
+{
+  "timestamp": "2025-10-31T16:46:04.340299",
+  "connection_info": {
+    "host": "localhost",
+    "port": 5432,
+    "database": "weplus_db",
+    "user": "postgres",
+    "connection_string": "postgresql://postgres:***@localhost:5432/weplus_db"
+  },
+  "server_info": {},
+  "database_info": {},
+  "performance_metrics": {},
+  "cloud_provider": {
+    "is_aliyun_rds": false,
+    "provider": "Unknown/Local",
+    "host_pattern_analysis": {
+      "contains_rds_aliyuncs": false,
+      "contains_pgm_prefix": false,
+      "contains_pg_subdomain": false
+    }
+  },
+  "errors": [
+    "服务器信息检测失败: connection was closed in the middle of operation",
+    "性能指标检测失败: 'utf-8' codec can't decode byte 0xd6 in position 67: invalid continuation byte"
+  ]
+}

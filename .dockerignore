@@ -1,0 +1,22 @@
+# 忽略无关文件以优化构建上下文
+.git
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.swp
+
+# 后端虚拟环境与本地敏感文件
+backend/.venv
+backend/.env
+backend/.pytest_cache
+
+# 前端依赖与缓存
+frontend2/node_modules
+frontend2/.vite
+frontend2/dist
+
+# 部署证书与本地生成文件
+deploy/certs
+*.log
+*.tmp
+

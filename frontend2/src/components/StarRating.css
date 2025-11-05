@@ -1,0 +1,90 @@
+.star-rating {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.stars-container {
+  display: flex;
+  gap: 2px;
+}
+
+.star {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.star.filled {
+  color: #ffd700;
+  text-shadow: 0 0 2px rgba(255, 215, 0, 0.5);
+}
+
+.star.empty {
+  color: #ddd;
+}
+
+.star-rating.readonly .star {
+  cursor: default;
+}
+
+.star-rating.interactive .star:hover {
+  transform: scale(1.1);
+}
+
+/* 尺寸变体 */
+.star-rating.small .star {
+  font-size: 14px;
+}
+
+.star-rating.medium .star {
+  font-size: 18px;
+}
+
+.star-rating.large .star {
+  font-size: 24px;
+}
+
+/* 评分信息 */
+.rating-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: #666;
+}
+
+.rating-value {
+  font-weight: 600;
+  color: #333;
+}
+
+.rating-count {
+  color: #999;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .star-rating.large .star {
+    font-size: 20px;
+  }
+  
+  .star-rating.medium .star {
+    font-size: 16px;
+  }
+  
+  .star-rating.small .star {
+    font-size: 12px;
+  }
+}
+
+/* 动画效果 */
+@keyframes starPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.star-rating.interactive .star:active {
+  animation: starPulse 0.3s ease;
+}

@@ -1,0 +1,186 @@
+.page-header {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.page-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.page-header-content {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.page-header-text {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 6px 0;
+  line-height: 1.2;
+  background: linear-gradient(135deg, #1a1a1a 0%, #4a5568 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+.page-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* 紧凑模式 */
+.page-header.compact {
+  padding: 12px 20px;
+  margin-bottom: 16px;
+}
+
+.page-header.compact .page-header-nav {
+  margin-bottom: 12px;
+}
+
+.page-header.compact .page-title {
+  font-size: 24px;
+}
+
+.page-header.compact .page-subtitle {
+  font-size: 14px;
+}
+
+/* 无导航模式 */
+.page-header.no-nav .page-header-nav {
+  display: none;
+}
+
+.page-header.no-nav {
+  padding-top: 20px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 10px 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+  }
+  
+  .page-header-nav {
+    margin-bottom: 12px;
+    gap: 12px;
+  }
+  
+  .page-header-content {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .page-subtitle {
+    font-size: 13px;
+  }
+  
+  .page-header-actions {
+    align-self: stretch;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  
+  /* 聊天页面按钮在移动端的优化 */
+  .page-header-actions .admin-button,
+  .page-header-actions .clear-chat-button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-header {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+  }
+  
+  .page-title {
+    font-size: 20px;
+  }
+  
+  .page-subtitle {
+    font-size: 13px;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .page-header {
+    background: linear-gradient(135deg, rgba(30, 30, 30, 0.95) 0%, rgba(45, 45, 45, 0.95) 100%);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
+  }
+  
+  .page-title {
+    background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .page-subtitle {
+    color: #a0a0a0;
+  }
+}
+
+/* 动画效果 */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-header {
+  animation: slideInDown 0.4s ease-out;
+}
+
+.page-title {
+  animation: slideInDown 0.5s ease-out 0.1s both;
+}
+
+.page-subtitle {
+  animation: slideInDown 0.5s ease-out 0.2s both;
+}
+
+.page-header-actions {
+  animation: slideInDown 0.5s ease-out 0.3s both;
+}

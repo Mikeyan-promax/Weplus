@@ -1,0 +1,367 @@
+.resource-preview-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.resource-preview-modal {
+  background: white;
+  border-radius: 12px;
+  width: 90vw;
+  height: 90vh;
+  max-width: 1200px;
+  max-height: 800px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.file-info .file-icon {
+  font-size: 24px;
+}
+
+.file-details h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-meta {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.preview-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: #f3f4f6;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.download-btn:hover {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.close-btn:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.preview-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+/* 加载状态 */
+.preview-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #6b7280;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top: 3px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 错误状态 */
+.preview-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  color: #6b7280;
+  text-align: center;
+}
+
+.error-icon {
+  font-size: 48px;
+  color: #f59e0b;
+}
+
+.preview-error button {
+  padding: 8px 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.2s;
+}
+
+.preview-error button:hover {
+  background: #2563eb;
+}
+
+/* 图片预览 */
+.preview-image {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.preview-image img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 音频预览 */
+.preview-audio {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.audio-player-container {
+  background: white;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+  text-align: center;
+}
+
+.audio-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.audio-icon {
+  font-size: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.audio-details h3 {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  word-break: break-word;
+}
+
+.audio-details p {
+  margin: 0;
+  font-size: 14px;
+  color: #718096;
+}
+
+.audio-player-container audio {
+  border-radius: 8px;
+  background: #f7fafc;
+  outline: none;
+}
+
+.audio-player-container audio::-webkit-media-controls-panel {
+  background-color: #f7fafc;
+  border-radius: 8px;
+}
+
+/* PDF预览 */
+.preview-pdf {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.preview-pdf iframe {
+  border: none;
+  border-radius: 0 0 12px 12px;
+}
+
+/* 文本预览 */
+.preview-text {
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.preview-text iframe {
+  border: none;
+  border-radius: 0 0 12px 12px;
+  background: white;
+}
+
+/* 不支持预览的文件 */
+.preview-unsupported {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+  color: #6b7280;
+  padding: 40px;
+}
+
+.preview-unsupported .file-icon {
+  font-size: 64px;
+  margin-bottom: 8px;
+}
+
+.preview-unsupported h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.preview-unsupported p {
+  margin: 0;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.preview-unsupported .file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.preview-unsupported .download-btn {
+  padding: 12px 24px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.preview-unsupported .download-btn:hover {
+  background: #2563eb;
+  transform: translateY(-1px);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .resource-preview-modal {
+    width: 95vw;
+    height: 95vh;
+    margin: 0;
+  }
+  
+  .preview-header {
+    padding: 12px 16px;
+  }
+  
+  .file-details h3 {
+    font-size: 14px;
+    max-width: 200px;
+  }
+  
+  .file-meta {
+    font-size: 11px;
+  }
+  
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+  
+  .preview-image {
+    padding: 16px;
+  }
+  
+  .preview-unsupported {
+    padding: 20px;
+  }
+  
+  .preview-unsupported .file-icon {
+    font-size: 48px;
+  }
+  
+  .preview-unsupported h3 {
+    font-size: 16px;
+    max-width: 250px;
+  }
+}

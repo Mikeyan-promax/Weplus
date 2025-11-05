@@ -1,0 +1,37 @@
+# 通用
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.swp
+__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+
+# Python 虚拟环境
+.venv/
+venv/
+backend/venv/
+
+# 后端敏感与运行时
+backend/.env
+backend/admin_token.txt
+backend/logs/
+backend/uploads/
+backend/data/
+logs/
+backups/
+uploads/
+data/
+database_migration.log
+migration.log
+
+# 前端依赖与构建产物
+frontend2/node_modules/
+frontend2/dist/
+frontend2/.vite/
+
+# 部署与本地证书
+deploy/certs/
+

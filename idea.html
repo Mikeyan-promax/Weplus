@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WePlus - OUC学生服务平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white;
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            position: relative;
+            width: 280px;
+            background: white;
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            overflow-y: auto;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 60px;
+            padding: 10px;
+        }
+        
+        .sidebar.collapsed .logo,
+        .sidebar.collapsed .nav-menu,
+        .sidebar.collapsed .nav-section {
+            display: none;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #1E98D7, #0066CC);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1E98D7;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            margin-bottom: 8px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            color: #666;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: rgba(30, 152, 215, 0.1);
+            color: #1E98D7;
+            transform: translateX(4px);
+        }
+
+        .nav-link.active {
+            background: linear-gradient(135deg, #1E98D7, #0066CC);
+            color: white;
+            box-shadow: 0 4px 15px rgba(30, 152, 215, 0.3);
+        }
+
+        .nav-link i {
+            width: 20px;
+            text-align: center;
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .nav-link span {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-link span {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-section {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-section-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: #999;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+            padding-left: 16px;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-section-title {
+            opacity: 0;
+        }
+
+        .main-content {
+            flex: 1;
+            background: white;
+            margin: 0;
+            border-radius: 0;
+            box-shadow: none;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            padding: 20px 30px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin: 0;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1E98D7, #0066CC);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(30, 152, 215, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(0, 0, 0, 0.05);
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .content-frame {
+            flex: 1;
+            border: none;
+            width: 100%;
+            background: white;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .welcome-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #1E98D7, #0066CC);
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .welcome-title {
+            font-size: 36px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .welcome-subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+            max-width: 500px;
+            line-height: 1.6;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .quick-action {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid rgba(30, 152, 215, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .quick-action:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(30, 152, 215, 0.2);
+            border-color: #1E98D7;
+        }
+
+        .quick-action i {
+            font-size: 32px;
+            color: #1E98D7;
+            margin-bottom: 15px;
+        }
+
+        .quick-action h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .quick-action p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+
+        .toggle-sidebar {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar.collapsed .toggle-sidebar {
+            position: static;
+            margin: 10px auto;
+        }
+
+        .toggle-sidebar:hover {
+            background: rgba(0, 0, 0, 0.15);
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                z-index: 1000;
+                height: 100vh;
+                transition: left 0.3s ease;
+            }
+
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .sidebar .toggle-sidebar {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+            }
+
+            .main-content {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .header {
+                padding: 15px 20px;
+            }
+
+            .header-title {
+                font-size: 24px;
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <nav class="sidebar" id="sidebar">
+            <button class="toggle-sidebar" onclick="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-graduation-cap"></i>
+                </div>
+                <div class="logo-text">WePlus</div>
+            </div>
+
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" data-page="welcome">
+                        <i class="fas fa-home"></i>
+                        <span>首页</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-page="初始页面.html">
+                        <i class="fas fa-sign-in-alt"></i>
+                        <span>用户信息</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" data-page="主功能页面.html">
+                        <i class="fas fa-th-large"></i>
+                        <span>校园智能AI助手（接入DeepSeek）</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="nav-section">
+                <div class="nav-section-title">校区导航</div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="地图.html">
+                            <i class="fas fa-map"></i>
+                            <span>校园地图</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="崂山.html">
+                            <i class="fas fa-mountain"></i>
+                            <span>崂山校区</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="鱼山.html">
+                            <i class="fas fa-fish"></i>
+                            <span>鱼山校区</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="西海岸.html">
+                            <i class="fas fa-water"></i>
+                            <span>西海岸校区</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="浮山.html">
+                            <i class="fas fa-tree"></i>
+                            <span>浮山校区</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">生活服务</div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="食堂.html">
+                            <i class="fas fa-utensils"></i>
+                            <span>食堂服务</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="医疗.html">
+                            <i class="fas fa-hospital"></i>
+                            <span>医疗服务</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="心理健康.html">
+                            <i class="fas fa-heart"></i>
+                            <span>心理健康</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="资源.html">
+                            <i class="fas fa-book"></i>
+                            <span>学习资源</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-section-title">其他功能</div>
+                <ul class="nav-menu">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="小喇叭.html">
+                            <i class="fas fa-bullhorn"></i>
+                            <span>校园广播</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="全国救助电话.html">
+                            <i class="fas fa-phone-alt"></i>
+                            <span>紧急求助</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-page="历史界面.html">
+                            <i class="fas fa-history"></i>
+                            <span>历史记录</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <header class="header">
+                <div>
+                    <h1 class="header-title" id="pageTitle">欢迎使用 WePlus</h1>
+                    <p class="header-subtitle" id="pageSubtitle">中国海洋大学学生服务平台</p>
+                </div>
+            </header>
+
+            <div id="contentArea">
+                <div class="welcome-screen">
+                    <div class="welcome-icon">
+                        <i class="fas fa-graduation-cap"></i>
+                    </div>
+                    <h2 class="welcome-title">欢迎使用 WePlus</h2>
+                    <p class="welcome-subtitle">
+                        中国海洋大学学生综合服务平台，为OUCer提供便捷的校园生活服务，
+                        包括校区导航、生活服务、学习资源等多项功能。
+                    </p>
+                    
+                    <div class="quick-actions">
+                        <a href="#" class="quick-action" data-page="主功能页面.html">
+                            <i class="fas fa-th-large"></i>
+                            <h3>主要功能</h3>
+                            <p>访问平台的核心功能模块</p>
+                        </a>
+                        <a href="#" class="quick-action" data-page="地图.html">
+                            <i class="fas fa-map"></i>
+                            <h3>校园地图</h3>
+                            <p>查看各校区位置和设施</p>
+                        </a>
+                        <a href="#" class="quick-action" data-page="食堂.html">
+                            <i class="fas fa-utensils"></i>
+                            <h3>食堂服务</h3>
+                            <p>查看食堂信息和菜单</p>
+                        </a>
+                        <a href="#" class="quick-action" data-page="资源.html">
+                            <i class="fas fa-book"></i>
+                            <h3>学习资源</h3>
+                            <p>获取学习相关资料</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 页面标题映射
+        const pageTitles = {
+            'welcome': '欢迎使用 WePlus',
+            '初始页面.html': '用户登录',
+            '主功能页面.html': '主要功能',
+            '地图.html': '校园地图',
+            '崂山.html': '崂山校区',
+            '鱼山.html': '鱼山校区',
+            '西海岸.html': '西海岸校区',
+            '浮山.html': '浮山校区',
+            '食堂.html': '食堂服务',
+            '医疗.html': '医疗服务',
+            '心理健康.html': '心理健康',
+            '资源.html': '学习资源',
+            '小喇叭.html': '校园广播',
+            '全国救助电话.html': '紧急求助',
+            '历史界面.html': '历史记录'
+        };
+
+        const pageSubtitles = {
+            'welcome': '中国海洋大学学生服务平台',
+            '初始页面.html': '请使用您的信息门户账号登录',
+            '主功能页面.html': 'OUCer的秘密基地',
+            '地图.html': '校园导航与位置服务',
+            '崂山.html': '崂山校区信息与服务',
+            '鱼山.html': '鱼山校区信息与服务',
+            '西海岸.html': '西海岸校区信息与服务',
+            '浮山.html': '浮山校区信息与服务',
+            '食堂.html': '食堂信息与餐饮服务',
+            '医疗.html': '校园医疗健康服务',
+            '心理健康.html': '心理咨询与健康服务',
+            '资源.html': '学习资源与学术支持',
+            '小喇叭.html': '校园通知与广播',
+            '全国救助电话.html': '紧急联系方式',
+            '历史界面.html': '使用历史与记录'
+        };
+
+        // 导航功能
+        function initNavigation() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            const quickActions = document.querySelectorAll('.quick-action');
+            const allLinks = [...navLinks, ...quickActions];
+
+            allLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    
+                    // 更新导航状态
+                    navLinks.forEach(nav => nav.classList.remove('active'));
+                    if (this.classList.contains('nav-link')) {
+                        this.classList.add('active');
+                    } else {
+                        // 为快速操作找到对应的导航项
+                        const correspondingNav = document.querySelector(`.nav-link[data-page="${page}"]`);
+                        if (correspondingNav) {
+                            correspondingNav.classList.add('active');
+                        }
+                    }
+                    
+                    loadPage(page);
+                });
+            });
+        }
+
+        // 加载页面
+        function loadPage(page) {
+            const contentArea = document.getElementById('contentArea');
+            const pageTitle = document.getElementById('pageTitle');
+            const pageSubtitle = document.getElementById('pageSubtitle');
+            
+            // 更新标题
+            pageTitle.textContent = pageTitles[page] || '页面';
+            pageSubtitle.textContent = pageSubtitles[page] || '';
+            
+            if (page === 'welcome') {
+                // 显示欢迎屏幕
+                contentArea.innerHTML = `
+                    <div class="welcome-screen">
+                        <div class="welcome-icon">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <h2 class="welcome-title">欢迎使用 WePlus</h2>
+                        <p class="welcome-subtitle">
+                            中国海洋大学学生综合服务平台，为OUCer提供便捷的校园生活服务，
+                            包括校区导航、生活服务、学习资源等多项功能。
+                        </p>
+                        
+                        <div class="quick-actions">
+                            <a href="#" class="quick-action" data-page="主功能页面.html">
+                                <i class="fas fa-th-large"></i>
+                                <h3>主要功能</h3>
+                                <p>访问平台的核心功能模块</p>
+                            </a>
+                            <a href="#" class="quick-action" data-page="地图.html">
+                                <i class="fas fa-map"></i>
+                                <h3>校园地图</h3>
+                                <p>查看各校区位置和设施</p>
+                            </a>
+                            <a href="#" class="quick-action" data-page="食堂.html">
+                                <i class="fas fa-utensils"></i>
+                                <h3>食堂服务</h3>
+                                <p>查看食堂信息和菜单</p>
+                            </a>
+                            <a href="#" class="quick-action" data-page="资源.html">
+                                <i class="fas fa-book"></i>
+                                <h3>学习资源</h3>
+                                <p>获取学习相关资料</p>
+                            </a>
+                        </div>
+                    </div>
+                `;
+                // 重新绑定快速操作的事件
+                const quickActions = document.querySelectorAll('.quick-action');
+                quickActions.forEach(link => {
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const page = this.getAttribute('data-page');
+                        const correspondingNav = document.querySelector(`.nav-link[data-page="${page}"]`);
+                        if (correspondingNav) {
+                            correspondingNav.classList.add('active');
+                        }
+                        document.querySelectorAll('.nav-link').forEach(nav => {
+                            if (nav !== correspondingNav) nav.classList.remove('active');
+                        });
+                        loadPage(page);
+                    });
+                });
+            } else {
+                // 加载对应的HTML页面
+                contentArea.innerHTML = `<iframe src="${page}" class="content-frame" onload="this.style.opacity=1"></iframe>`;
+            }
+        }
+
+        // 侧边栏切换
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+            
+            // 在移动端切换open类
+            if (window.innerWidth <= 768) {
+                sidebar.classList.toggle('open');
+            }
+        }
+
+        // 全屏切换
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        // 响应式处理
+        function handleResize() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth <= 768) {
+                sidebar.classList.remove('collapsed');
+            } else {
+                sidebar.classList.remove('open');
+            }
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initNavigation();
+            window.addEventListener('resize', handleResize);
+            
+            // 点击外部关闭移动端侧边栏
+            document.addEventListener('click', function(e) {
+                const sidebar = document.getElementById('sidebar');
+                const toggleBtn = document.querySelector('.toggle-sidebar');
+                
+                if (window.innerWidth <= 768 && 
+                    !sidebar.contains(e.target) && 
+                    !toggleBtn.contains(e.target) && 
+                    sidebar.classList.contains('open')) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        });
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                toggleSidebar();
+            }
+            if (e.key === 'F11') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,238 @@
+.comment-list {
+  margin-top: 24px;
+}
+
+.comment-list__header {
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.comment-list__header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+}
+
+.comment-list__empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.comment-list__empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.comment {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.comment--reply {
+  margin-left: 40px;
+  margin-top: 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+}
+
+.comment__avatar {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+}
+
+.comment__avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment__avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.comment__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.comment__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.comment__username {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.comment__time {
+  color: #666;
+  font-size: 12px;
+}
+
+.comment__text {
+  color: #333;
+  line-height: 1.5;
+  margin-bottom: 12px;
+  word-wrap: break-word;
+}
+
+.comment__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.comment__reply-btn {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.comment__reply-btn:hover {
+  background: #e3f2fd;
+}
+
+.comment__reply-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+.comment__reply-input {
+  width: 100%;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  resize: vertical;
+  min-height: 60px;
+  margin-bottom: 8px;
+}
+
+.comment__reply-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.comment__reply-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.comment__replies {
+  margin-top: 12px;
+}
+
+.comment-list__load-more {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e0e0e0;
+}
+
+/* 按钮样式 */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn--small {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn--primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn--primary:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn--secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn--secondary:hover:not(:disabled) {
+  background: #545b62;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .comment {
+    padding: 12px;
+    gap: 8px;
+  }
+  
+  .comment--reply {
+    margin-left: 20px;
+  }
+  
+  .comment__avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .comment__avatar-placeholder {
+    font-size: 14px;
+  }
+  
+  .comment__username {
+    font-size: 13px;
+  }
+  
+  .comment__time {
+    font-size: 11px;
+  }
+  
+  .comment__text {
+    font-size: 14px;
+  }
+}

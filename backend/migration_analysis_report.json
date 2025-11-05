@@ -1,0 +1,109 @@
+{
+  "total_files": 14,
+  "files_analysis": [
+    {
+      "file": "auth_routes.py",
+      "imports": 1,
+      "sync_connections": 5,
+      "cursor_operations": 9,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "check_db_temp.py",
+      "imports": 1,
+      "sync_connections": 0,
+      "cursor_operations": 11,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "check_users_table.py",
+      "imports": 1,
+      "sync_connections": 0,
+      "cursor_operations": 11,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "test_api.py",
+      "imports": 1,
+      "sync_connections": 0,
+      "cursor_operations": 13,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "user_management_api.py",
+      "imports": 1,
+      "sync_connections": 2,
+      "cursor_operations": 12,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "app\\api\\admin_dashboard_api.py",
+      "imports": 0,
+      "sync_connections": 5,
+      "cursor_operations": 58,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "app\\api\\admin_file_api.py",
+      "imports": 1,
+      "sync_connections": 8,
+      "cursor_operations": 30,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "app\\api\\admin_rag_api.py",
+      "imports": 1,
+      "sync_connections": 11,
+      "cursor_operations": 32,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "app\\api\\admin_user_api.py",
+      "imports": 1,
+      "sync_connections": 0,
+      "cursor_operations": 18,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "app\\api\\study_resources_api.py",
+      "imports": 1,
+      "sync_connections": 0,
+      "cursor_operations": 6,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "app\\services\\logging_service.py",
+      "imports": 1,
+      "sync_connections": 8,
+      "cursor_operations": 32,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "database\\async_migration_script.py",
+      "imports": 1,
+      "sync_connections": 0,
+      "cursor_operations": 1,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "database\\simple_init.py",
+      "imports": 0,
+      "sync_connections": 0,
+      "cursor_operations": 11,
+      "needs_async_conversion": true
+    },
+    {
+      "file": "database\\sqlite_config.py",
+      "imports": 0,
+      "sync_connections": 1,
+      "cursor_operations": 0,
+      "needs_async_conversion": true
+    }
+  ],
+  "summary": {
+    "needs_async_conversion": 14,
+    "import_updates": 11,
+    "sync_connections": 40,
+    "cursor_operations": 244
+  }
+}

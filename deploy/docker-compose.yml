@@ -1,0 +1,44 @@
+services:
+  backend:
+    build:
+      context: ../backend
+      dockerfile: ../deploy/Dockerfile
+    container_name: weplus-backend
+    env_file:
+      - ../backend/.env
+    environment:
+      # 基础配置（与 Settings 对齐，根据项目需要调整）
+      ENABLE_JSON_LOGGING: "true"
+      PROMETHEUS_ENABLED: "true"
+      SENTRY_DSN: ""
+      ALLOWED_ORIGINS: '["http://localhost"]'
+      # ADMIN_IP_WHITELIST 暂时禁用，避免解析异常导致容器退出
+      # ADMIN_IP_WHITELIST: "127.0.0.1,10.0.0.1"
+      # 如使用数据库，请按需添加连接字符串
+      # DATABASE_URL: "postgresql+psycopg2://user:pass@db:5432/weplus"
+    networks:
+      - app_net
+    expose:
+      - "8000"
+    # 如需多进程：可覆盖 command 增加 --workers
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: weplus-nginx
+    depends_on:
+      - backend
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../frontend2/dist:/usr/share/nginx/html:ro
+      # 如启用 HTTPS，挂载证书目录（示例）
+      # - ./certs:/etc/nginx/certs:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - app_net
+
+networks:
+  app_net:
+    driver: bridge

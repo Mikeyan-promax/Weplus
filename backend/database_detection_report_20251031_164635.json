@@ -1,0 +1,243 @@
+{
+  "timestamp": "2025-10-31T16:46:34.589908",
+  "connection_info": {
+    "host": "pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com",
+    "port": 5432,
+    "database": "weplus_db",
+    "user": "weplus_db",
+    "connection_string": "postgresql://weplus_db:***@pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com:5432/weplus_db"
+  },
+  "server_info": {
+    "version_full": "PostgreSQL 17.6",
+    "version_short": "17.6",
+    "version_number": "170006",
+    "settings": {
+      "max_connections": {
+        "value": "420",
+        "unit": null,
+        "category": "Connections and Authentication / Connection Settings",
+        "description": "Sets the maximum number of concurrent connections."
+      },
+      "port": {
+        "value": "5432",
+        "unit": null,
+        "category": "Connections and Authentication / Connection Settings",
+        "description": "Sets the TCP port the server listens on."
+      },
+      "config_file": {
+        "value": "/data/postgresql.conf",
+        "unit": null,
+        "category": "File Locations",
+        "description": "Sets the server's main configuration file."
+      },
+      "data_directory": {
+        "value": "/data",
+        "unit": null,
+        "category": "File Locations",
+        "description": "Sets the server's data directory."
+      },
+      "external_pid_file": {
+        "value": "",
+        "unit": null,
+        "category": "File Locations",
+        "description": "Writes the postmaster PID to the specified file."
+      },
+      "hba_file": {
+        "value": "/data/pg_hba.conf",
+        "unit": null,
+        "category": "File Locations",
+        "description": "Sets the server's \"hba\" configuration file."
+      },
+      "ident_file": {
+        "value": "/data/pg_ident.conf",
+        "unit": null,
+        "category": "File Locations",
+        "description": "Sets the server's \"ident\" configuration file."
+      },
+      "server_version": {
+        "value": "17.6",
+        "unit": null,
+        "category": "Preset Options",
+        "description": "Shows the server version."
+      },
+      "server_version_num": {
+        "value": "170006",
+        "unit": null,
+        "category": "Preset Options",
+        "description": "Shows the server version as an integer."
+      },
+      "default_statistics_target": {
+        "value": "100",
+        "unit": null,
+        "category": "Query Tuning / Other Planner Options",
+        "description": "Sets the default statistics target."
+      },
+      "effective_cache_size": {
+        "value": "262144",
+        "unit": "8kB",
+        "category": "Query Tuning / Planner Cost Constants",
+        "description": "Sets the planner's assumption about the total size of the data caches."
+      },
+      "random_page_cost": {
+        "value": "1.1",
+        "unit": null,
+        "category": "Query Tuning / Planner Cost Constants",
+        "description": "Sets the planner's estimate of the cost of a nonsequentially fetched disk page."
+      },
+      "effective_io_concurrency": {
+        "value": "1",
+        "unit": null,
+        "category": "Resource Usage / Asynchronous Behavior",
+        "description": "Number of simultaneous requests that can be handled efficiently by the disk subsystem."
+      },
+      "maintenance_work_mem": {
+        "value": "65536",
+        "unit": "kB",
+        "category": "Resource Usage / Memory",
+        "description": "Sets the maximum memory to be used for maintenance operations."
+      },
+      "shared_buffers": {
+        "value": "121137",
+        "unit": "8kB",
+        "category": "Resource Usage / Memory",
+        "description": "Sets the number of shared memory buffers used by the server."
+      },
+      "work_mem": {
+        "value": "4096",
+        "unit": "kB",
+        "category": "Resource Usage / Memory",
+        "description": "Sets the maximum memory to be used for query workspaces."
+      },
+      "checkpoint_completion_target": {
+        "value": "0.9",
+        "unit": null,
+        "category": "Write-Ahead Log / Checkpoints",
+        "description": "Time spent flushing dirty buffers during checkpoint, as fraction of checkpoint interval."
+      },
+      "max_wal_size": {
+        "value": "2048",
+        "unit": "MB",
+        "category": "Write-Ahead Log / Checkpoints",
+        "description": "Sets the WAL size that triggers a checkpoint."
+      },
+      "min_wal_size": {
+        "value": "512",
+        "unit": "MB",
+        "category": "Write-Ahead Log / Checkpoints",
+        "description": "Sets the minimum size to shrink the WAL to."
+      },
+      "wal_buffers": {
+        "value": "2048",
+        "unit": "8kB",
+        "category": "Write-Ahead Log / Settings",
+        "description": "Sets the number of disk-page buffers in shared memory for WAL."
+      }
+    }
+  },
+  "database_info": {
+    "name": "weplus_db",
+    "size_pretty": "10 MB",
+    "size_bytes": 10996883,
+    "tables": [
+      {
+        "schemaname": "public",
+        "tablename": "document_chunks",
+        "size": "280 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "study_resources",
+        "size": "128 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "admin_users",
+        "size": "128 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "users",
+        "size": "128 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "user_study_records",
+        "size": "112 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "documents",
+        "size": "112 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resource_comments",
+        "size": "80 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resource_downloads",
+        "size": "80 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "resource_ratings",
+        "size": "72 kB"
+      },
+      {
+        "schemaname": "public",
+        "tablename": "knowledge_entries",
+        "size": "64 kB"
+      }
+    ],
+    "active_connections": 2,
+    "connection_details": [
+      {
+        "datname": null,
+        "usename": "replicator",
+        "application_name": "standby1",
+        "client_addr": "172.17.75.194",
+        "state": "active",
+        "backend_start": "2025-10-05 11:50:46.757871+00:00",
+        "query_start": "2025-10-05 11:50:46.766564+00:00",
+        "state_change": "2025-10-05 11:50:46.766572+00:00"
+      },
+      {
+        "datname": "weplus_db",
+        "usename": "weplus_db",
+        "application_name": "",
+        "client_addr": "211.64.159.138",
+        "state": "active",
+        "backend_start": "2025-10-31 08:46:38.009195+00:00",
+        "query_start": "2025-10-31 08:46:38.473909+00:00",
+        "state_change": "2025-10-31 08:46:38.473910+00:00"
+      }
+    ]
+  },
+  "performance_metrics": {
+    "connection_latency_ms": 68.15,
+    "cache_hit_ratio": 100.0,
+    "database_stats": {
+      "active_backends": 7,
+      "committed_transactions": 30198,
+      "rolled_back_transactions": 2440,
+      "blocks_read": 123,
+      "blocks_hit": 2100932,
+      "tuples_returned": 18125058,
+      "tuples_fetched": 859251,
+      "tuples_inserted": 5116,
+      "tuples_updated": 571,
+      "tuples_deleted": 946
+    }
+  },
+  "cloud_provider": {
+    "is_aliyun_rds": true,
+    "provider": "Alibaba Cloud RDS",
+    "host_pattern_analysis": {
+      "contains_rds_aliyuncs": true,
+      "contains_pgm_prefix": true,
+      "contains_pg_subdomain": true
+    }
+  },
+  "errors": []
+}

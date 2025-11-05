@@ -1,0 +1,209 @@
+ embedding model 嵌入模型 字节跳动豆包嵌入 
+- 模型 : doubao-embedding-text-240715
+- API Key : 6674bc28-fc4b-47b8-8795-bf79eb01c9ff
+
+
+完整调用指南
+OpenAI SDK 调用示例
+Python
+1. 请按如下命令安装环境
+pip install --upgrade "openai>=1.0"
+复制
+2. 请参考如下示例代码进行调用
+import os
+from openai import OpenAI
+# gets API Key from environment variable OPENAI_API_KEY
+client = OpenAI(
+    api_key=os.environ.get("ARK_API_KEY"),
+    base_url="https://ark.cn-beijing.volces.com/api/v3",
+)
+print("----- embeddings request -----")
+resp = client.embeddings.create(
+    model="doubao-embedding-text-240715",
+    input=["花椰菜又称菜花、花菜，是一种常见的蔬菜。"],
+    encoding_format="float"
+)
+print(resp)
+
+以下是有关火山引擎调用api的接口文档
+火山引擎如何接入API：从入门到实践的技术指南
+关键词:
+火山引擎如何接入API
+火山引擎接入API
+作者: youqing 2025-08-01
+接入API是开发者与云服务平台交互的核心环节，尤其是像火山引擎这样功能强大的平台，提供了丰富的接口来满足多样化的业务需求。本文将详细讲解火山引擎如何接入API，从注册账号到生成请求，再到调试和优化，带你一步步掌握整个流程。同时，我们还会梳理当前与火山引擎如何接入API相关的热点话题，并通过表格和代码示例，让内容更直观、更具操作性。不管你是初学者还是有一定经验的开发者，这篇文章都能帮你快速上手。
+
+一、接入火山引擎API的基本流程
+要使用火山引擎的API，首先得完成一些准备工作。以下是接入的核心步骤：
+
+注册账号并获取API密钥
+在火山引擎官网上注册一个账号是第一步。登录后，进入控制台的API管理页面，点击“创建密钥”，系统会生成一组密钥对，包括Access Key ID和Secret Access Key。这是调用API时的身份凭证，务必妥善保存，避免泄露。
+查阅官方文档
+火山引擎的API文档非常详尽，涵盖了接口列表、参数说明和示例代码。在正式开发前，花点时间熟悉目标接口的调用方式，能大大减少后续踩坑的可能。
+构建API请求
+火山引擎的API基于HTTP协议，通常采用RESTful风格。请求需要包含密钥、时间戳、签名等信息，确保安全性。签名是接入中比较关键的一环，后文会详细说明。
+测试与调试
+使用工具（如Postman）发送请求，验证返回结果是否符合预期。如果遇到问题，可以参考文档中的错误码说明进行排查。
+处理响应数据
+API返回的数据一般是JSON格式，开发者需要根据业务需求解析并集成到自己的应用中。
+二、火山引擎如何接入API的热点内容
+围绕火山引擎如何接入API，当前的讨论热点主要集中在几个方面：安全性、性能优化和多语言支持。以下是具体分析：
+
+安全性
+API调用的安全性一直是开发者关注的重点。火山引擎采用HMAC-SHA256算法生成签名，确保请求不被篡改。最近的趋势是，许多开发者结合IAM角色管理，进一步限制密钥权限，提升安全性。
+性能优化
+对于高频调用的场景，如何减少延迟和提高吞吐量成了热门话题。火山引擎支持批量请求和异步调用，开发者可以通过调整参数来优化性能。
+多语言支持
+火山引擎提供了Python、Java、Go等多种语言的SDK，降低了接入门槛。社区里关于SDK使用的最佳实践分享也越来越多，尤其是Python SDK因其简洁性受到青睐。
+三、签名生成与请求构建详解
+在火山引擎如何接入API中，签名生成是个绕不开的技术点。火山引擎要求每个请求都携带签名，用于验证身份。下面以一个实际场景为例，展示如何用Python构建签名和请求。
+
+假设我们要调用火山引擎的某个查询接口，步骤如下：
+
+准备必要参数
+Access Key ID: AKIAIOSFODNN7EXAMPLE
+Secret Access Key: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+请求方法: GET
+接口地址: https://api.volcengine.com/v1/query
+时间戳: 2025-03-20T00:00:00Z
+生成签名
+签名需要将请求参数、时间戳等信息按特定规则拼接后，用Secret Access Key进行加密。以下是Python代码示例：
+import hmac
+
+import hashlib
+
+import base64
+
+from urllib.parse import urlencode
+
+
+
+# 参数定义
+
+access_key = "AKIAIOSFODNN7EXAMPLE"
+
+secret_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+
+timestamp = "2025-03-20T00:00:00Z"
+
+method = "GET"
+
+host = "api.volcengine.com"
+
+path = "/v1/query"
+
+params = {"Action": "DescribeInstances", "Version": "2023-01-01"}
+
+
+
+# 构造签名字符串
+
+canonical_string = f"{method}\n{host}\n{path}\n{urlencode(params)}\n{timestamp}"
+
+signature = hmac.new(
+
+    secret_key.encode('utf-8'),
+
+    canonical_string.encode('utf-8'),
+
+    hashlib.sha256
+
+).digest()
+
+signature = base64.b64encode(signature).decode('utf-8')
+
+
+
+# 输出签名
+
+print("签名:", signature)
+发送请求
+将签名和其他参数放入请求头或URL中，使用HTTP库发送请求：
+import requests
+
+
+
+headers = {
+
+    "Authorization": f"HMAC-SHA256 Credential={access_key}, Signature={signature}",
+
+    "X-Date": timestamp
+
+}
+
+url = f"https://{host}{path}?{urlencode(params)}"
+
+response = requests.get(url, headers=headers)
+
+print(response.json())
+这个例子展示了火山引擎如何接入API的核心步骤，尤其是签名生成的部分。实际开发中，你可以直接用火山引擎的SDK简化这个过程，但理解底层逻辑有助于排查问题。
+
+四、常见接入方式的对比
+不同的接入方式各有优劣，下面通过表格对比直观展示：
+
+接入方式	优点	缺点	适用场景
+直接HTTP请求	灵活性高，可自定义参数	需要手动处理签名，开发成本高	小规模测试或定制化需求
+官方SDK	封装完善，调用简单	灵活性稍差，可能有版本兼容问题	快速开发与集成
+CLI工具	操作直观，适合运维人员	不适合程序化调用	临时调试或管理任务
+第三方工具（如Postman）	测试方便，支持可视化	不适合生产环境，仅限调试	接口验证与学习
+从表格可以看出，如果是快速上手，SDK是首选；而需要深度定制时，直接构造HTTP请求更合适。开发者可以根据项目需求选择最适合的方式。
+
+五、调试与优化技巧
+接入API后，调试和优化是不可忽视的环节。以下是一些实用建议：
+
+日志记录
+在代码中添加详细日志，记录请求参数和响应内容，便于定位问题。例如，使用Python的logging模块：
+import logging
+
+
+
+logging.basicConfig(level=logging.INFO)
+
+logger = logging.getLogger(__name__)
+
+
+
+logger.info(f"发送请求: {url}")
+
+logger.info(f"响应内容: {response.text}")
+错误处理
+火山引擎的API会返回状态码和错误信息，建议用try-except捕获异常：
+try:
+
+    response = requests.get(url, headers=headers)
+
+    response.raise_for_status()
+
+except requests.exceptions.HTTPError as e:
+
+    print(f"请求失败: {e}")
+性能优化
+对于高并发场景，可以使用连接池或异步请求。以下是用aiohttp实现的异步调用示例：
+import aiohttp
+
+import asyncio
+
+
+
+async def fetch(session, url, headers):
+
+    async with session.get(url, headers=headers) as response:
+
+        return await response.json()
+
+
+
+async def main():
+
+    async with aiohttp.ClientSession() as session:
+
+        tasks = [fetch(session, url, headers) for _ in range(10)]
+
+        results = await asyncio.gather(*tasks)
+
+    print(results)
+
+
+
+asyncio.run(main())
+这些技巧能有效提升接入效率，确保应用稳定运行。

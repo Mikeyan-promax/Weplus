@@ -1,0 +1,111 @@
+{
+  "success_rate": 50.0,
+  "test_results": [
+    {
+      "test_name": "API Health Check",
+      "success": true,
+      "message": "API is running and accessible",
+      "timestamp": "2025-10-29T19:04:30.293722",
+      "details": {
+        "status_code": 200,
+        "response": {
+          "message": "WePlus RAG Campus Assistant API",
+          "version": "2.0.0",
+          "status": "running",
+          "features": [
+            "DeepSeek聊天API集成",
+            "豆包嵌入模型集成",
+            "文档处理和向量化",
+            "智能检索和问答",
+            "多轮对话支持"
+          ],
+          "endpoints": {
+            "chat": "/api/rag/chat",
+            "document_upload": "/api/rag/documents/upload",
+            "document_process": "/api/rag/documents/process",
+            "health_check": "/api/rag/health",
+            "system_stats": "/api/rag/stats"
+          },
+          "timestamp": "2025-10-29T19:04:30.290729"
+        }
+      }
+    },
+    {
+      "test_name": "Database Connection",
+      "success": true,
+      "message": "Database connection successful",
+      "timestamp": "2025-10-29T19:04:36.296014",
+      "details": {
+        "status_code": 404
+      }
+    },
+    {
+      "test_name": "User Registration",
+      "success": false,
+      "message": "Registration failed with status 422",
+      "timestamp": "2025-10-29T19:04:37.302495",
+      "details": {
+        "status_code": 422,
+        "response": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"confirm_password\"],\"msg\":\"Field required\",\"input\":{\"username\":\"testuser_1761735877\",\"email\":\"test_1761735877@example.com\",\"password\":\"testpassword123\",\"full_name\":\"Test User\"},\"url\":\"https://errors.pydantic.dev/2.12/v/missing\"},{\"type\":\"missing\",\"loc\":[\"body\",\"verification_code\"],\"msg\":\"Field required\",\"input\":{\"username\":\"testuser_1761735877\",\"email\":\"test_1761735877@example.com\",\"password\":\"testpassword123\",\"full_name\":\"Test User\"},\"url\":\"https://errors.pydantic.dev/2.12/v/missing\"}]}"
+      }
+    },
+    {
+      "test_name": "File Upload",
+      "success": false,
+      "message": "File upload failed with status 403",
+      "timestamp": "2025-10-29T19:04:38.306457",
+      "details": {
+        "status_code": 403,
+        "response": "{\"detail\":\"Not authenticated\"}"
+      }
+    },
+    {
+      "test_name": "RAG Basic Chat",
+      "success": true,
+      "message": "RAG basic chat successful",
+      "timestamp": "2025-10-29T19:04:57.319785",
+      "details": {
+        "status_code": 200,
+        "has_response": true
+      }
+    },
+    {
+      "test_name": "RAG Knowledge Base",
+      "success": true,
+      "message": "RAG with knowledge base successful",
+      "timestamp": "2025-10-29T19:05:58.244396",
+      "details": {
+        "status_code": 200,
+        "has_response": true
+      }
+    },
+    {
+      "test_name": "Document Search",
+      "success": true,
+      "message": "Document search successful",
+      "timestamp": "2025-10-29T19:05:59.246425",
+      "details": {
+        "status_code": 200,
+        "results_count": 0
+      }
+    },
+    {
+      "test_name": "Frontend Accessibility",
+      "success": false,
+      "message": "Frontend test failed: HTTPConnectionPool(host='localhost', port=3000): Max retries exceeded with url: / (Caused by NewConnectionError('<urllib3.connection.HTTPConnection object at 0x000002750ADAB250>: Failed to establish a new connection: [WinError 10061] 由于目标计算机积极拒绝，无法连接。'))",
+      "timestamp": "2025-10-29T19:06:04.334807",
+      "details": {}
+    },
+    {
+      "test_name": "API Endpoints",
+      "success": false,
+      "message": "API endpoints test: 1/3 accessible (33.3%)",
+      "timestamp": "2025-10-29T19:06:05.341226",
+      "details": {
+        "success_rate": 33.33333333333333,
+        "accessible_endpoints": 1
+      }
+    }
+  ],
+  "timestamp": "2025-10-29T19:06:06.342345"
+}

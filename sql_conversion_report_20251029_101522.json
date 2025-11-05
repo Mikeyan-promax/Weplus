@@ -1,0 +1,185 @@
+{
+  "conversion_summary": {
+    "timestamp": "2025-10-29T10:15:22.229387",
+    "files_scanned": 2792,
+    "files_modified": 651,
+    "sql_statements_converted": 651,
+    "pragma_statements_removed": 8,
+    "autoincrement_converted": 15,
+    "data_types_converted": 4650,
+    "functions_converted": 555,
+    "errors_count": 0,
+    "success": true
+  },
+  "conversion_rules_applied": {
+    "data_types": [
+      [
+        "\\bINTEGER\\s+PRIMARY\\s+KEY\\s+AUTOINCREMENT\\b",
+        "SERIAL PRIMARY KEY"
+      ],
+      [
+        "\\bINTEGER\\s+AUTOINCREMENT\\b",
+        "SERIAL"
+      ],
+      [
+        "\\bAUTOINCREMENT\\b",
+        ""
+      ],
+      [
+        "\\bTEXT\\b(?!\\s*\\()",
+        "VARCHAR"
+      ],
+      [
+        "\\bBLOB\\b",
+        "BYTEA"
+      ],
+      [
+        "\\bREAL\\b",
+        "DOUBLE PRECISION"
+      ],
+      [
+        "\\bNUMERIC\\b",
+        "DECIMAL"
+      ],
+      [
+        "\\bCHECK\\s*\\([^)]*LIKE[^)]*\\)",
+        ""
+      ]
+    ],
+    "sql_syntax": [
+      [
+        "sqlite_master",
+        "information_schema.tables"
+      ],
+      [
+        "sqlite_temp_master",
+        "information_schema.tables"
+      ],
+      [
+        "PRAGMA\\s+table_info\\s*\\(\\s*[\\'\"]?([^\\'\")]+)[\\'\"]?\\s*\\)",
+        "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_name = '\\1'"
+      ],
+      [
+        "PRAGMA\\s+foreign_keys\\s*=\\s*ON",
+        "-- PostgreSQL foreign keys are always enabled"
+      ],
+      [
+        "PRAGMA\\s+foreign_keys\\s*=\\s*OFF",
+        "-- PostgreSQL foreign keys cannot be disabled"
+      ],
+      [
+        "PRAGMA\\s+synchronous\\s*=\\s*\\w+",
+        "-- PostgreSQL synchronous setting managed by configuration"
+      ],
+      [
+        "PRAGMA\\s+journal_mode\\s*=\\s*\\w+",
+        "-- PostgreSQL uses WAL by default"
+      ],
+      [
+        "PRAGMA\\s+cache_size\\s*=\\s*\\d+",
+        "-- PostgreSQL cache managed by shared_buffers"
+      ],
+      [
+        "PRAGMA\\s+temp_store\\s*=\\s*\\w+",
+        "-- PostgreSQL temp storage managed automatically"
+      ],
+      [
+        "PRAGMA\\s+[^;]+;?",
+        "-- PRAGMA statement removed (PostgreSQL specific)"
+      ],
+      [
+        "LIMIT\\s+(\\d+)\\s+OFFSET\\s+(\\d+)",
+        "OFFSET \\2 LIMIT \\1"
+      ],
+      [
+        "`([^`]+)`",
+        "\"\\1\""
+      ],
+      [
+        "\\|\\|",
+        "CONCAT"
+      ]
+    ],
+    "functions": [
+      [
+        "datetime\\s*\\(\\s*[\\'\"]now[\\'\"]?\\s*\\)",
+        "NOW()"
+      ],
+      [
+        "datetime\\s*\\([^)]+\\)",
+        "NOW()"
+      ],
+      [
+        "date\\s*\\(\\s*[\\'\"]now[\\'\"]?\\s*\\)",
+        "CURRENT_DATE"
+      ],
+      [
+        "time\\s*\\(\\s*[\\'\"]now[\\'\"]?\\s*\\)",
+        "CURRENT_TIME"
+      ],
+      [
+        "strftime\\s*\\([^)]+\\)",
+        "TO_CHAR(NOW(), 'YYYY-MM-DD HH24:MI:SS')"
+      ],
+      [
+        "LENGTH\\s*\\(",
+        "CHAR_LENGTH("
+      ],
+      [
+        "SUBSTR\\s*\\(",
+        "SUBSTRING("
+      ],
+      [
+        "TRIM\\s*\\(\\s*([^,)]+)\\s*,\\s*([^)]+)\\)",
+        "TRIM(\\2 FROM \\1)"
+      ],
+      [
+        "RANDOM\\s*\\(\\s*\\)",
+        "RANDOM()"
+      ],
+      [
+        "ABS\\s*\\(",
+        "ABS("
+      ],
+      [
+        "CAST\\s*\\(([^)]+)\\s+AS\\s+INTEGER\\)",
+        "CAST(\\1 AS INTEGER)"
+      ],
+      [
+        "CAST\\s*\\(([^)]+)\\s+AS\\s+TEXT\\)",
+        "CAST(\\1 AS VARCHAR)"
+      ],
+      [
+        "CAST\\s*\\(([^)]+)\\s+AS\\s+REAL\\)",
+        "CAST(\\1 AS DOUBLE PRECISION)"
+      ]
+    ],
+    "special_syntax": [
+      [
+        "INSERT\\s+OR\\s+REPLACE\\s+INTO",
+        "INSERT INTO ... ON CONFLICT ... DO UPDATE SET"
+      ],
+      [
+        "INSERT\\s+OR\\s+IGNORE\\s+INTO",
+        "INSERT INTO ... ON CONFLICT DO NOTHING"
+      ],
+      [
+        "REPLACE\\s+INTO",
+        "-- Use INSERT ... ON CONFLICT DO UPDATE SET for PostgreSQL"
+      ],
+      [
+        "CREATE\\s+UNIQUE\\s+INDEX\\s+IF\\s+NOT\\s+EXISTS",
+        "CREATE UNIQUE INDEX IF NOT EXISTS"
+      ],
+      [
+        "CREATE\\s+INDEX\\s+IF\\s+NOT\\s+EXISTS",
+        "CREATE INDEX IF NOT EXISTS"
+      ],
+      [
+        "CREATE\\s+TABLE\\s+IF\\s+NOT\\s+EXISTS",
+        "CREATE TABLE IF NOT EXISTS"
+      ]
+    ]
+  },
+  "errors": []
+}

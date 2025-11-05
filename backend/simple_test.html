@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API连接测试</title>
+</head>
+<body>
+    <h1>API连接测试</h1>
+    <button onclick="testConnection()">测试连接</button>
+    <div id="result"></div>
+
+    <script>
+        async function testConnection() {
+            const result = document.getElementById('result');
+            result.innerHTML = '测试中...';
+            
+            try {
+                console.log('开始测试API连接...');
+                
+                // 测试1: 简单的fetch请求
+                const response = await fetch('http://localhost:8000/api/rag/documents');
+                console.log('响应状态:', response.status);
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('响应数据:', data);
+                    result.innerHTML = `
+                        <h3>✅ 连接成功!</h3>
+                        <p>状态码: ${response.status}</p>
+                        <p>文档数量: ${data.total_count}</p>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    result.innerHTML = `
+                        <h3>❌ 连接失败</h3>
+                        <p>状态码: ${response.status}</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('连接错误:', error);
+                result.innerHTML = `
+                    <h3>❌ 连接错误</h3>
+                    <p>错误: ${error.message}</p>
+                `;
+            }
+        }
+        
+        // 页面加载时自动测试
+        window.onload = testConnection;
+    </script>
+</body>
+</html>

@@ -1,0 +1,237 @@
+/* 加载动画容器 */
+.loading-spinner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* 现代化旋转动画 */
+@keyframes modernSpin {
+  0% { 
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+  50% { 
+    transform: rotate(180deg) scale(1.1);
+    opacity: 0.8;
+  }
+  100% { 
+    transform: rotate(360deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { 
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes orbit {
+  0% { transform: rotate(0deg) translateX(25px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(25px) rotate(-360deg); }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* 主旋转器 - 现代化设计 */
+.spinner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 现代化多层旋转效果 */
+.spinner::before {
+  content: '';
+  position: absolute;
+  border: 3px solid transparent;
+  border-top: 3px solid #667eea;
+  border-right: 3px solid #764ba2;
+  border-radius: 50%;
+  animation: modernSpin 1.5s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+.spinner::after {
+  content: '';
+  position: absolute;
+  border: 2px solid transparent;
+  border-bottom: 2px solid #f093fb;
+  border-left: 2px solid #f5576c;
+  border-radius: 50%;
+  animation: modernSpin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite reverse;
+}
+
+/* 内部旋转器 - 轨道效果 */
+.spinner-inner {
+  position: absolute;
+  animation: orbit 2s linear infinite;
+}
+
+.spinner-inner::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 8px;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+  animation: breathe 1s ease-in-out infinite;
+}
+
+/* 尺寸变体 */
+.loading-spinner.small .spinner::before {
+  width: 20px;
+  height: 20px;
+}
+
+.loading-spinner.small .spinner::after {
+  width: 14px;
+  height: 14px;
+}
+
+.loading-spinner.small .spinner-inner {
+  width: 20px;
+  height: 20px;
+}
+
+.loading-spinner.medium .spinner::before {
+  width: 40px;
+  height: 40px;
+}
+
+.loading-spinner.medium .spinner::after {
+  width: 28px;
+  height: 28px;
+}
+
+.loading-spinner.medium .spinner-inner {
+  width: 40px;
+  height: 40px;
+}
+
+.loading-spinner.large .spinner::before {
+  width: 60px;
+  height: 60px;
+}
+
+.loading-spinner.large .spinner::after {
+  width: 42px;
+  height: 42px;
+}
+
+.loading-spinner.large .spinner-inner {
+  width: 60px;
+  height: 60px;
+}
+
+
+
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .spinner::before {
+    border-top-color: #8b9dc3;
+    border-right-color: #9f7aea;
+  }
+  
+  .spinner::after {
+    border-bottom-color: #f093fb;
+    border-left-color: #f5576c;
+  }
+}
+
+/* 全屏加载覆盖层 - 现代化毛玻璃效果 */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes fadeIn {
+  0% { 
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% { 
+    opacity: 1;
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .loading-overlay {
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(20px) saturate(180%);
+  }
+}
+
+/* 页面内加载 */
+.loading-inline {
+  padding: 50px 20px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+  border-radius: 16px;
+  border: 1px solid rgba(102, 126, 234, 0.1);
+}
+
+/* 按钮加载状态 - 现代化设计 */
+.btn-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.8;
+  overflow: hidden;
+}
+
+.btn-loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.btn-loading .spinner::before {
+  width: 16px;
+  height: 16px;
+  border-width: 2px;
+  margin-right: 8px;
+}
+
+.btn-loading .spinner::after {
+  width: 12px;
+  height: 12px;
+  border-width: 1px;
+}

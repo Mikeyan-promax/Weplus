@@ -1,0 +1,311 @@
+/* 动画按钮基础样式 */
+.animated-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  outline: none;
+  user-select: none;
+  font-family: inherit;
+}
+
+.animated-btn:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+/* 按钮内容 */
+.btn-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  transition: transform 0.2s ease;
+}
+
+.btn-text {
+  transition: opacity 0.2s ease;
+}
+
+.btn-icon {
+  font-size: 1.1em;
+  transition: transform 0.3s ease;
+}
+
+/* 尺寸变体 */
+.btn-small {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  min-height: 36px;
+}
+
+.btn-medium {
+  padding: 12px 24px;
+  font-size: 1rem;
+  min-height: 44px;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 1.125rem;
+  min-height: 52px;
+}
+
+/* 颜色变体 */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(108, 117, 125, 0.4);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #e74c3c 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}
+
+.btn-outline {
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+  box-shadow: none;
+}
+
+.btn-outline:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+/* 点击动画 */
+.animated-btn.clicked {
+  transform: scale(0.95);
+}
+
+.animated-btn.clicked .btn-content {
+  transform: scale(0.95);
+}
+
+/* 涟漪效果 */
+.btn-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+  pointer-events: none;
+}
+
+.animated-btn:active .btn-ripple {
+  width: 300px;
+  height: 300px;
+}
+
+/* 按钮加载状态 */
+.animated-btn.loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.8;
+  overflow: hidden;
+}
+
+.animated-btn.loading::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shimmerButton 1.5s infinite;
+}
+
+.btn-spinner {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.animated-btn.loading .spinner-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin: 0 2px;
+  background: currentColor;
+  border-radius: 50%;
+  animation: modernPulse 1.4s ease-in-out infinite both;
+}
+
+.animated-btn.loading .spinner-dot:nth-child(1) { animation-delay: -0.32s; }
+.animated-btn.loading .spinner-dot:nth-child(2) { animation-delay: -0.16s; }
+.animated-btn.loading .spinner-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes shimmerButton {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+@keyframes modernPulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.spinner-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: spinnerPulse 1.4s ease-in-out infinite both;
+}
+
+.spinner-dot:nth-child(1) { animation-delay: -0.32s; }
+.spinner-dot:nth-child(2) { animation-delay: -0.16s; }
+.spinner-dot:nth-child(3) { animation-delay: 0s; }
+
+@keyframes spinnerPulse {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 禁用状态 */
+.animated-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* 悬停效果增强 */
+.animated-btn:hover .btn-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.animated-btn:hover .btn-content {
+  transform: translateY(-1px);
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .btn-outline {
+    color: #8b9dc3;
+    border-color: #8b9dc3;
+  }
+  
+  .btn-outline:hover {
+    background: #8b9dc3;
+    color: #1a1a1a;
+  }
+  
+  .btn-ripple {
+    background: rgba(255, 255, 255, 0.2);
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .btn-large {
+    padding: 14px 28px;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  .btn-medium {
+    padding: 10px 20px;
+    font-size: 0.9rem;
+    min-height: 40px;
+  }
+  
+  .btn-small {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-height: 32px;
+  }
+}
+
+/* 特殊动画效果 */
+@keyframes buttonGlow {
+  0%, 100% {
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 25px rgba(102, 126, 234, 0.5);
+  }
+}
+
+.animated-btn.glow {
+  animation: buttonGlow 2s ease-in-out infinite;
+}
+
+/* 浮动效果 */
+@keyframes buttonFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.animated-btn.float {
+  animation: buttonFloat 3s ease-in-out infinite;
+}

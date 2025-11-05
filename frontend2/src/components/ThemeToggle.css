@@ -1,0 +1,203 @@
+/* 主题切换按钮基础样式 */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+  transition: left 0.5s;
+}
+
+.theme-toggle:hover::before {
+  left: 100%;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.theme-toggle:active {
+  transform: translateY(0);
+}
+
+/* 尺寸变体 */
+.theme-toggle-small {
+  padding: 6px 10px;
+  font-size: 0.85rem;
+}
+
+.theme-toggle-small .theme-icon {
+  font-size: 1rem;
+}
+
+.theme-toggle-medium {
+  padding: 8px 12px;
+  font-size: 0.9rem;
+}
+
+.theme-toggle-medium .theme-icon {
+  font-size: 1.1rem;
+}
+
+.theme-toggle-large {
+  padding: 10px 16px;
+  font-size: 1rem;
+}
+
+.theme-toggle-large .theme-icon {
+  font-size: 1.2rem;
+}
+
+/* 主题图标 */
+.theme-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover .theme-icon {
+  transform: scale(1.1) rotate(10deg);
+}
+
+/* 主题标签 */
+.theme-label {
+  white-space: nowrap;
+  color: #4a5568;
+  transition: color 0.3s ease;
+}
+
+/* 深色模式样式 */
+.theme-toggle.dark {
+  background: rgba(26, 32, 44, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.theme-toggle.dark .theme-label {
+  color: #e2e8f0;
+}
+
+.theme-toggle.dark:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+}
+
+/* 浅色模式样式 */
+.theme-toggle.light {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.theme-toggle.light .theme-label {
+  color: #4a5568;
+}
+
+.theme-toggle.light:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .theme-toggle {
+    padding: 8px;
+    border-radius: 10px;
+  }
+  
+  .theme-toggle-small {
+    padding: 6px;
+  }
+  
+  .theme-toggle-medium {
+    padding: 8px;
+  }
+  
+  .theme-toggle-large {
+    padding: 10px;
+  }
+  
+  /* 移动端隐藏标签 */
+  .theme-label {
+    display: none;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .theme-toggle {
+    border: 2px solid;
+  }
+  
+  .theme-toggle.light {
+    border-color: #000;
+  }
+  
+  .theme-toggle.dark {
+    border-color: #fff;
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle,
+  .theme-icon,
+  .theme-label {
+    transition: none;
+  }
+  
+  .theme-toggle::before {
+    display: none;
+  }
+  
+  .theme-toggle:hover {
+    transform: none;
+  }
+  
+  .theme-toggle:hover .theme-icon {
+    transform: none;
+  }
+}
+
+/* 焦点样式 */
+.theme-toggle:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+}
+
+.theme-toggle.dark:focus {
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.5);
+}
+
+/* 动画效果 */
+@keyframes themeChange {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.theme-toggle:active .theme-icon {
+  animation: themeChange 0.3s ease;
+}

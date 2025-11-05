@@ -1,0 +1,127 @@
+LLM模型 DeepSeek 
+- 模型 : deepseek-chat
+- API Key : sk-9189176321ae486c8f755145b59299eb
+
+DeepSeek API DOC:
+Your First API Call
+The DeepSeek API uses an API format compatible with OpenAI. By modifying the configuration, you can use the OpenAI SDK or softwares compatible with the OpenAI API to access the DeepSeek API.
+
+PARAM	VALUE
+base_url *       	https://api.deepseek.com
+api_key	apply for an API key
+* To be compatible with OpenAI, you can also use https://api.deepseek.com/v1 as the base_url. But note that the v1 here has NO relationship with the model's version.
+
+* deepseek-chat and deepseek-reasoner are upgraded to DeepSeek-V3.2-Exp now. deepseek-chat is the non-thinking mode of DeepSeek-V3.2-Exp and deepseek-reasoner is the thinking mode of DeepSeek-V3.2-Exp.
+
+Invoke The Chat API
+Once you have obtained an API key, you can access the DeepSeek API using the following example scripts. This is a non-stream example, you can set the stream parameter to true to get stream response.
+
+curl
+curl https://api.deepseek.com/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${DEEPSEEK_API_KEY}" \
+  -d '{
+        "model": "deepseek-chat",
+        "messages": [
+          {"role": "system", "content": "You are a helpful assistant."},
+          {"role": "user", "content": "Hello!"}
+        ],
+        "stream": false
+      }'
+
+
+python
+# Please install OpenAI SDK first: `pip3 install openai`
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.environ.get('DEEPSEEK_API_KEY'), base_url="https://api.deepseek.com")
+
+response = client.chat.completions.create(
+    model="deepseek-chat",
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant"},
+        {"role": "user", "content": "Hello"},
+    ],
+    stream=False
+)
+
+print(response.choices[0].message.content)
+
+
+nodejs
+// Please install OpenAI SDK first: `npm install openai`
+
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+        baseURL: 'https://api.deepseek.com',
+        apiKey: process.env.DEEPSEEK_API_KEY,
+});
+
+async function main() {
+  const completion = await openai.chat.completions.create({
+    messages: [{ role: "system", content: "You are a helpful assistant." }],
+    model: "deepseek-chat",
+  });
+
+  console.log(completion.choices[0].message.content);
+}
+
+main();
+
+Error Codes
+When calling DeepSeek API, you may encounter errors. Here list the causes and solutions.
+
+                    CODE                    	DESCRIPTION
+400 - Invalid Format	Cause: Invalid request body format.
+Solution: Please modify your request body according to the hints in the error message. For more API format details, please refer to DeepSeek API Docs.
+401 - Authentication Fails	Cause: Authentication fails due to the wrong API key.
+Solution: Please check your API key. If you don't have one, please create an API key first.
+402 - Insufficient Balance	Cause: You have run out of balance.
+Solution: Please check your account's balance, and go to the Top up page to add funds.
+422 - Invalid Parameters	Cause: Your request contains invalid parameters.
+Solution: Please modify your request parameters according to the hints in the error message. For more API format details, please refer to DeepSeek API Docs.
+429 - Rate Limit Reached	Cause: You are sending requests too quickly.
+Solution: Please pace your requests reasonably. We also advise users to temporarily switch to the APIs of alternative LLM service providers, like OpenAI.
+500 - Server Error	Cause: Our server encounters an issue.
+Solution: Please retry your request after a brief wait and contact us if the issue persists.
+503 - Server Overloaded	Cause: The server is overloaded due to high traffic.
+Solution: Please retry your request after a brief wait.
+
+Models & Pricing
+The prices listed below are in unites of per 1M tokens. A token, the smallest unit of text that the model recognizes, can be a word, a number, or even a punctuation mark. We will bill based on the total number of input and output tokens by the model.
+
+Model Details
+MODEL	deepseek-chat	deepseek-reasoner
+MODEL VERSION	DeepSeek-V3.2-Exp
+(Non-thinking Mode)	DeepSeek-V3.2-Exp
+(Thinking Mode)
+CONTEXT LENGTH	128K
+MAX OUTPUT	DEFAULT: 4K
+MAXIMUM: 8K	DEFAULT: 32K
+MAXIMUM: 64K
+FEATURES	Json Output	✓	✓
+Function Calling	✓	✗(1)
+Chat Prefix Completion（Beta）	✓	✓
+FIM Completion（Beta）	✓	✗
+PRICING	1M INPUT TOKENS (CACHE HIT)	$0.028
+1M INPUT TOKENS (CACHE MISS)	$0.28
+1M OUTPUT TOKENS	$0.42
+(1) If the request to the deepseek-reasoner model includes the tools parameter, the request will actually be processed using the deepseek-chat model.
+Deduction Rules
+The expense = number of tokens × price. The corresponding fees will be directly deducted from your topped-up balance or granted balance, with a preference for using the granted balance first when both balances are available.
+
+Product prices may vary and DeepSeek reserves the right to adjust them. We recommend topping up based on your actual usage and regularly checking this page for the most recent pricing information.
+
+Rate Limit
+DeepSeek API does NOT constrain user's rate limit. We will try out best to serve every request.
+
+However, please note that when our servers are under high traffic pressure, your requests may take some time to receive a response from the server. During this period, your HTTP request will remain connected, and you may continuously receive contents in the following formats:
+
+Non-streaming requests: Continuously return empty lines
+Streaming requests: Continuously return SSE keep-alive comments (: keep-alive)
+These contents do not affect the parsing of the JSON body by the OpenAI SDK. If you are parsing the HTTP responses yourself, please ensure to handle these empty lines or comments appropriately.
+
+If the request is still not completed after 30 minutes, the server will close the connection.
+

@@ -1,0 +1,103 @@
+{
+  "success_rate": 85.71428571428571,
+  "test_results": [
+    {
+      "test_name": "API Health Check",
+      "success": true,
+      "message": "API is running and accessible",
+      "timestamp": "2025-10-29T19:07:16.887507",
+      "details": {
+        "status_code": 200,
+        "message": "WePlus RAG Campus Assistant API"
+      }
+    },
+    {
+      "test_name": "Database Connection",
+      "success": false,
+      "message": "Database connection failed with status 404",
+      "timestamp": "2025-10-29T19:07:39.386688",
+      "details": {
+        "status_code": 404
+      }
+    },
+    {
+      "test_name": "RAG Basic Chat",
+      "success": true,
+      "message": "RAG basic chat successful",
+      "timestamp": "2025-10-29T19:08:06.425787",
+      "details": {
+        "status_code": 200,
+        "has_response": true
+      }
+    },
+    {
+      "test_name": "RAG Knowledge Base",
+      "success": true,
+      "message": "RAG with knowledge base successful",
+      "timestamp": "2025-10-29T19:09:08.586850",
+      "details": {
+        "status_code": 200,
+        "has_response": true
+      }
+    },
+    {
+      "test_name": "Document Search",
+      "success": true,
+      "message": "Document search successful",
+      "timestamp": "2025-10-29T19:09:08.621025",
+      "details": {
+        "status_code": 200,
+        "results_count": 0
+      }
+    },
+    {
+      "test_name": "File Upload Endpoint",
+      "success": true,
+      "message": "File upload endpoint accessible (status: 403)",
+      "timestamp": "2025-10-29T19:09:09.624695",
+      "details": {
+        "status_code": 403
+      }
+    },
+    {
+      "test_name": "Frontend Accessibility",
+      "success": true,
+      "message": "Frontend is accessible at http://localhost:5173",
+      "timestamp": "2025-10-29T19:09:10.631879",
+      "details": {
+        "status_code": 200
+      }
+    },
+    {
+      "test_name": "API Endpoints",
+      "success": true,
+      "message": "API endpoints test: 5/6 accessible (83.3%)",
+      "timestamp": "2025-10-29T19:09:15.375227",
+      "details": {
+        "success_rate": 83.33333333333334,
+        "endpoint_results": [
+          "✅ Root endpoint: 200",
+          "❌ Documents list: 404",
+          "✅ RAG chat: 200",
+          "✅ Document search: 200",
+          "✅ User registration: 422",
+          "✅ User login: 422"
+        ]
+      }
+    },
+    {
+      "test_name": "System Integration",
+      "success": true,
+      "message": "Integration test: 3/3 services operational",
+      "timestamp": "2025-10-29T19:09:18.353863",
+      "details": {
+        "backend": true,
+        "frontend": true,
+        "rag_system": true,
+        "integration_score": 3
+      }
+    }
+  ],
+  "timestamp": "2025-10-29T19:09:19.362456",
+  "migration_status": "PostgreSQL migration completed"
+}

@@ -1,0 +1,48 @@
+{
+  "migration_summary": {
+    "start_time": "2025-10-29T10:07:05.013944",
+    "end_time": "2025-10-29T10:07:11.327281",
+    "duration_seconds": 6.313337,
+    "databases_processed": 7,
+    "tables_migrated": 21,
+    "records_migrated": 38,
+    "errors_count": 0,
+    "success": true
+  },
+  "verification_result": {
+    "total_tables": 28,
+    "total_records": 45,
+    "table_stats": {
+      "admin_logs": 0,
+      "admin_users": 6,
+      "api_access_logs": 0,
+      "categories": 0,
+      "chat_messages": 0,
+      "chat_sessions": 0,
+      "document_chunks": 0,
+      "document_tags": 0,
+      "documents": 0,
+      "file_categories": 6,
+      "file_records": 0,
+      "knowledge_entries": 0,
+      "resource_categories": 10,
+      "resource_comments": 0,
+      "resource_downloads": 0,
+      "resource_favorites": 0,
+      "resource_ratings": 0,
+      "resource_tag_relations": 0,
+      "resource_tags": 15,
+      "retrieval_logs": 0,
+      "security_logs": 0,
+      "study_resources": 0,
+      "system_logs": 0,
+      "system_stats": 4,
+      "tags": 4,
+      "user_action_logs": 0,
+      "users": 0,
+      "vector_metadata": 0
+    },
+    "success": true
+  },
+  "errors": []
+}

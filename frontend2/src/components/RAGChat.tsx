@@ -1,0 +1,306 @@
+import React, { useState, useRef, useEffect } from 'react';
+import ChatMessage from './ChatMessage';
+import LoadingSpinner from './LoadingSpinner';
+import type { Message } from '../types/Message';
+import { ragApi, type RAGChatMessage } from '../services/ragApi';
+import { getUserData, setUserData, USER_DATA_TYPES } from '../utils/userDataManager';
+import { useAuth } from '../contexts/AuthContext';
+import './RAGChat.css';
+
+const RAGChat: React.FC = () => {
+  const { user } = useAuth();
+  
+  // 从用户数据中加载聊天历史
+  const loadChatHistory = (): Message[] => {
+    if (!user) return [];
+    
+    try {
+      const savedHistory = getUserData(USER_DATA_TYPES.CHAT_HISTORY);
+      if (savedHistory && Array.isArray(savedHistory)) {
+        return savedHistory.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.warn('加载聊天历史失败:', error);
+    }
+    
+    return [];
+  };
+
+  // 保存聊天历史到用户数据
+  const saveChatHistory = (messages: Message[]) => {
+    if (!user) return;
+    
+    try {
+      // 只保存最近50条消息
+      const messagesToSave = messages.slice(-50).map(msg => ({
+        ...msg,
+        timestamp: msg.timestamp.toISOString()
+      }));
+      setUserData(USER_DATA_TYPES.CHAT_HISTORY, messagesToSave);
+    } catch (error) {
+      console.warn('保存聊天历史失败:', error);
+    }
+  };
+
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const savedHistory = loadChatHistory();
+    if (savedHistory.length > 0) {
+      return savedHistory;
+    }
+    
+    // 默认欢迎消息
+    return [
+      {
+        id: '1',
+        content: '您好！我是校园智能AI助手，可以帮助您解答关于校园生活、学习资源、校区导航等各种问题。请问有什么可以帮助您的吗？',
+        sender: 'assistant',
+        timestamp: new Date()
+      }
+    ];
+  });
+  const [inputValue, setInputValue] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [canStop, setCanStop] = useState(false);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // 自动调整文本框高度
+  const adjustTextareaHeight = () => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  };
+
+  // 滚动到底部
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+    // 保存聊天历史
+    saveChatHistory(messages);
+  }, [messages]);
+
+  // 发送消息 - 使用RAG API
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      content: inputValue.trim(),
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue.trim();
+    setInputValue('');
+    setIsLoading(true);
+    setCanStop(true);
+
+    // 创建新的AbortController
+    const controller = new AbortController();
+    setAbortController(controller);
+
+    // 重置文本框高度
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
+
+    // 创建AI消息占位符
+    const assistantMessageId = (Date.now() + 1).toString();
+    const assistantMessage: Message = {
+      id: assistantMessageId,
+      content: '',
+      sender: 'assistant',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, assistantMessage]);
+
+    try {
+      // 构建聊天历史
+      const chatHistory: RAGChatMessage[] = messages
+        .filter(msg => msg.sender !== 'assistant' || msg.content.trim() !== '')
+        .map(msg => ({
+          role: msg.sender === 'user' ? 'user' : 'assistant',
+          content: msg.content
+        }));
+
+      // 调用RAG API进行流式聊天
+      await ragApi.streamChat(currentInput, chatHistory, (response) => {
+        if (response.error) {
+          // 如果是用户主动停止，不显示错误信息
+          if (response.error === 'Request aborted') {
+            setIsLoading(false);
+            setCanStop(false);
+            setAbortController(null);
+            return;
+          }
+          
+          // 处理其他错误
+          setMessages(prev => prev.map(msg => 
+            msg.id === assistantMessageId 
+              ? { ...msg, content: `抱歉，服务出现问题：${response.error}` }
+              : msg
+          ));
+          setIsLoading(false);
+          setCanStop(false);
+          setAbortController(null);
+          return;
+        }
+
+        if (response.finished) {
+          // 流式输出完成
+          setIsLoading(false);
+          setCanStop(false);
+          setAbortController(null);
+          return;
+        }
+
+        // 更新AI消息内容（流式追加）- 优化性能，避免不必要的重新渲染
+        if (response.content) {
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const targetIndex = newMessages.findIndex(msg => msg.id === assistantMessageId);
+            if (targetIndex !== -1) {
+              newMessages[targetIndex] = {
+                ...newMessages[targetIndex],
+                content: newMessages[targetIndex].content + response.content
+              };
+            }
+            return newMessages;
+          });
+        }
+      }, true, controller);
+
+    } catch (error) {
+      console.error('发送消息失败:', error);
+      setMessages(prev => prev.map(msg => 
+        msg.id === assistantMessageId 
+          ? { ...msg, content: '抱歉，我现在无法回复您的消息。请稍后再试。' }
+          : msg
+      ));
+      setIsLoading(false);
+      setCanStop(false);
+      setAbortController(null);
+    }
+  };
+
+  // 停止AI回答
+  const handleStopResponse = () => {
+    if (abortController) {
+      abortController.abort();
+      setIsLoading(false);
+      setCanStop(false);
+      setAbortController(null);
+      
+      // 在最后一条AI消息后添加停止标记
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && lastMessage.sender === 'assistant') {
+          return prev.map((msg, index) => 
+            index === prev.length - 1 
+              ? { ...msg, content: msg.content + '\n\n[回答已停止]' }
+              : msg
+          );
+        }
+        return prev;
+      });
+    }
+  };
+
+  return (
+    <div className="rag-chat">
+      <div className="messages-container">
+        <div className="messages-list">
+          {messages.map((message) => (
+            <ChatMessage key={message.id} message={message} />
+          ))}
+          {isLoading && (
+            <div className="loading-message">
+              <div className="message-bubble assistant">
+                <LoadingSpinner size="small" />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
+
+
+
+      <div className="input-container">
+        <div className="input-wrapper">
+          <textarea
+            ref={textareaRef}
+            value={inputValue}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              adjustTextareaHeight();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (canStop) {
+                  handleStopResponse();
+                } else {
+                  handleSendMessage();
+                }
+              }
+            }}
+            placeholder="输入您的问题... (Shift+Enter 换行)"
+            className="message-input"
+            disabled={isLoading && !canStop}
+            rows={1}
+          />
+          
+          {/* 发送/停止按钮 */}
+          {canStop ? (
+            <button
+              onClick={handleStopResponse}
+              className="stop-button"
+              title="停止回答"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor"/>
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim() || isLoading}
+              className={`send-button ${!inputValue.trim() ? 'disabled' : 'enabled'}`}
+              title={!inputValue.trim() ? '请输入消息' : '发送消息'}
+            >
+              {isLoading ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="loading-icon">
+                  <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeDasharray="15 5" strokeDashoffset="0">
+                    <animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="1s" repeatCount="indefinite"/>
+                  </circle>
+                </svg>
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M7 11L12 6L17 11M12 18V7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
+        <div className="input-footer">
+          <p className="input-hint">
+            💡 提示：由RAG知识库+DeepSeek AI驱动，可以回答专属于中国海洋大学校园生活、学习资源、导航等问题
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RAGChat;

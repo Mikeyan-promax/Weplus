@@ -1,0 +1,20 @@
+{
+  "migration_summary": {
+    "timestamp": "2025-10-29T10:08:58.680618",
+    "files_scanned": 2788,
+    "files_modified": 55,
+    "sqlite_connections_replaced": 72,
+    "sql_queries_converted": 0,
+    "errors_count": 0,
+    "success": true
+  },
+  "errors": [],
+  "backup_location": "C:\\Users\\MikeYan-PC\\Desktop\\weplus\\migration_backup",
+  "postgresql_config": {
+    "host": "pgm-2ze8ej8ej8ej8ej8.pg.rds.aliyuncs.com",
+    "port": "5432",
+    "database": "weplus_main",
+    "user": "weplus_user",
+    "password": "WePlus2024!@#"
+  }
+}

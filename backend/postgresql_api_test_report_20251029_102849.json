@@ -1,0 +1,111 @@
+{
+  "test_summary": {
+    "total_tests": 11,
+    "successful_tests": 0,
+    "failed_tests": 11,
+    "success_rate": "0.0%",
+    "duration_seconds": 116.625323,
+    "timestamp": "2025-10-29T10:28:49.251860"
+  },
+  "test_results": [
+    {
+      "test_name": "GET /health",
+      "url": "http://localhost:8000/health",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:27:03.250005"
+    },
+    {
+      "test_name": "GET /",
+      "url": "http://localhost:8000/",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:27:14.252104"
+    },
+    {
+      "test_name": "GET /docs",
+      "url": "http://localhost:8000/docs",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:27:25.250197"
+    },
+    {
+      "test_name": "GET /openapi.json",
+      "url": "http://localhost:8000/openapi.json",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:27:36.245615"
+    },
+    {
+      "test_name": "GET /api/admin/dashboard/overview",
+      "url": "http://localhost:8000/api/admin/dashboard/overview",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:27:46.243460"
+    },
+    {
+      "test_name": "GET /api/admin/users",
+      "url": "http://localhost:8000/api/admin/users",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:27:56.245758"
+    },
+    {
+      "test_name": "GET /api/admin/files",
+      "url": "http://localhost:8000/api/admin/files",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:28:06.243326"
+    },
+    {
+      "test_name": "GET /api/users",
+      "url": "http://localhost:8000/api/users",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:28:16.251550"
+    },
+    {
+      "test_name": "GET /api/auth/me",
+      "url": "http://localhost:8000/api/auth/me",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:28:27.250612"
+    },
+    {
+      "test_name": "GET /api/study-resources",
+      "url": "http://localhost:8000/api/study-resources",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:28:38.253150"
+    },
+    {
+      "test_name": "GET /api/study-resources/categories",
+      "url": "http://localhost:8000/api/study-resources/categories",
+      "method": "GET",
+      "status_code": null,
+      "success": false,
+      "error": "",
+      "timestamp": "2025-10-29T10:28:49.250648"
+    }
+  ]
+}

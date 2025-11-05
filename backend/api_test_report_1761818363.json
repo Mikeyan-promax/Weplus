@@ -1,0 +1,74 @@
+[
+  {
+    "test": "健康检查",
+    "success": true,
+    "details": "状态: healthy",
+    "timestamp": "2025-10-30 17:59:14"
+  },
+  {
+    "test": "API文档",
+    "success": true,
+    "details": "Swagger UI 和 OpenAPI JSON 都可访问",
+    "timestamp": "2025-10-30 17:59:14"
+  },
+  {
+    "test": "数据库连接",
+    "success": true,
+    "details": "通过健康检查推断数据库正常",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "发送验证码",
+    "success": false,
+    "details": "状态码: 404",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "用户注册",
+    "success": false,
+    "details": "跳过测试：验证码发送失败",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "文档列表",
+    "success": false,
+    "details": "状态码: 500",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "文档搜索",
+    "success": true,
+    "details": "搜索结果: 0 个",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "学习资源",
+    "success": true,
+    "details": "共 0 个资源",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "管理员端点",
+    "success": false,
+    "details": "状态码: 404",
+    "timestamp": "2025-10-30 17:59:22"
+  },
+  {
+    "test": "RAG聊天",
+    "success": false,
+    "details": "状态码: 500",
+    "timestamp": "2025-10-30 17:59:23"
+  },
+  {
+    "test": "向量搜索",
+    "success": true,
+    "details": "找到 0 个结果",
+    "timestamp": "2025-10-30 17:59:23"
+  },
+  {
+    "test": "前后端连接",
+    "success": false,
+    "details": "CORS: False, API: False",
+    "timestamp": "2025-10-30 17:59:23"
+  }
+]
