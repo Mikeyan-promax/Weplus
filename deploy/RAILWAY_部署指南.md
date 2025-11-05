@@ -130,5 +130,5 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
 - 可观测性：`SENTRY_DSN`、`PROMETHEUS_ENABLED`
 - 限流：`REQUEST_RATE_LIMIT_ENABLED`、`REQUEST_RATE_LIMIT_PER_MINUTE`
 
-> 注：本指南严格依据仓库内 `Dockerfile`、`railway.json`、`deploy/nginx.railway.conf`、`backend/app/core/config.py` 与 `backend/database/config.py` 的实际实现撰写。
+> 注：本指南严格依据仓库内 `Dockerfile`、`railway.json`、`deploy/nginx.railway.conf.template`、`backend/app/core/config.py` 与 `backend/database/config.py` 的实际实现撰写。
 

@@ -6,7 +6,7 @@
 - `backend/` 后端 FastAPI 源码与依赖
 - `frontend2/` 前端 React + Vite 源码
 - `deploy/` 部署相关配置（Nginx、supervisord、检查脚本、清单）
-  - `nginx.railway.conf` 单容器 Nginx 配置
+  - `nginx.railway.conf.template` 单容器 Nginx 配置模板（运行时渲染监听 `$PORT`）
   - `supervisord.railway.conf` 同时启动 Uvicorn 与 Nginx
   - `checks/railway_post_deploy_check.py` 发布后联通检查脚本
   - `DEPLOYMENT_CHECKLIST.md` 生产就绪核对表
@@ -21,4 +21,3 @@
 ## 备注
 - 健康检查端点：`/api/healthz`（与 `railway.json` 对齐）
 - 生产务必设置环境变量：`SECRET_KEY`、`ALLOWED_ORIGINS`、`DATABASE_URL` 等
-

@@ -78,7 +78,6 @@ def main() -> int:
 
     checks = [
         ("健康检查", "/api/healthz"),
-        ("健康检查别名", "/healthz"),
         ("备用健康", "/health"),
         ("就绪检查", "/readyz"),
         ("API文档", "/docs"),
@@ -89,10 +88,9 @@ def main() -> int:
         status, data = check_endpoint(base, path)
         if status == 200:
             ok += 1
-            snippet = str(data)[:160] if data else "<无响应体>"
-            print(f"✅ {name} - 200 OK | {path} | 响应: {snippet}")
+            print(f"✅ {name} - 200 OK | {path} | 响应: {str(data)[:120]}")
         else:
-            print(f"⚠️  {name} - 非200 | {path} | 状态: {status} | 详情: {data}")
+            print(f"⚠️  {name} - 非200 | {path} | 详情: {data}")
 
     print(f"\n📊 巡检完成：{ok}/{len(checks)} 项通过")
     return 0 if ok >= 2 else 1

@@ -1,27 +1,12 @@
-railway部署界面报错
-
-
-Weplus
-/
-cccf259b
-Failed
-
-Nov 5, 2025, 10:49 AM
-Get Help
-Details
-Build Logs
-Deploy Logs
-Search build logs
-
 You reached the start of the range
-Nov 5, 2025, 10:49 AM
+Nov 5, 2025, 12:01 PM
  
 [Region: asia-southeast1]
 =========================
 Using Detected Dockerfile
 =========================
 
-context: gwfv-Z84R
+context: w271-LWHA
 
 internal
 load build definition from Dockerfile
@@ -29,11 +14,11 @@ load build definition from Dockerfile
 
 internal
 load metadata for docker.io/library/python:3.11-slim
-2s
+1s
 
 internal
 load metadata for docker.io/library/node:18-alpine
-2s
+1s
 
 auth
 library/python:pull token for registry-1.docker.io
@@ -51,189 +36,414 @@ internal
 load build context
 0ms
 
-backend-build
-FROM docker.io/library/python:3.11-slim@sha256:fa9b525a0be0c5ae5e6f2209f4be6fdc5a15a36fed0222144d98ac0d08f876d4
-17ms
-
 frontend-build
 FROM docker.io/library/node:18-alpine@sha256:8d6421d663b4c28fd3ebc498332f249011d118945588d0a35cb9bc4b8ca09d9e
 15ms
 
-frontend-build
-WORKDIR /app
-35ms
+backend-build
+FROM docker.io/library/python:3.11-slim@sha256:fa9b525a0be0c5ae5e6f2209f4be6fdc5a15a36fed0222144d98ac0d08f876d4
+17ms
+
+backend-build
+WORKDIR /app cached
+0ms
+
+runtime
+RUN apt-get update && apt-get install -y --no-install-recommends     nginx     supervisor   && rm -rf /var/lib/apt/lists/*
+11s
+Hit:1 http://deb.debian.org/debian trixie InRelease
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9669 kB]
+Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [5412 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [69.2 kB]
+Fetched 9834 kB in 1s (10.3 MB/s)
+Reading package lists...
+
+Reading package lists...
+
+Building dependency tree...
+
+Reading state information...
+
+The following additional packages will be installed:
+  iproute2 libbpf1 libcap2-bin libcom-err2 libelf1t64 libexpat1
+  libgssapi-krb5-2 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libmnl0
+  libpython3-stdlib libpython3.13-minimal libpython3.13-stdlib libtirpc-common
+  libtirpc3t64 libxtables12 media-types nginx-common python3
+  python3-autocommand python3-inflect python3-jaraco.context
+  python3-jaraco.functools python3-minimal python3-more-itertools
+  python3-pkg-resources python3-typeguard python3-typing-extensions python3.13
+  python3.13-minimal
+Suggested packages:
+  krb5-doc krb5-user fcgiwrap nginx-doc ssl-cert python3-doc python3-tk
+  python3-venv python3-setuptools python3.13-venv python3.13-doc binutils
+  binfmt-support supervisor-doc
+Recommended packages:
+  libpam-cap krb5-locales
+The following NEW packages will be installed:
+  iproute2 libbpf1 libcap2-bin libcom-err2 libelf1t64 libexpat1
+  libgssapi-krb5-2 libk5crypto3 libkeyutils1 libkrb5-3 libkrb5support0 libmnl0
+  libpython3-stdlib libpython3.13-minimal libpython3.13-stdlib libtirpc-common
+  libtirpc3t64 libxtables12 media-types nginx nginx-common python3
+  python3-autocommand python3-inflect python3-jaraco.context
+  python3-jaraco.functools python3-minimal python3-more-itertools
+  python3-pkg-resources python3-typeguard python3-typing-extensions python3.13
+  python3.13-minimal supervisor
+0 upgraded, 34 newly installed, 0 to remove and 0 not upgraded.
+Need to get 9752 kB of archives.
+After this operation, 37.1 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main amd64 libexpat1 amd64 2.7.1-2 [108 kB]
+Get:2 http://deb.debian.org/debian trixie/main amd64 libpython3.13-minimal amd64 3.13.5-2 [862 kB]
+Get:3 http://deb.debian.org/debian trixie/main amd64 python3.13-minimal amd64 3.13.5-2 [2224 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 python3-minimal amd64 3.13.5-1 [27.2 kB]
+Get:5 http://deb.debian.org/debian trixie/main amd64 media-types all 13.0.0 [29.3 kB]
+Get:6 http://deb.debian.org/debian trixie/main amd64 libpython3.13-stdlib amd64 3.13.5-2 [1956 kB]
+Get:7 http://deb.debian.org/debian trixie/main amd64 python3.13 amd64 3.13.5-2 [757 kB]
+Get:8 http://deb.debian.org/debian trixie/main amd64 libpython3-stdlib amd64 3.13.5-1 [10.2 kB]
+Get:9 http://deb.debian.org/debian trixie/main amd64 python3 amd64 3.13.5-1 [28.2 kB]
+Get:10 http://deb.debian.org/debian trixie/main amd64 python3-autocommand all 2.2.2-3 [13.6 kB]
+Get:11 http://deb.debian.org/debian trixie/main amd64 python3-more-itertools all 10.7.0-1 [67.4 kB]
+Get:12 http://deb.debian.org/debian trixie/main amd64 python3-typing-extensions all 4.13.2-1 [90.5 kB]
+Get:13 http://deb.debian.org/debian trixie/main amd64 python3-typeguard all 4.4.2-1 [37.3 kB]
+Get:14 http://deb.debian.org/debian trixie/main amd64 python3-inflect all 7.3.1-2 [32.4 kB]
+Get:15 http://deb.debian.org/debian trixie/main amd64 python3-jaraco.context all 6.0.1-1 [8276 B]
+Get:16 http://deb.debian.org/debian trixie/main amd64 python3-jaraco.functools all 4.1.0-1 [12.0 kB]
+Get:17 http://deb.debian.org/debian trixie/main amd64 python3-pkg-resources all 78.1.1-0.1 [224 kB]
+Get:18 http://deb.debian.org/debian trixie/main amd64 supervisor all 4.2.5-3 [311 kB]
+Get:19 http://deb.debian.org/debian trixie/main amd64 libelf1t64 amd64 0.192-4 [189 kB]
+Get:20 http://deb.debian.org/debian trixie/main amd64 libbpf1 amd64 1:1.5.0-3 [169 kB]
+Get:21 http://deb.debian.org/debian trixie/main amd64 libmnl0 amd64 1.0.5-3 [11.9 kB]
+Get:22 http://deb.debian.org/debian trixie/main amd64 libkrb5support0 amd64 1.21.3-5 [33.0 kB]
+Get:23 http://deb.debian.org/debian trixie/main amd64 libcom-err2 amd64 1.47.2-3+b3 [25.0 kB]
+Get:24 http://deb.debian.org/debian trixie/main amd64 libk5crypto3 amd64 1.21.3-5 [81.5 kB]
+Get:25 http://deb.debian.org/debian trixie/main amd64 libkeyutils1 amd64 1.6.3-6 [9456 B]
+Get:26 http://deb.debian.org/debian trixie/main amd64 libkrb5-3 amd64 1.21.3-5 [326 kB]
+Get:27 http://deb.debian.org/debian trixie/main amd64 libgssapi-krb5-2 amd64 1.21.3-5 [138 kB]
+Get:28 http://deb.debian.org/debian trixie/main amd64 libtirpc-common all 1.3.6+ds-1 [11.0 kB]
+Get:29 http://deb.debian.org/debian trixie/main amd64 libtirpc3t64 amd64 1.3.6+ds-1 [83.3 kB]
+Get:30 http://deb.debian.org/debian trixie/main amd64 libxtables12 amd64 1.8.11-2 [31.9 kB]
+Get:31 http://deb.debian.org/debian trixie/main amd64 libcap2-bin amd64 1:2.75-10+b1 [36.4 kB]
+Get:32 http://deb.debian.org/debian trixie/main amd64 iproute2 amd64 6.15.0-1 [1089 kB]
+Get:33 http://deb.debian.org/debian trixie/main amd64 nginx-common all 1.26.3-3+deb13u1 [109 kB]
+Get:34 http://deb.debian.org/debian trixie/main amd64 nginx amd64 1.26.3-3+deb13u1 [609 kB]
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 34.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Preconfiguring packages ...
+Fetched 9752 kB in 0s (74.6 MB/s)
+Selecting previously unselected package libexpat1:amd64.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5644 files and directories currently installed.)
+Preparing to unpack .../libexpat1_2.7.1-2_amd64.deb ...
+Unpacking libexpat1:amd64 (2.7.1-2) ...
+Selecting previously unselected package libpython3.13-minimal:amd64.
+Preparing to unpack .../libpython3.13-minimal_3.13.5-2_amd64.deb ...
+Unpacking libpython3.13-minimal:amd64 (3.13.5-2) ...
+Selecting previously unselected package python3.13-minimal.
+Preparing to unpack .../python3.13-minimal_3.13.5-2_amd64.deb ...
+Unpacking python3.13-minimal (3.13.5-2) ...
+Setting up libpython3.13-minimal:amd64 (3.13.5-2) ...
+Setting up libexpat1:amd64 (2.7.1-2) ...
+Setting up python3.13-minimal (3.13.5-2) ...
+Selecting previously unselected package python3-minimal.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 5978 files and directories currently installed.)
+Preparing to unpack .../python3-minimal_3.13.5-1_amd64.deb ...
+Unpacking python3-minimal (3.13.5-1) ...
+Selecting previously unselected package media-types.
+Preparing to unpack .../media-types_13.0.0_all.deb ...
+Unpacking media-types (13.0.0) ...
+Selecting previously unselected package libpython3.13-stdlib:amd64.
+Preparing to unpack .../libpython3.13-stdlib_3.13.5-2_amd64.deb ...
+Unpacking libpython3.13-stdlib:amd64 (3.13.5-2) ...
+Selecting previously unselected package python3.13.
+Preparing to unpack .../python3.13_3.13.5-2_amd64.deb ...
+Unpacking python3.13 (3.13.5-2) ...
+Selecting previously unselected package libpython3-stdlib:amd64.
+Preparing to unpack .../libpython3-stdlib_3.13.5-1_amd64.deb ...
+Unpacking libpython3-stdlib:amd64 (3.13.5-1) ...
+Setting up python3-minimal (3.13.5-1) ...
+Selecting previously unselected package python3.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%
+(Reading database ... 35%
+(Reading database ... 40%
+(Reading database ... 45%
+(Reading database ... 50%
+(Reading database ... 55%
+(Reading database ... 60%
+(Reading database ... 65%
+(Reading database ... 70%
+(Reading database ... 75%
+(Reading database ... 80%
+(Reading database ... 85%
+(Reading database ... 90%
+(Reading database ... 95%
+(Reading database ... 100%
+(Reading database ... 6432 files and directories currently installed.)
+Preparing to unpack .../00-python3_3.13.5-1_amd64.deb ...
+Unpacking python3 (3.13.5-1) ...
+Selecting previously unselected package python3-autocommand.
+Preparing to unpack .../01-python3-autocommand_2.2.2-3_all.deb ...
+Unpacking python3-autocommand (2.2.2-3) ...
+Selecting previously unselected package python3-more-itertools.
+Preparing to unpack .../02-python3-more-itertools_10.7.0-1_all.deb ...
+Unpacking python3-more-itertools (10.7.0-1) ...
+Selecting previously unselected package python3-typing-extensions.
+Preparing to unpack .../03-python3-typing-extensions_4.13.2-1_all.deb ...
+Unpacking python3-typing-extensions (4.13.2-1) ...
+Selecting previously unselected package python3-typeguard.
+Preparing to unpack .../04-python3-typeguard_4.4.2-1_all.deb ...
+Unpacking python3-typeguard (4.4.2-1) ...
+Selecting previously unselected package python3-inflect.
+Preparing to unpack .../05-python3-inflect_7.3.1-2_all.deb ...
+Unpacking python3-inflect (7.3.1-2) ...
+Selecting previously unselected package python3-jaraco.context.
+Preparing to unpack .../06-python3-jaraco.context_6.0.1-1_all.deb ...
+Unpacking python3-jaraco.context (6.0.1-1) ...
+Selecting previously unselected package python3-jaraco.functools.
+Preparing to unpack .../07-python3-jaraco.functools_4.1.0-1_all.deb ...
+Unpacking python3-jaraco.functools (4.1.0-1) ...
+Selecting previously unselected package python3-pkg-resources.
+Preparing to unpack .../08-python3-pkg-resources_78.1.1-0.1_all.deb ...
+Unpacking python3-pkg-resources (78.1.1-0.1) ...
+Selecting previously unselected package supervisor.
+Preparing to unpack .../09-supervisor_4.2.5-3_all.deb ...
+Unpacking supervisor (4.2.5-3) ...
+Selecting previously unselected package libelf1t64:amd64.
+Preparing to unpack .../10-libelf1t64_0.192-4_amd64.deb ...
+Unpacking libelf1t64:amd64 (0.192-4) ...
+Selecting previously unselected package libbpf1:amd64.
+Preparing to unpack .../11-libbpf1_1%3a1.5.0-3_amd64.deb ...
+Unpacking libbpf1:amd64 (1:1.5.0-3) ...
+Selecting previously unselected package libmnl0:amd64.
+Preparing to unpack .../12-libmnl0_1.0.5-3_amd64.deb ...
+Unpacking libmnl0:amd64 (1.0.5-3) ...
+Selecting previously unselected package libkrb5support0:amd64.
+Preparing to unpack .../13-libkrb5support0_1.21.3-5_amd64.deb ...
+Unpacking libkrb5support0:amd64 (1.21.3-5) ...
+Selecting previously unselected package libcom-err2:amd64.
+Preparing to unpack .../14-libcom-err2_1.47.2-3+b3_amd64.deb ...
+Unpacking libcom-err2:amd64 (1.47.2-3+b3) ...
+Selecting previously unselected package libk5crypto3:amd64.
+Preparing to unpack .../15-libk5crypto3_1.21.3-5_amd64.deb ...
+Unpacking libk5crypto3:amd64 (1.21.3-5) ...
+Selecting previously unselected package libkeyutils1:amd64.
+Preparing to unpack .../16-libkeyutils1_1.6.3-6_amd64.deb ...
+Unpacking libkeyutils1:amd64 (1.6.3-6) ...
+Selecting previously unselected package libkrb5-3:amd64.
+Preparing to unpack .../17-libkrb5-3_1.21.3-5_amd64.deb ...
+Unpacking libkrb5-3:amd64 (1.21.3-5) ...
+Selecting previously unselected package libgssapi-krb5-2:amd64.
+Preparing to unpack .../18-libgssapi-krb5-2_1.21.3-5_amd64.deb ...
+Unpacking libgssapi-krb5-2:amd64 (1.21.3-5) ...
+Selecting previously unselected package libtirpc-common.
+Preparing to unpack .../19-libtirpc-common_1.3.6+ds-1_all.deb ...
+Unpacking libtirpc-common (1.3.6+ds-1) ...
+Selecting previously unselected package libtirpc3t64:amd64.
+Preparing to unpack .../20-libtirpc3t64_1.3.6+ds-1_amd64.deb ...
+Adding 'diversion of /lib/x86_64-linux-gnu/libtirpc.so.3 to /lib/x86_64-linux-gnu/libtirpc.so.3.usr-is-merged by libtirpc3t64'
+Adding 'diversion of /lib/x86_64-linux-gnu/libtirpc.so.3.0.0 to /lib/x86_64-linux-gnu/libtirpc.so.3.0.0.usr-is-merged by libtirpc3t64'
+Unpacking libtirpc3t64:amd64 (1.3.6+ds-1) ...
+Selecting previously unselected package libxtables12:amd64.
+Preparing to unpack .../21-libxtables12_1.8.11-2_amd64.deb ...
+Unpacking libxtables12:amd64 (1.8.11-2) ...
+Selecting previously unselected package libcap2-bin.
+Preparing to unpack .../22-libcap2-bin_1%3a2.75-10+b1_amd64.deb ...
+Unpacking libcap2-bin (1:2.75-10+b1) ...
+Selecting previously unselected package iproute2.
+Preparing to unpack .../23-iproute2_6.15.0-1_amd64.deb ...
+Unpacking iproute2 (6.15.0-1) ...
+Selecting previously unselected package nginx-common.
+Preparing to unpack .../24-nginx-common_1.26.3-3+deb13u1_all.deb ...
+Unpacking nginx-common (1.26.3-3+deb13u1) ...
+Selecting previously unselected package nginx.
+Preparing to unpack .../25-nginx_1.26.3-3+deb13u1_amd64.deb ...
+Unpacking nginx (1.26.3-3+deb13u1) ...
+Setting up media-types (13.0.0) ...
+Setting up libkeyutils1:amd64 (1.6.3-6) ...
+Setting up libtirpc-common (1.3.6+ds-1) ...
+Setting up nginx-common (1.26.3-3+deb13u1) ...
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Setting up libcom-err2:amd64 (1.47.2-3+b3) ...
+Setting up libelf1t64:amd64 (0.192-4) ...
+Setting up libkrb5support0:amd64 (1.21.3-5) ...
+Setting up libcap2-bin (1:2.75-10+b1) ...
+Setting up libmnl0:amd64 (1.0.5-3) ...
+Setting up libk5crypto3:amd64 (1.21.3-5) ...
+Setting up libxtables12:amd64 (1.8.11-2) ...
+Setting up libkrb5-3:amd64 (1.21.3-5) ...
+Setting up libpython3.13-stdlib:amd64 (3.13.5-2) ...
+Setting up libbpf1:amd64 (1:1.5.0-3) ...
+Setting up libpython3-stdlib:amd64 (3.13.5-1) ...
+Setting up python3.13 (3.13.5-2) ...
+Setting up python3 (3.13.5-1) ...
+running python rtupdate hooks for python3.13...
+running python post-rtupdate hooks for python3.13...
+Setting up python3-autocommand (2.2.2-3) ...
+Setting up libgssapi-krb5-2:amd64 (1.21.3-5) ...
+Setting up python3-typing-extensions (4.13.2-1) ...
+Setting up python3-more-itertools (10.7.0-1) ...
+Setting up python3-jaraco.functools (4.1.0-1) ...
+Setting up python3-jaraco.context (6.0.1-1) ...
+Setting up libtirpc3t64:amd64 (1.3.6+ds-1) ...
+Setting up iproute2 (6.15.0-1) ...
+debconf: unable to initialize frontend: Dialog
+debconf: (TERM is not set, so the dialog frontend is not usable.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Setting up python3-typeguard (4.4.2-1) ...
+Setting up python3-inflect (7.3.1-2) ...
+Setting up python3-pkg-resources (78.1.1-0.1) ...
+Setting up supervisor (4.2.5-3) ...
+invoke-rc.d: could not determine current runlevel
+invoke-rc.d: policy-rc.d denied execution of start.
+Setting up nginx (1.26.3-3+deb13u1) ...
+invoke-rc.d: could not determine current runlevel
+invoke-rc.d: policy-rc.d denied execution of start.
+Processing triggers for libc-bin (2.41-12) ...
+
+backend-build
+COPY backend/requirements.txt /app/requirements.txt
+67ms
 
 frontend-build
-COPY frontend2/package.json frontend2/package-lock.json* frontend2/pnpm-lock.yaml* /app/
-36ms
+WORKDIR /app cached
+0ms
+
+frontend-build
+COPY frontend2/package.json frontend2/package-lock.json* frontend2/pnpm-lock.yaml* /app/ cached
+0ms
 
 frontend-build
 RUN npm ci --silent || npm install --legacy-peer-deps --silent
 7s
 
 backend-build
-WORKDIR /app
-50ms
-
-runtime
-RUN apt-get update && apt-get install -y --no-install-recommends     nginx     supervisor   && rm -rf /var/lib/apt/lists/*
-10s
-Processing triggers for libc-bin (2.41-12) ...
-
-backend-build
-RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     libffi-dev     openssl     ca-certificates   && rm -rf /var/lib/apt/lists/*
-10s
-Processing triggers for libc-bin (2.41-12) ...
+RUN pip install --no-cache-dir --prefer-binary -r /app/requirements.txt
+18s
+[notice] To update, run: pip install --upgrade pip
 
 frontend-build
 COPY frontend2/ /app/
-182ms
+190ms
 
 frontend-build
 RUN npm run build
-6s
-> frontend2@0.0.0 build
-> tsc -b && vite build
-src/components/ChatUITest.tsx(143,13): error TS2322: Type '{ key: string; content: string; isUser: boolean; timestamp: string; }' is not assignable to type 'IntrinsicAttributes & ChatMessageProps'.
-
-  Property 'content' does not exist on type 'IntrinsicAttributes & ChatMessageProps'.
-src/components/ChatUITest.tsx(151,11): error TS2322: Type '{ content: string; isUser: boolean; timestamp: string; isTyping: boolean; }' is not assignable to type 'IntrinsicAttributes & ChatMessageProps'.
-
-  Property 'content' does not exist on type 'IntrinsicAttributes & ChatMessageProps'.
-src/components/OtherTools.tsx(6,20): error TS7016: Could not find a declaration file for module 'qrcode'. '/app/node_modules/qrcode/lib/index.js' implicitly has an 'any' type.
-
-  Try `npm i --save-dev @types/qrcode` if it exists or add a new declaration (.d.ts) file containing `declare module 'qrcode';`
-src/components/OtherTools.tsx(8,29): error TS7016: Could not find a declaration file for module 'turndown'. '/app/node_modules/turndown/lib/turndown.cjs.js' implicitly has an 'any' type.
-
-  Try `npm i --save-dev @types/turndown` if it exists or add a new declaration (.d.ts) file containing `declare module 'turndown';`
-src/components/OtherTools.tsx(39,95): error TS2503: Cannot find namespace 'JSX'.
-
-src/components/OtherTools.tsx(584,20): error TS6133: 'e' is declared but its value is never read.
-
-src/components/OtherTools.tsx(1097,47): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'.
-
-  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
-    Types of property 'buffer' are incompatible.
-      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
-        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
-          Types of property '[Symbol.toStringTag]' are incompatible.
-            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
-src/components/OtherTools.tsx(1140,47): error TS2322: Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'BlobPart'.
-
-  Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'ArrayBufferView<ArrayBuffer>'.
-    Types of property 'buffer' are incompatible.
-      Type 'ArrayBufferLike' is not assignable to type 'ArrayBuffer'.
-        Type 'SharedArrayBuffer' is not assignable to type 'ArrayBuffer'.
-          Types of property '[Symbol.toStringTag]' are incompatible.
-            Type '"SharedArrayBuffer"' is not assignable to type '"ArrayBuffer"'.
-src/components/RatingModal.tsx(13,3): error TS6133: 'resourceId' is declared but its value is never read.
-
-src/components/TestUserDataIsolation.tsx(43,11): error TS2322: Type '{ children: string; onClick: () => Promise<void>; disabled: boolean; style: { backgroundColor: string; color: string; padding: string; border: string; borderRadius: string; cursor: string; }; }' is not assignable to type 'IntrinsicAttributes & AnimatedButtonProps'.
-
-  Property 'style' does not exist on type 'IntrinsicAttributes & AnimatedButtonProps'.
-src/components/admin/DocumentManagement.tsx(134,15): error TS18046: 'error' is of type 'unknown'.
-
-src/components/admin/DocumentManagement.tsx(135,18): error TS18046: 'error' is of type 'unknown'.
-
-src/components/admin/DocumentManagement.tsx(136,16): error TS18046: 'error' is of type 'unknown'.
-
-src/components/admin/UserManagement.tsx(50,10): error TS6133: 'stats' is declared but its value is never read.
-
-src/components/admin/UserManagement.tsx(53,10): error TS6133: 'roleFilter' is declared but its value is never read.
-
-src/components/admin/UserManagement.tsx(53,22): error TS6133: 'setRoleFilter' is declared but its value is never read.
-
-src/components/admin/UserManagement.tsx(81,10): error TS6133: 'totalUsers' is declared but its value is never read.
-
-src/components/common/CommentForm.tsx(13,3): error TS6133: 'resourceId' is declared but its value is never read.
-
-src/components/common/CommentList.tsx(1,27): error TS6133: 'useEffect' is declared but its value is never read.
-
-src/components/common/CommentList.tsx(27,3): error TS6133: 'resourceId' is declared but its value is never read.
-
-src/contexts/AuthContext.tsx(6,65): error TS1484: 'ReactNode' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
-
-src/contexts/AuthContext.tsx(32,9): error TS2304: Cannot find name 'clearAuthTokens'.
-
-src/contexts/AuthContext.tsx(63,5): error TS2322: Type '(userData: User) => void' is not assignable to type '(credentials: LoginCredentials) => Promise<boolean>'.
-
-  Types of parameters 'userData' and 'credentials' are incompatible.
-    Type 'LoginCredentials' is missing the following properties from type 'User': id, username, is_active, is_verified, created_at
-src/utils/functionalityTest.ts(132,11): error TS6133: 'hasHashRouter' is declared but its value is never read.
-
-src/utils/testUserDataIsolation.ts(82,31): error TS2339: Property 'theme' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(83,31): error TS2339: Property 'language' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(84,31): error TS2339: Property 'theme' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(85,31): error TS2339: Property 'language' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(126,44): error TS2339: Property 'length' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(127,44): error TS2339: Property 'length' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(128,20): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
-
-  Property '0' does not exist on type '{}'.
-src/utils/testUserDataIsolation.ts(129,20): error TS7053: Element implicitly has an 'any' type because expression of type '0' can't be used to index type '{}'.
-
-  Property '0' does not exist on type '{}'.
-src/utils/testUserDataIsolation.ts(176,44): error TS2339: Property 'messageNotifications' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(177,44): error TS2339: Property 'activityReminders' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(178,44): error TS2339: Property 'messageNotifications' does not exist on type '{}'.
-
-src/utils/testUserDataIsolation.ts(179,44): error TS2339: Property 'activityReminders' does not exist on type '{}'.
-
+11s
+✓ built in 8.33s
 
 backend-build
-COPY backend/requirements.txt /app/requirements.txt
-59ms
+COPY backend/ /app
+72ms
 
-backend-build
-RUN pip install --no-cache-dir --prefer-binary -r /app/requirements.txt
+runtime
+COPY --from=backend-build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
+1s
+
+runtime
+COPY --from=backend-build /usr/local/bin/uvicorn /usr/local/bin/uvicorn
+70ms
+
+runtime
+COPY --from=backend-build /app /app
+75ms
+
+runtime
+COPY --from=frontend-build /app/dist /usr/share/nginx/html
+154ms
+
+runtime
+COPY deploy/nginx.railway.conf /etc/nginx/nginx.conf
+22ms
+
+runtime
+COPY deploy/supervisord.railway.conf /etc/supervisord.conf
+33ms
+
+importing to docker
 3s
-Collecting fastapi==0.104.1 (from -r /app/requirements.txt (line 2))
-  Downloading fastapi-0.104.1-py3-none-any.whl.metadata (24 kB)
-Collecting uvicorn==0.24.0 (from uvicorn[standard]==0.24.0->-r /app/requirements.txt (line 3))
-  Downloading uvicorn-0.24.0-py3-none-any.whl.metadata (6.4 kB)
-Collecting sqlalchemy==2.0.23 (from -r /app/requirements.txt (line 6))
-  Downloading SQLAlchemy-2.0.23-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (9.6 kB)
-Collecting psycopg2-binary==2.9.9 (from -r /app/requirements.txt (line 7))
-  Downloading psycopg2_binary-2.9.9-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
-Collecting asyncpg==0.29.0 (from -r /app/requirements.txt (line 8))
-  Downloading asyncpg-0.29.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
-Collecting alembic==1.12.1 (from -r /app/requirements.txt (line 9))
-  Downloading alembic-1.12.1-py3-none-any.whl.metadata (7.3 kB)
-Collecting pgvector==0.2.4 (from -r /app/requirements.txt (line 10))
-  Downloading pgvector-0.2.4-py2.py3-none-any.whl.metadata (9.8 kB)
-Collecting langchain==0.1.0 (from -r /app/requirements.txt (line 13))
-  Downloading langchain-0.1.0-py3-none-any.whl.metadata (13 kB)
-Collecting langchain-community==0.0.10 (from -r /app/requirements.txt (line 14))
-  Downloading langchain_community-0.0.10-py3-none-any.whl.metadata (7.3 kB)
-Collecting sentence-transformers==2.2.2 (from -r /app/requirements.txt (line 15))
-  Downloading sentence-transformers-2.2.2.tar.gz (85 kB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 86.0/86.0 kB 306.2 MB/s eta 0:00:00
-  Preparing metadata (setup.py): started
-  Preparing metadata (setup.py): finished with status 'done'
-Collecting pypdf2==3.0.1 (from -r /app/requirements.txt (line 18))
-  Downloading pypdf2-3.0.1-py3-none-any.whl.metadata (6.8 kB)
-Collecting python-docx==1.1.0 (from -r /app/requirements.txt (line 19))
-  Downloading python_docx-1.1.0-py3-none-any.whl.metadata (2.0 kB)
-Collecting python-multipart==0.0.6 (from -r /app/requirements.txt (line 20))
-  Downloading python_multipart-0.0.6-py3-none-any.whl.metadata (2.5 kB)
-Collecting openai==1.3.7 (from -r /app/requirements.txt (line 23))
-  Downloading openai-1.3.7-py3-none-any.whl.metadata (17 kB)
-Collecting httpx==0.25.2 (from -r /app/requirements.txt (line 24))
-  Downloading httpx-0.25.2-py3-none-any.whl.metadata (6.9 kB)
-Dockerfile:16
--------------------
-14 |     # 复制源码并构建
-15 |     COPY frontend2/ /app/
-16 | >>> RUN npm run build
-17 |
-18 |     # === Backend Build ===
--------------------
-ERROR: failed to build: failed to solve: process "/bin/sh -c npm run build" did not complete successfully: exit code: 2
+
+auth
+sharing credentials for production-asia-southeast1-eqsg3a.railway-registry.com
+0ms
+Build time: 54.71 seconds
+ 
+====================
+Starting Healthcheck
+====================
+Path: /api/healthz
+Retry window: 5m0s
+ 
+Attempt #1 failed with service unavailable. Continuing to retry for 4m49s
+Attempt #2 failed with service unavailable. Continuing to retry for 4m38s
+Attempt #3 failed with service unavailable. Continuing to retry for 4m26s
+Attempt #4 failed with service unavailable. Continuing to retry for 4m12s
+Attempt #5 failed with service unavailable. Continuing to retry for 3m54s
+Attempt #6 failed with service unavailable. Continuing to retry for 3m27s
+Attempt #7 failed with service unavailable. Continuing to retry for 2m47s
