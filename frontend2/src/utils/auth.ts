@@ -16,8 +16,9 @@ const USER_INFO_KEY = 'user_info';
  */
 export const isAuthenticated = (): boolean => {
   const token = localStorage.getItem(ACCESS_TOKEN_KEY);
-  const userInfo = localStorage.getItem(USER_INFO_KEY);
-  return !!(token && userInfo);
+  const user = getUserInfo();
+  // 必须同时存在有效 token 与可解析的用户信息
+  return !!(token && user);
 };
 
 /**
@@ -41,6 +42,11 @@ export const getUserInfo = (): User | null => {
   const userInfo = localStorage.getItem(USER_INFO_KEY);
   if (userInfo) {
     try {
+      // 过滤无效串，避免 JSON.parse 抛错或误判登录
+      const val = userInfo.trim();
+      if (val === 'undefined' || val === 'null' || val === '') {
+        return null;
+      }
       return JSON.parse(userInfo);
     } catch (error) {
       console.error('解析用户信息失败:', error);

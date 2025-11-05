@@ -6,7 +6,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { User, AuthContextType, LoginCredentials } from '../types/auth';
-import { isAuthenticated, getUserInfo, logout as authLogout, clearAuthTokens, saveAuthTokens } from '../utils/auth';
+import { isAuthenticated, getUserInfo, getAccessToken, logout as authLogout, clearAuthTokens, saveAuthTokens } from '../utils/auth';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -26,17 +26,40 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // 初始化用户状态
   useEffect(() => {
     /**
-     * 初始化认证状态：
-     * - 如已认证，则读取并设置用户信息
-     * - 异常时清理本地令牌，避免脏数据
+     * 初始化认证状态
+     * - 优先从 localStorage 读取 user_info
+     * - 若 token 存在但 user_info 缺失或无效，则调用 /api/auth/me 获取并写入
+     * - 异常时清理令牌，避免脏数据导致误判
      */
-    const initializeAuth = () => {
+    const initializeAuth = async () => {
       try {
-        if (isAuthenticated()) {
-          const userInfo = getUserInfo();
-          if (userInfo) {
-            setUser(userInfo);
+        const token = getAccessToken();
+        const cachedUser = getUserInfo();
+
+        if (cachedUser) {
+          setUser(cachedUser);
+          return;
+        }
+
+        if (token) {
+          const res = await fetch('/api/auth/me', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (res.ok) {
+            const me = await res.json();
+            // 写入本地并更新上下文
+            localStorage.setItem('user_info', JSON.stringify(me));
+            setUser(me);
+            return;
           }
+
+          // token 无效或服务不可用，清理令牌
+          clearAuthTokens();
         }
       } catch (error) {
         console.error('初始化认证状态失败:', error);

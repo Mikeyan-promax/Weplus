@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './Login.css';
 
 interface LoginFormData {
@@ -15,6 +16,7 @@ const Login: React.FC = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { login } = useAuth();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -26,37 +28,23 @@ const Login: React.FC = () => {
     if (error) setError('');
   };
 
+  /**
+   * 提交登录表单处理函数
+   * - 行为：调用 AuthContext.login 统一登录逻辑，避免重复/不一致的 localStorage 写入
+   * - 成功：跳转到主应用 /app
+   * - 失败：展示错误消息
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    /**
-     * 提交登录：使用相对路径 `/api/auth/login`，避免硬编码端口导致云端（如8080）不可用
-     */
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // 保存token到localStorage
-        localStorage.setItem('access_token', data.access_token);
-        localStorage.setItem('refresh_token', data.refresh_token);
-        localStorage.setItem('user_info', JSON.stringify(data.user));
-        
-        // 登录成功后跳转到主应用页面
+      const ok = await login({ email: formData.email, password: formData.password });
+      if (ok) {
         navigate('/app', { replace: true });
       } else {
-        // 处理HTTP错误状态
-        const errorData = await response.json();
-        setError(errorData.detail || '登录失败');
+        setError('登录失败，请检查邮箱或密码');
       }
     } catch (error) {
       console.error('登录错误:', error);
