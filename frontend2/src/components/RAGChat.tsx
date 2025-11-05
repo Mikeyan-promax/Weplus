@@ -67,6 +67,8 @@ const RAGChat: React.FC = () => {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // 首次加载标记：用于避免初次加载时自动滚动到底部
+  const hasInitializedRef = useRef<boolean>(false);
 
   // 自动调整文本框高度
   const adjustTextareaHeight = () => {
@@ -82,7 +84,19 @@ const RAGChat: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // 首次加载：保持页面滚动在顶部，满足“默认置顶”的要求
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      try {
+        window.scrollTo({ top: 0, behavior: 'auto' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      } catch (e) {}
+    } else {
+      // 非首次（用户发送消息或AI流式输出）：滚动到底部以显示最新内容
+      scrollToBottom();
+    }
+
     // 保存聊天历史
     saveChatHistory(messages);
   }, [messages]);
