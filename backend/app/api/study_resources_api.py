@@ -4,7 +4,7 @@
 """
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse, PlainTextResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import os
@@ -119,7 +119,7 @@ def _resolve_resource_file_path(resource: Any) -> Path:
         except Exception:
             # 某些平台路径解析异常时忽略
             continue
-
+    
     # 所有候选均不存在，返回主目录下的候选用于错误提示
     return UPLOAD_DIR / basename
 
@@ -734,6 +734,17 @@ async def preview_resource(resource_id: int):
         # 统一使用容错解析定位文件
         file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
+            # 文件缺失时回退：如果存在来源URL，重定向到该URL供浏览器直接预览
+            source_url = None
+            if isinstance(resource, dict):
+                source_url = resource.get('source_url')
+            else:
+                source_url = getattr(resource, 'source_url', None)
+
+            if _is_valid_url(source_url):
+                logger.warning(f"资源文件缺失，重定向到来源URL预览: id={resource_id}, url={source_url}")
+                return RedirectResponse(url=source_url, status_code=302)
+
             raise HTTPException(status_code=404, detail="文件不存在")
 
         # 根据文件类型返回适当的媒体类型
@@ -763,20 +774,23 @@ async def download_resource(resource_id: int):
         if not resource:
             raise HTTPException(status_code=404, detail="资源不存在")
         # 容错解析文件路径
-        if isinstance(resource, dict):
-            title = resource.get('title', 'resource')
-        else:
-            title = getattr(resource, 'title', 'resource')
-
         file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
+            # 文件缺失时回退：如存在来源URL，重定向到来源URL进行下载
+            source_url = None
+            if isinstance(resource, dict):
+                source_url = resource.get('source_url')
+            else:
+                source_url = getattr(resource, 'source_url', None)
+
+            if _is_valid_url(source_url):
+                logger.warning(f"资源文件缺失，重定向到来源URL下载: id={resource_id}, url={source_url}")
+                return RedirectResponse(url=source_url, status_code=302)
+
             raise HTTPException(status_code=404, detail="文件不存在")
 
-        # 增加下载次数 - 暂时跳过，因为需要实现
-        # await resource.increment_download_count()
         # 规范化下载文件名：标题 + 扩展名（不带双点）
-        safe_suffix = file_path.suffix  # 例如 .pdf
-        download_name = f"{title}{safe_suffix}"
+        download_name = _build_download_filename(resource, file_path)
 
         return FileResponse(
             path=str(file_path),
@@ -789,6 +803,40 @@ async def download_resource(resource_id: int):
     except Exception as e:
         logger.error(f"文件下载失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"下载失败: {str(e)}")
+
+
+@router.get("/{resource_id}/exists", summary="检查资源文件是否存在")
+async def resource_exists(resource_id: int):
+    """检查资源文件是否存在于服务器
+    函数级注释：用于部署后联通检查与管理端诊断，返回JSON包含存在状态与候选路径
+    """
+    try:
+        resource = StudyResource.get_by_id(resource_id)
+        if not resource:
+            raise HTTPException(status_code=404, detail="资源不存在")
+
+        file_path = _resolve_resource_file_path(resource)
+        exists = file_path.exists()
+
+        # 来源URL情况
+        source_url = None
+        if isinstance(resource, dict):
+            source_url = resource.get('source_url')
+        else:
+            source_url = getattr(resource, 'source_url', None)
+
+        return {
+            "success": True,
+            "resource_id": resource_id,
+            "exists": bool(exists),
+            "candidate_path": str(file_path),
+            "source_url": source_url if _is_valid_url(source_url) else None
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"检查资源文件存在性失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"检查失败: {str(e)}")
 
 @router.get("/categories/list", summary="获取资源分类列表")
 async def get_categories():
@@ -963,3 +1011,26 @@ async def process_uploaded_file(resource_id: int, file_path: Path):
             
     except Exception as e:
         logger.error(f"文件处理失败: {str(e)}")
+def _is_valid_url(url: Optional[str]) -> bool:
+    """检查字符串是否为有效的HTTP/HTTPS URL
+    函数级注释：仅用于回退场景（文件缺失时）尝试重定向到资源来源URL
+    """
+    try:
+        if not url or not isinstance(url, str):
+            return False
+        u = url.strip().lower()
+        return u.startswith("http://") or u.startswith("https://")
+    except Exception:
+        return False
+
+def _build_download_filename(resource: Any, file_path: Path) -> str:
+    """构造下载文件名（标题 + 扩展名）
+    函数级注释：避免双点扩展名与空标题情况
+    """
+    if isinstance(resource, dict):
+        title = resource.get('title', 'resource')
+    else:
+        title = getattr(resource, 'title', 'resource')
+    suffix = file_path.suffix
+    safe_title = title if title else 'resource'
+    return f"{safe_title}{suffix}"
