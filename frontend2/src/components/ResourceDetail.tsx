@@ -70,10 +70,12 @@ const ResourceDetail: React.FC = () => {
 
   const fetchResourceDetail = async () => {
     try {
-      const response = await fetch(`/api/study-resources/resource/${id}`);
+      // 后端实际路由为 /api/study-resources/{resource_id}
+      const response = await fetch(`/api/study-resources/${id}`);
       if (response.ok) {
         const data = await response.json();
-        setResource(data.resource);
+        // 后端返回结构为 { success: true, data: <resource> }
+        setResource(data.data);
       } else {
         console.error('获取资源详情失败');
       }
@@ -86,7 +88,8 @@ const ResourceDetail: React.FC = () => {
 
   const fetchRatingStats = async () => {
     try {
-      const response = await fetch(`/api/study-resources/resource/${id}/ratings`);
+      // 后端实际路由为 /api/study-resources/{resource_id}/ratings
+      const response = await fetch(`/api/study-resources/${id}/ratings`);
       if (response.ok) {
         const data = await response.json();
         setRating(data.ratings);

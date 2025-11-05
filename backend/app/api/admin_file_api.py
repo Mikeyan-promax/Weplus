@@ -27,9 +27,64 @@ logger = logging.getLogger(__name__)
 # 创建路由器
 router = APIRouter(prefix="/api/admin/files", tags=["文件管理"])
 
-# 文件存储配置
-UPLOAD_DIR = Path("uploads")
-UPLOAD_DIR.mkdir(exist_ok=True)
+# 文件存储配置与路径解析（统一为与学习资源相同的容错回退逻辑）
+def _compute_admin_upload_dir() -> Path:
+    """
+    计算管理员文件上传主目录
+    优先使用环境变量 ADMIN_UPLOAD_DIR / UPLOAD_DIR，其次使用全局 settings.UPLOAD_DIR，
+    最后回退到相对目录 ./uploads。创建目录（含父级）以确保可写。
+    """
+    env_dir = os.getenv('ADMIN_UPLOAD_DIR') or os.getenv('UPLOAD_DIR') or getattr(settings, 'UPLOAD_DIR', './uploads')
+    upload_dir = Path(env_dir)
+    try:
+        upload_dir.mkdir(parents=True, exist_ok=True)
+    except Exception as e:
+        logger.warning(f"创建管理员上传目录失败: {e}")
+    return upload_dir
+
+UPLOAD_DIR = _compute_admin_upload_dir()
+
+# 回退目录集合，兼容历史路径与容器常见持久化卷位置
+FALLBACK_DIRS = [
+    UPLOAD_DIR,
+    Path(str(getattr(settings, 'UPLOAD_DIR', 'uploads'))),
+    Path('uploads'),
+    Path('data') / 'uploads',
+    Path('/data/uploads'),
+    Path('/app/uploads'),
+]
+
+def _resolve_admin_file_path(file_path_str: str, uploader_id: Optional[int]) -> Path:
+    """
+    解析管理员文件的真实存储路径（容错回退）
+    - 先尝试原始路径（兼容 Windows/Posix 分隔符）
+    - 若不存在，按文件名在各候选目录下（含/不含用户子目录）查找
+    - 返回第一个存在的路径；若均不存在，返回首个候选路径用于错误提示
+    """
+    try:
+        # 统一分隔符，兼容 Windows 路径
+        normalized = file_path_str.replace('\\', '/')
+        original_path = Path(normalized)
+        if original_path.exists():
+            return original_path
+
+        basename = original_path.name or Path(file_path_str).name
+        candidates: list[Path] = []
+
+        # 在各回退目录中查找（优先用户子目录）
+        for base in FALLBACK_DIRS:
+            if uploader_id is not None:
+                candidates.append(base / str(uploader_id) / basename)
+            candidates.append(base / basename)
+
+        for cand in candidates:
+            if cand.exists():
+                return cand
+
+        return candidates[0] if candidates else original_path
+    except Exception as e:
+        logger.warning(f"解析管理员文件路径失败: {e}")
+        return Path(file_path_str)
 
 # 允许的文件类型和大小限制
 ALLOWED_EXTENSIONS = {
@@ -108,7 +163,11 @@ def validate_file(file: UploadFile) -> None:
         )
 
 def save_uploaded_file(file: UploadFile, user_id: int) -> tuple:
-    """保存上传的文件"""
+    """
+    保存上传的文件
+    - 生成唯一文件名，并存储到 UPLOAD_DIR/<user_id>/
+    - 返回(文件路径字符串, 文件大小, MIME类型)
+    """
     # 生成唯一文件名
     file_id = str(uuid.uuid4())
     ext = Path(file.filename).suffix.lower()
@@ -116,7 +175,7 @@ def save_uploaded_file(file: UploadFile, user_id: int) -> tuple:
     
     # 创建用户目录
     user_dir = UPLOAD_DIR / str(user_id)
-    user_dir.mkdir(exist_ok=True)
+    user_dir.mkdir(parents=True, exist_ok=True)
     
     # 保存文件
     file_path = user_dir / filename
@@ -303,7 +362,12 @@ async def download_file(
     file_id: int,
     current_user: Dict[str, Any] = Depends(get_current_user)
 ):
-    """下载文件"""
+    """
+    下载文件
+    - 校验权限
+    - 使用统一的路径解析回退逻辑定位物理文件
+    - 以内联 FileResponse 返回（保留原始文件名与 MIME 类型）
+    """
     try:
         file_record = FileRecord.get_by_id(file_id)
         if not file_record:
@@ -321,8 +385,8 @@ async def download_file(
                 detail="没有权限下载此文件"
             )
         
-        # 检查文件是否存在
-        file_path = Path(file_record.file_path)
+        # 解析真实文件路径（含回退目录与用户子目录）
+        file_path = _resolve_admin_file_path(file_record.file_path, file_record.uploader_id)
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
