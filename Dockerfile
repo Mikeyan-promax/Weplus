@@ -16,22 +16,30 @@ COPY frontend2/ /app/
 RUN npm run build
 
 # === Backend Build ===
-FROM python:3.11-alpine AS backend-build
+FROM python:3.11-slim AS backend-build
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 WORKDIR /app
 # 安装构建所需系统依赖（cryptography 等）
-RUN apk add --no-cache build-base libffi-dev openssl-dev
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libffi-dev \
+    openssl \
+    ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
 COPY backend/requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir --prefer-binary -r /app/requirements.txt
 COPY backend/ /app
 
 # === Runtime ===
-FROM python:3.11-alpine AS runtime
+FROM python:3.11-slim AS runtime
 WORKDIR /app
 # 安装运行时进程管理与 Nginx
-RUN apk add --no-cache nginx supervisor
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nginx \
+    supervisor \
+  && rm -rf /var/lib/apt/lists/*
 
 # 复制后端依赖与源码
 COPY --from=backend-build /usr/local/lib/python3.11/site-packages /usr/local/lib/python3.11/site-packages
