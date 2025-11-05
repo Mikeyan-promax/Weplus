@@ -1,11 +1,20 @@
 /* HelloPage 样式文件 - 现代化全屏设计 */
 
+/*
+ * HelloPage 根容器滚动策略
+ * 目的：由于全局 body 已设置 overflow-y: hidden，为避免页面无法滚动，
+ *       将 .hello-page 设为唯一的纵向滚动容器，保证桌面端与移动端正常滚动。
+ */
 .hello-page {
-  min-height: 100vh;
+  height: 100vh; /* 固定视口高度，内部滚动 */
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   overflow-x: hidden;
+  overflow-y: auto; /* 使 HelloPage 成为唯一的纵向滚动容器 */
+  -webkit-overflow-scrolling: touch; /* 移动端弹性滚动 */
+  touch-action: pan-y; /* 仅允许纵向手势滚动，避免误触 */
+  overscroll-behavior-y: contain; /* 减少滚动穿透 */
 }
 
 /* 导航栏样式 */

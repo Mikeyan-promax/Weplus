@@ -205,22 +205,55 @@ def init_sync_connection_pool():
 
 @contextmanager
 def get_db_connection():
-    """获取同步数据库连接（用于兼容性）"""
+    """获取同步数据库连接（用于兼容性）
+    
+    功能说明：
+    - 从线程连接池安全获取连接；
+    - 如果拿到的是“已关闭”的连接，立刻丢弃并重新获取一个有效连接；
+    - 在异常情况下尝试回滚事务；
+    - 始终把连接归还到连接池，避免泄漏。
+    """
     if _sync_connection_pool is None:
         init_sync_connection_pool()
-    
+
     conn = None
     try:
+        # 从连接池获取一个连接
         conn = _sync_connection_pool.getconn()
+
+        # 如果连接已关闭，丢弃并重取一个新连接
+        try:
+            if getattr(conn, "closed", 0):
+                logger.warning("从连接池获取到已关闭连接，尝试丢弃并重新获取")
+                try:
+                    _sync_connection_pool.putconn(conn, close=True)
+                except Exception as ce:
+                    logger.warning(f"丢弃已关闭连接失败: {ce}")
+                conn = _sync_connection_pool.getconn()
+        except Exception as st:
+            logger.warning(f"检查连接状态时发生异常，将继续使用当前连接: {st}")
+
         yield conn
     except Exception as e:
-        if conn:
-            conn.rollback()
+        # 异常时尽量回滚，避免脏事务
+        try:
+            if conn:
+                conn.rollback()
+        except Exception:
+            pass
         logger.error(f"数据库操作错误: {e}")
         raise
     finally:
+        # 尝试归还连接到连接池；失败则关闭
         if conn:
-            _sync_connection_pool.putconn(conn)
+            try:
+                _sync_connection_pool.putconn(conn)
+            except Exception as re:
+                logger.warning(f"归还连接到池失败，将尝试关闭连接: {re}")
+                try:
+                    conn.close()
+                except Exception:
+                    pass
 
 def execute_query(query: str, params=None):
     """执行同步查询"""

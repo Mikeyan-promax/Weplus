@@ -112,7 +112,12 @@ class TokenResponse(BaseModel):
 
 # 辅助函数
 def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
-    """根据邮箱获取用户"""
+    """根据邮箱获取用户
+    
+    说明：
+    - 使用同步连接池上下文获取连接与游标；
+    - 捕获并记录详细异常信息，便于定位“连接已关闭”等问题。
+    """
     try:
         with get_db_connection() as conn:
             with conn.cursor(cursor_factory=RealDictCursor) as cursor:
@@ -139,11 +144,16 @@ def get_user_by_email(email: str) -> Optional[Dict[str, Any]]:
                     }
                 return None
     except Exception as e:
-        logger.error(f"获取用户失败: {str(e)}")
+        logger.error(f"获取用户失败: {type(e).__name__} - {str(e)}")
         return None
 
 def create_user(email: str, username: str, password: str) -> Dict[str, Any]:
-    """创建新用户"""
+    """创建新用户
+    
+    说明：
+    - 插入用户基础信息并返回完整字段；
+    - 在失败时抛出 HTTP 500，记录详细异常类型。
+    """
     password_hash = auth_service.hash_password(password)
     
     try:
@@ -172,14 +182,18 @@ def create_user(email: str, username: str, password: str) -> Dict[str, Any]:
                     'profile': row['profile'] if row['profile'] else {}
                 }
     except Exception as e:
-        logger.error(f"创建用户失败: {str(e)}")
+        logger.error(f"创建用户失败: {type(e).__name__} - {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="创建用户失败"
         )
 
 def update_user_verification(email: str, is_verified: bool = True):
-    """更新用户验证状态"""
+    """更新用户验证状态
+    
+    说明：
+    - 标记邮箱验证，同时更新更新时间戳。
+    """
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
@@ -189,10 +203,14 @@ def update_user_verification(email: str, is_verified: bool = True):
                 """, (is_verified, email))
                 conn.commit()
     except Exception as e:
-        logger.error(f"更新用户验证状态失败: {str(e)}")
+        logger.error(f"更新用户验证状态失败: {type(e).__name__} - {str(e)}")
 
 def update_user_last_login(user_id: int):
-    """更新用户最后登录时间"""
+    """更新用户最后登录时间
+    
+    说明：
+    - 登录成功后记录 last_login 与 updated_at。
+    """
     try:
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
@@ -202,7 +220,7 @@ def update_user_last_login(user_id: int):
                 """, (user_id,))
                 conn.commit()
     except Exception as e:
-        logger.error(f"更新用户最后登录时间失败: {str(e)}")
+        logger.error(f"更新用户最后登录时间失败: {type(e).__name__} - {str(e)}")
 
 def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Dict[str, Any]:
     """获取当前用户"""
@@ -455,10 +473,15 @@ async def get_me(current_user: Dict[str, Any] = Depends(get_current_user)):
 
 @router.post("/verify-email", summary="验证邮箱")
 async def verify_email(request: EmailVerificationConfirm):
-    """验证邮箱"""
+    """验证邮箱
+    
+    说明：
+    - 仅进行验证码正确性校验，但不删除（不消费）验证码；
+    - 保留验证码供后续 /register 端点进行二次校验并消费，避免注册阶段出现“验证码不存在或已过期”。
+    """
     try:
-        # 验证验证码
-        verify_result = await email_service.verify_code(request.email, request.code)
+        # 验证验证码（不删除，保留供注册阶段消费）
+        verify_result = await email_service.verify_code(request.email, request.code, delete_on_success=False)
         if not verify_result.get("success"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
