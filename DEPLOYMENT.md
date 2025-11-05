@@ -50,3 +50,20 @@ DB_PASSWORD=your_db_password
 - 确保数据库连接信息正确
 - 在生产环境中，建议将 `DEBUG` 设置为 `False`
 - 确保服务器防火墙允许应用端口的访问
+
+## 学习资源文件存储（Railway 持久化）
+
+为确保“学习资源”上传的文件在 Railway 上持久化保存，请配置以下环境变量并挂载持久化卷：
+
+- 环境变量：
+  - `STUDY_RESOURCES_DIR=/data/study_resources`
+    - 后端会优先使用该目录保存和解析资源文件。
+
+- Railway Volumes：
+  - 在 Railway 项目中添加 Volume，并将其挂载到容器路径 `/data`
+  - 后端会自动在 `/data/study_resources` 下创建子目录。
+
+说明：
+- 本地开发默认使用项目内 `backend/app/data/study_resources`。
+- 生产（Railway）建议使用 `/data/study_resources`（持久化卷）。
+- 预览/下载端点会在多个候选目录中回退查找（包含历史默认目录与 `STUDY_RESOURCES_DIR`），便于跨环境迁移。

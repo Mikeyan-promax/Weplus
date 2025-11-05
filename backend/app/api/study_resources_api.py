@@ -4,7 +4,7 @@
 """
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query, status, BackgroundTasks
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import FileResponse, RedirectResponse, PlainTextResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 import os
@@ -35,9 +35,16 @@ logger = logging.getLogger(__name__)
 # 创建路由器
 router = APIRouter(prefix="/api/study-resources", tags=["学习资源管理"])
 
-# 文件存储配置
-UPLOAD_DIR = Path(__file__).parent.parent.parent / "data" / "study_resources"
-UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+"""
+文件存储配置：优先环境变量，其次全局设置，最后使用本地默认目录
+函数级注释：
+- 目标：在不同运行环境（本地/容器/Railway）统一文件保存与解析的基准目录。
+- 优先级：
+  1) 环境变量 `STUDY_RESOURCES_DIR` / `WEPLUS_STUDY_RESOURCES_DIR`
+  2) 全局设置 `settings.UPLOAD_DIR`（下挂 `study_resources` 子目录）
+  3) 项目内默认 `backend/app/data/study_resources`
+- 同时维护 `FALLBACK_DIRS` 以便解析旧路径或迁移后的路径。
+"""
 
 # 引入全局配置，提供额外的回退目录支持
 try:
@@ -45,18 +52,53 @@ try:
 except Exception:
     settings = None
 
+def _compute_upload_dir() -> Path:
+    """计算并返回用于保存学习资源文件的主目录。"""
+    # 1) 环境变量优先（便于Railway/容器挂载持久化卷，如 /data/study_resources）
+    env_dir = os.getenv('STUDY_RESOURCES_DIR') or os.getenv('WEPLUS_STUDY_RESOURCES_DIR')
+    if env_dir:
+        p = Path(env_dir)
+        p.mkdir(parents=True, exist_ok=True)
+        logger.info(f"使用环境变量指定的学习资源目录: {p}")
+        return p
+
+    # 2) 全局设置（如 settings.UPLOAD_DIR），统一在其下创建 study_resources 子目录
+    if settings and getattr(settings, 'UPLOAD_DIR', None):
+        base = Path(getattr(settings, 'UPLOAD_DIR'))
+        p = base / 'study_resources'
+        p.mkdir(parents=True, exist_ok=True)
+        logger.info(f"使用全局设置的学习资源目录: {p}")
+        return p
+
+    # 3) 默认项目内目录
+    p = Path(__file__).parent.parent.parent / "data" / "study_resources"
+    p.mkdir(parents=True, exist_ok=True)
+    logger.info(f"使用默认学习资源目录: {p}")
+    return p
+
+# 主上传目录
+UPLOAD_DIR = _compute_upload_dir()
+
 # 可能的回退目录集合（按优先级）
 FALLBACK_DIRS = []
-if settings and getattr(settings, 'UPLOAD_DIR', None):
-    # 使用全局上传目录下的 study_resources 子目录作为回退
-    FALLBACK_DIRS.append(Path(getattr(settings, 'UPLOAD_DIR')) / 'study_resources')
-    # 同时加入全局上传目录本身作为次级回退（防止只存了文件名）
-    FALLBACK_DIRS.append(Path(getattr(settings, 'UPLOAD_DIR')))
 
-# 支持通过环境变量覆盖（Railway/容器环境可注入）
-env_dir = os.getenv('STUDY_RESOURCES_DIR') or os.getenv('WEPLUS_STUDY_RESOURCES_DIR')
-if env_dir:
-    FALLBACK_DIRS.insert(0, Path(env_dir))
+# 将环境变量目录与全局设置目录加入回退，用于兼容旧数据或迁移情况
+try:
+    env_dir = os.getenv('STUDY_RESOURCES_DIR') or os.getenv('WEPLUS_STUDY_RESOURCES_DIR')
+    if env_dir:
+        FALLBACK_DIRS.append(Path(env_dir))
+except Exception:
+    pass
+
+if settings and getattr(settings, 'UPLOAD_DIR', None):
+    base = Path(getattr(settings, 'UPLOAD_DIR'))
+    FALLBACK_DIRS.append(base / 'study_resources')
+    FALLBACK_DIRS.append(base)
+
+# 同时加入历史默认目录，便于解析之前写入的路径
+historical_default = Path(__file__).parent.parent.parent / "data" / "study_resources"
+if historical_default != UPLOAD_DIR:
+    FALLBACK_DIRS.append(historical_default)
 
 def _get_media_type(file_path: Path) -> str:
     """根据文件扩展名获取媒体类型（MIME）
@@ -88,7 +130,7 @@ def _resolve_resource_file_path(resource: Any) -> Path:
     - 逻辑：
       1) 优先尝试原始路径；
       2) 若不存在，则以原始路径的文件名在主目录 UPLOAD_DIR 下查找；
-      3) 再依次在 FALLBACK_DIRS 中查找；
+      3) 再依次在 FALLBACK_DIRS 中查找（包含历史默认目录、环境变量目录等）；
     - 输出：存在的 Path 对象；若无法定位则返回最可能的候选（用于错误日志）
     """
     # 提取原始路径字符串
@@ -119,9 +161,14 @@ def _resolve_resource_file_path(resource: Any) -> Path:
         except Exception:
             # 某些平台路径解析异常时忽略
             continue
-    
+
     # 所有候选均不存在，返回主目录下的候选用于错误提示
-    return UPLOAD_DIR / basename
+    missing = UPLOAD_DIR / basename
+    logger.warning(
+        f"资源文件定位失败，resource_id={getattr(resource, 'id', None) or (resource.get('id') if isinstance(resource, dict) else None)}, "
+        f"原始路径={raw_path}, 尝试目录={[str(c) for c in candidates]}, 返回候选={missing}"
+    )
+    return missing
 
 # HTTP Bearer认证
 security = HTTPBearer()
@@ -734,17 +781,6 @@ async def preview_resource(resource_id: int):
         # 统一使用容错解析定位文件
         file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
-            # 文件缺失时回退：如果存在来源URL，重定向到该URL供浏览器直接预览
-            source_url = None
-            if isinstance(resource, dict):
-                source_url = resource.get('source_url')
-            else:
-                source_url = getattr(resource, 'source_url', None)
-
-            if _is_valid_url(source_url):
-                logger.warning(f"资源文件缺失，重定向到来源URL预览: id={resource_id}, url={source_url}")
-                return RedirectResponse(url=source_url, status_code=302)
-
             raise HTTPException(status_code=404, detail="文件不存在")
 
         # 根据文件类型返回适当的媒体类型
@@ -774,23 +810,20 @@ async def download_resource(resource_id: int):
         if not resource:
             raise HTTPException(status_code=404, detail="资源不存在")
         # 容错解析文件路径
+        if isinstance(resource, dict):
+            title = resource.get('title', 'resource')
+        else:
+            title = getattr(resource, 'title', 'resource')
+
         file_path = _resolve_resource_file_path(resource)
         if not file_path.exists():
-            # 文件缺失时回退：如存在来源URL，重定向到来源URL进行下载
-            source_url = None
-            if isinstance(resource, dict):
-                source_url = resource.get('source_url')
-            else:
-                source_url = getattr(resource, 'source_url', None)
-
-            if _is_valid_url(source_url):
-                logger.warning(f"资源文件缺失，重定向到来源URL下载: id={resource_id}, url={source_url}")
-                return RedirectResponse(url=source_url, status_code=302)
-
             raise HTTPException(status_code=404, detail="文件不存在")
 
+        # 增加下载次数 - 暂时跳过，因为需要实现
+        # await resource.increment_download_count()
         # 规范化下载文件名：标题 + 扩展名（不带双点）
-        download_name = _build_download_filename(resource, file_path)
+        safe_suffix = file_path.suffix  # 例如 .pdf
+        download_name = f"{title}{safe_suffix}"
 
         return FileResponse(
             path=str(file_path),
@@ -803,40 +836,6 @@ async def download_resource(resource_id: int):
     except Exception as e:
         logger.error(f"文件下载失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"下载失败: {str(e)}")
-
-
-@router.get("/{resource_id}/exists", summary="检查资源文件是否存在")
-async def resource_exists(resource_id: int):
-    """检查资源文件是否存在于服务器
-    函数级注释：用于部署后联通检查与管理端诊断，返回JSON包含存在状态与候选路径
-    """
-    try:
-        resource = StudyResource.get_by_id(resource_id)
-        if not resource:
-            raise HTTPException(status_code=404, detail="资源不存在")
-
-        file_path = _resolve_resource_file_path(resource)
-        exists = file_path.exists()
-
-        # 来源URL情况
-        source_url = None
-        if isinstance(resource, dict):
-            source_url = resource.get('source_url')
-        else:
-            source_url = getattr(resource, 'source_url', None)
-
-        return {
-            "success": True,
-            "resource_id": resource_id,
-            "exists": bool(exists),
-            "candidate_path": str(file_path),
-            "source_url": source_url if _is_valid_url(source_url) else None
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"检查资源文件存在性失败: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"检查失败: {str(e)}")
 
 @router.get("/categories/list", summary="获取资源分类列表")
 async def get_categories():
@@ -1011,26 +1010,3 @@ async def process_uploaded_file(resource_id: int, file_path: Path):
             
     except Exception as e:
         logger.error(f"文件处理失败: {str(e)}")
-def _is_valid_url(url: Optional[str]) -> bool:
-    """检查字符串是否为有效的HTTP/HTTPS URL
-    函数级注释：仅用于回退场景（文件缺失时）尝试重定向到资源来源URL
-    """
-    try:
-        if not url or not isinstance(url, str):
-            return False
-        u = url.strip().lower()
-        return u.startswith("http://") or u.startswith("https://")
-    except Exception:
-        return False
-
-def _build_download_filename(resource: Any, file_path: Path) -> str:
-    """构造下载文件名（标题 + 扩展名）
-    函数级注释：避免双点扩展名与空标题情况
-    """
-    if isinstance(resource, dict):
-        title = resource.get('title', 'resource')
-    else:
-        title = getattr(resource, 'title', 'resource')
-    suffix = file_path.suffix
-    safe_title = title if title else 'resource'
-    return f"{safe_title}{suffix}"

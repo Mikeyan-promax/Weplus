@@ -69,10 +69,6 @@
   - `REQUEST_RATE_LIMIT_ENABLED`：`false` 或 `true`
   - `REQUEST_RATE_LIMIT_PER_MINUTE`：如 `60`
 
-- 文件存储（学习资源）
-  - `STUDY_RESOURCES_DIR`：学习资源文件主目录（建议设置为 `/app/data/study_resources` 并在 Railway 绑定持久化卷）
-  - 说明：后端在 `study_resources_api.py` 中已经支持从该目录作为首选与回退目录查找文件；未设置时使用仓库内默认 `data/study_resources`。
-
 > UI 操作路径提示：服务 → Variables → New Variable → 输入 `Key` 与 `Value` → Save。
 
 ---
@@ -107,12 +103,6 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
   - 防火墙或安全组是否允许数据库连接？
 - CORS 错误：`ALLOWED_ORIGINS` 是否包含当前访问域名？
 - 认证异常：`SECRET_KEY` 是否正确设置并固定？
-- 学习资源预览/下载 404：
-  - 常见原因：部署容器内未存在对应文件（例如在本地上传过但未在云端重新上传）
-  - 处理建议：
-    1) 在管理端重新上传资源，确保文件落地到 `/app/data/study_resources`；
-    2) 在 Railway Variables 设置 `STUDY_RESOURCES_DIR=/app/data/study_resources`；
-    3) 如资源记录含 `source_url`，后端已在文件缺失时自动重定向到该 URL 以便预览/下载。
 
 ---
 
@@ -141,3 +131,4 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
 - 限流：`REQUEST_RATE_LIMIT_ENABLED`、`REQUEST_RATE_LIMIT_PER_MINUTE`
 
 > 注：本指南严格依据仓库内 `Dockerfile`、`railway.json`、`deploy/nginx.railway.conf`、`backend/app/core/config.py` 与 `backend/database/config.py` 的实际实现撰写。
+
