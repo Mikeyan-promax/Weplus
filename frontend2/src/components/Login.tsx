@@ -31,8 +31,11 @@ const Login: React.FC = () => {
     setLoading(true);
     setError('');
 
+    /**
+     * 提交登录：使用相对路径 `/api/auth/login`，避免硬编码端口导致云端（如8080）不可用
+     */
     try {
-      const response = await fetch('http://localhost:8000/api/auth/login', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -191,10 +191,13 @@ const ResourceDetail: React.FC = () => {
     }
   };
 
+  /**
+   * 资源下载：使用相对路径 `/api/study-resources/:id/download`，避免硬编码端口
+   */
   const handleDownload = () => {
     try {
       // 使用window.open直接下载，这样会自动处理认证和文件名
-      window.open(`http://localhost:8000/api/study-resources/${id}/download`, '_blank');
+      window.open(`/api/study-resources/${id}/download`, '_blank');
       console.log('下载已启动:', id);
     } catch (error) {
       console.error('下载失败:', error);

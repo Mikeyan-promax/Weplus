@@ -47,10 +47,13 @@ const VectorDatabaseManagement: React.FC = () => {
     loadVectorStats();
   }, [navigate]);
 
+  /**
+   * 加载向量数据库统计信息：相对路径 `/api/admin/vector/stats`，避免硬编码端口
+   */
   const loadVectorStats = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/admin/vector/stats', {
+      const response = await fetch('/api/admin/vector/stats', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
         }
@@ -90,13 +93,17 @@ const VectorDatabaseManagement: React.FC = () => {
     }
   };
 
+  /**
+   * 重建索引：相对路径 `/api/admin/vector/rebuild/:indexName`，避免硬编码端口
+   * @param indexName 索引名称
+   */
   const handleRebuildIndex = async (indexName: string) => {
     if (window.confirm(`确定要重建索引 "${indexName}" 吗？这可能需要一些时间。`)) {
       setRebuilding(true);
       setRebuildProgress(0);
 
       try {
-        const response = await fetch(`http://localhost:8000/api/admin/vector/rebuild/${indexName}`, {
+        const response = await fetch(`/api/admin/vector/rebuild/${indexName}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -143,10 +150,14 @@ const VectorDatabaseManagement: React.FC = () => {
     }
   };
 
+  /**
+   * 清空索引：相对路径 `/api/admin/vector/clear/:indexName`，避免硬编码端口
+   * @param indexName 索引名称
+   */
   const handleClearIndex = async (indexName: string) => {
     if (window.confirm(`确定要清空索引 "${indexName}" 吗？这将删除所有向量数据！`)) {
       try {
-        const response = await fetch(`http://localhost:8000/api/admin/vector/clear/${indexName}`, {
+        const response = await fetch(`/api/admin/vector/clear/${indexName}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token')}`

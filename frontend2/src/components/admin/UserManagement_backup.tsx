@@ -52,13 +52,16 @@ const UserManagement: React.FC = () => {
     loadUsers();
   }, [navigate]);
 
+  /**
+   * 加载用户列表：相对路径 `/api/admin/users`，避免硬编码端口
+   */
   const loadUsers = async () => {
     setLoading(true);
     try {
       const adminToken = localStorage.getItem('admin_token');
       
       // 调用真实API获取用户数据
-      const response = await fetch('http://localhost:8000/api/admin/users', {
+      const response = await fetch('/api/admin/users', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

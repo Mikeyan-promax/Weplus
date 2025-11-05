@@ -27,9 +27,17 @@ export interface StreamResponse {
 }
 
 class RAGApiService {
-  private baseUrl = 'http://localhost:8000';
+  // 使用相对路径作为基础URL，避免硬编码端口，适配不同部署环境（如5173本地/8080云端）
+  private baseUrl = '';
 
-  // 真正的流式聊天，使用Server-Sent Events处理DeepSeek的实时响应
+  /**
+   * 流式聊天（SSE）：使用相对路径 `/api/rag/chat/stream`，确保在不同端口部署时无需修改代码
+   * @param message 用户输入消息
+   * @param history 历史消息，用于上下文
+   * @param onChunk 流式回调，逐片段返回内容
+   * @param useRAG 是否启用RAG检索
+   * @param abortController 取消控制器
+   */
   async streamChat(
     message: string,
     history: RAGChatMessage[] = [],
@@ -127,7 +135,12 @@ class RAGApiService {
     }
   }
 
-  // 普通聊天（非流式）
+  /**
+   * 普通聊天（非流式）：相对路径 `/api/rag/chat`，避免硬编码 `localhost:8000`
+   * @param message 用户输入消息
+   * @param history 历史消息，用于上下文
+   * @param useRAG 是否启用RAG检索
+   */
   async chat(
     message: string,
     history: RAGChatMessage[] = [],
@@ -160,7 +173,9 @@ class RAGApiService {
     }
   }
 
-  // 获取RAG系统统计信息
+  /**
+   * 获取RAG系统统计信息：相对路径 `/api/rag/stats`
+   */
   async getStats() {
     try {
       const response = await fetch(`${this.baseUrl}/api/rag/stats`);
@@ -174,7 +189,9 @@ class RAGApiService {
     }
   }
 
-  // 获取已处理的文档列表
+  /**
+   * 获取已处理的文档列表：相对路径 `/api/rag/documents`
+   */
   async getDocuments() {
     try {
       const response = await fetch(`${this.baseUrl}/api/rag/documents`);

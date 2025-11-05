@@ -45,8 +45,11 @@ const Register: React.FC = () => {
     setLoading(true);
     setError('');
 
+    /**
+     * 验证邮箱验证码：相对路径 `/api/auth/verify-email`，避免硬编码端口
+     */
     try {
-      const response = await fetch('http://localhost:8000/api/auth/verify-email', {
+      const response = await fetch('/api/auth/verify-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -82,8 +85,11 @@ const Register: React.FC = () => {
     setLoading(true);
     setError('');
 
+    /**
+     * 发送邮箱验证码：相对路径 `/api/auth/send-verification-code`，避免硬编码端口
+     */
     try {
-      const response = await fetch('http://localhost:8000/api/auth/send-verification-code', {
+      const response = await fetch('/api/auth/send-verification-code', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -145,8 +151,11 @@ const Register: React.FC = () => {
       return;
     }
 
+    /**
+     * 提交注册：相对路径 `/api/auth/register`，避免硬编码端口造成云端不可用
+     */
     try {
-      const response = await fetch('http://localhost:8000/api/auth/register', {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

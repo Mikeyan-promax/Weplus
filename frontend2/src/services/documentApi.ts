@@ -3,7 +3,8 @@
  * 提供文档、分类、标签的CRUD操作和高级搜索功能
  */
 
-const API_BASE_URL = 'http://localhost:8000';
+// 使用相对路径基准，避免硬编码端口；通过同源或反向代理访问后端
+const API_BASE_URL = '';
 
 // 类型定义
 export interface Document {
@@ -87,7 +88,7 @@ class DocumentApiService {
   // ==================== 文档管理 ====================
 
   /**
-   * 获取文档列表
+   * 获取文档列表：相对路径 `${API_BASE_URL}/api/rag/documents`，适配不同部署端口
    */
   async getDocuments(params: {
     offset?: number;
@@ -150,7 +151,7 @@ class DocumentApiService {
   }
 
   /**
-   * 上传文档
+   * 上传文档：相对路径 `${API_BASE_URL}/api/documents/upload`
    */
   async uploadDocument(file: File, metadata?: {
     category_id?: number;
@@ -183,7 +184,7 @@ class DocumentApiService {
   }
 
   /**
-   * 删除文档
+   * 删除文档：相对路径 `${API_BASE_URL}/api/documents/${documentId}`
    */
   async deleteDocument(documentId: string): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/api/documents/${documentId}`, {
@@ -195,7 +196,7 @@ class DocumentApiService {
   }
 
   /**
-   * 更新文档
+   * 更新文档：相对路径 `${API_BASE_URL}/api/documents/${documentId}`
    */
   async updateDocument(documentId: string, data: {
     filename?: string;
@@ -213,7 +214,7 @@ class DocumentApiService {
   }
 
   /**
-   * 批量操作
+   * 批量操作：相对路径 `${API_BASE_URL}/api/documents/batch}`
    */
   async batchOperation(request: BatchOperationRequest): Promise<any> {
     const response = await fetch(`${API_BASE_URL}/api/documents/batch`, {

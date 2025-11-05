@@ -31,6 +31,9 @@ const AdminLogin: React.FC = () => {
     }
   };
 
+  /**
+   * 管理员登录提交：相对路径 `/api/admin/auth/login`，避免硬编码端口影响部署
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -43,8 +46,8 @@ const AdminLogin: React.FC = () => {
     setError('');
 
     try {
-      // 调用后端管理员登录API
-      const response = await fetch('http://localhost:8000/api/admin/auth/login', {
+      // 调用后端管理员登录API（相对路径，适配本地/云端端口）
+      const response = await fetch('/api/admin/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
