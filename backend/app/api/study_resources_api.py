@@ -930,13 +930,61 @@ async def admin_create_category(
 # 前端需要的端点 - 必须在参数化路由之前
 @router.get("/categories", summary="获取资源分类列表")
 async def get_categories_for_frontend():
-    """获取所有资源分类 - 前端使用"""
+    """获取所有资源分类（含资源数量） - 前端使用
+    函数级注释：
+    - 返回分类基础信息，并附加每个分类的资源数量 `resource_count`；
+    - 统计口径：study_resources 表中 status='active' 的资源；
+    - 解决前端“分类计数为0”的问题。
+    """
     try:
-        categories = ResourceCategory.get_all_active()
-        return {
-            "success": True,
-            "data": [category.to_dict() for category in categories]
-        }
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT 
+                        c.id, c.name, c.code, c.description, c.icon, c.color, c.sort_order, c.is_active,
+                        COALESCE(cnt.count, 0) AS resource_count
+                    FROM resource_categories c
+                    LEFT JOIN (
+                        SELECT category_id, COUNT(*) AS count
+                        FROM study_resources
+                        WHERE status = 'active'
+                        GROUP BY category_id
+                    ) AS cnt ON cnt.category_id = c.id
+                    WHERE c.is_active = TRUE
+                    ORDER BY c.sort_order, c.name
+                    """
+                )
+                rows = cur.fetchall()
+
+        categories = []
+        for row in rows:
+            if isinstance(row, dict):
+                categories.append({
+                    "id": row.get("id"),
+                    "name": row.get("name"),
+                    "code": row.get("code"),
+                    "description": row.get("description"),
+                    "icon": row.get("icon"),
+                    "color": row.get("color"),
+                    "sort_order": row.get("sort_order"),
+                    "is_active": row.get("is_active"),
+                    "resource_count": row.get("resource_count", 0)
+                })
+            else:
+                categories.append({
+                    "id": row[0],
+                    "name": row[1],
+                    "code": row[2],
+                    "description": row[3],
+                    "icon": row[4],
+                    "color": row[5],
+                    "sort_order": row[6],
+                    "is_active": row[7],
+                    "resource_count": row[8] if len(row) > 8 else 0
+                })
+
+        return {"success": True, "data": categories}
         
     except Exception as e:
         logger.error(f"获取分类列表失败: {str(e)}")
@@ -974,14 +1022,22 @@ async def get_resources_for_frontend(
 
 @router.get("/{resource_id}", summary="获取资源详情")
 async def get_resource(resource_id: int):
-    """获取指定资源的详细信息"""
+    """获取指定资源的详细信息
+    函数级注释：
+    - 从数据库获取资源详情；
+    - 成功获取后，增加一次查看次数（view_count）；
+    - 返回资源详情字典。
+    """
     try:
         resource = StudyResource.get_by_id(resource_id)
         if not resource:
             raise HTTPException(status_code=404, detail="资源不存在")
         
-        # 增加查看次数
-        # await resource.increment_view_count()
+        # 增加查看次数（异步执行，统计失败不影响主流程）
+        try:
+            await resource.increment_view_count()
+        except Exception as inc_err:
+            logger.warning(f"增加查看次数失败 id={resource_id}: {inc_err}")
         
         return {
             "success": True,
@@ -1062,8 +1118,11 @@ async def download_resource(resource_id: int):
                     return RedirectResponse(url=src_url, status_code=302)
             raise HTTPException(status_code=404, detail="文件不存在")
 
-        # 增加下载次数 - 暂时跳过，因为需要实现
-        # await resource.increment_download_count()
+        # 增加下载次数（在返回文件前执行，保证统计准确）
+        try:
+            await resource.increment_download_count()
+        except Exception as inc_err:
+            logger.warning(f"增加下载次数失败 id={resource_id}: {inc_err}")
         # 规范化下载文件名：标题 + 扩展名（不带双点）
         safe_suffix = file_path.suffix  # 例如 .pdf
         download_name = f"{title}{safe_suffix}"
@@ -1082,13 +1141,60 @@ async def download_resource(resource_id: int):
 
 @router.get("/categories/list", summary="获取资源分类列表")
 async def get_categories():
-    """获取所有资源分类"""
+    """获取所有资源分类（含资源数量）
+    函数级注释：
+    - 与 /categories 返回一致，包含 resource_count 字段；
+    - 支持旧前端路径复用。
+    """
     try:
-        categories = ResourceCategory.get_all_active()
-        return {
-            "success": True,
-            "data": [category.to_dict() for category in categories]
-        }
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT 
+                        c.id, c.name, c.code, c.description, c.icon, c.color, c.sort_order, c.is_active,
+                        COALESCE(cnt.count, 0) AS resource_count
+                    FROM resource_categories c
+                    LEFT JOIN (
+                        SELECT category_id, COUNT(*) AS count
+                        FROM study_resources
+                        WHERE status = 'active'
+                        GROUP BY category_id
+                    ) AS cnt ON cnt.category_id = c.id
+                    WHERE c.is_active = TRUE
+                    ORDER BY c.sort_order, c.name
+                    """
+                )
+                rows = cur.fetchall()
+
+        categories = []
+        for row in rows:
+            if isinstance(row, dict):
+                categories.append({
+                    "id": row.get("id"),
+                    "name": row.get("name"),
+                    "code": row.get("code"),
+                    "description": row.get("description"),
+                    "icon": row.get("icon"),
+                    "color": row.get("color"),
+                    "sort_order": row.get("sort_order"),
+                    "is_active": row.get("is_active"),
+                    "resource_count": row.get("resource_count", 0)
+                })
+            else:
+                categories.append({
+                    "id": row[0],
+                    "name": row[1],
+                    "code": row[2],
+                    "description": row[3],
+                    "icon": row[4],
+                    "color": row[5],
+                    "sort_order": row[6],
+                    "is_active": row[7],
+                    "resource_count": row[8] if len(row) > 8 else 0
+                })
+
+        return {"success": True, "data": categories}
         
     except Exception as e:
         logger.error(f"获取分类列表失败: {str(e)}")
