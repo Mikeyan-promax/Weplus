@@ -6,6 +6,8 @@
   margin: 0 auto;
   background: #f8fafc;
   min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
 }
 
 /* 页面头部 */

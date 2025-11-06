@@ -1,5 +1,7 @@
 .admin-dashboard {
   min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }

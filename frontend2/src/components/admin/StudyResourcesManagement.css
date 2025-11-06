@@ -1,6 +1,8 @@
 .study-resources-management {
   padding: 20px;
   min-height: 100vh;
+  height: 100vh;
+  overflow-y: auto;
   width: 100%;
   box-sizing: border-box;
   background-color: #f8fafc;
