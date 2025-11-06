@@ -2,6 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './AdminLogin.css';
 
+/**
+ * 管理员登录页面组件
+ * 负责处理管理员登录流程：
+ * - 检查本地存储中的 admin_token，已登录则跳转管理后台
+ * - 采集邮箱和密码并发起登录请求
+ * - 登录成功后跳转至管理后台首页
+ */
 const AdminLogin: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -162,7 +169,7 @@ const AdminLogin: React.FC = () => {
           <button className="back-button" onClick={handleBackToApp}>
             ← 返回应用首页
           </button>
-          <p>默认管理员账号：admin@weplus.com / admin123</p>
+          
         </div>
       </div>
     </div>
