@@ -19,6 +19,9 @@ import jwt
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 from datetime import datetime
 from urllib.parse import urlparse
+import zipfile
+from zipfile import ZipFile
+from io import BytesIO
 
 # 导入数据库模型和配置
 from database.study_resources_models import (
@@ -707,6 +710,190 @@ async def admin_delete_resource(
     except Exception as e:
         logger.error(f"删除资源失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
+
+@router.get("/admin/scan-missing", summary="管理员缺失文件巡检报告")
+async def admin_scan_missing_resources(admin_user: dict = Depends(verify_admin_token)):
+    """巡检所有学习资源的文件存在性并生成修复建议
+    函数级注释：
+    - 读取数据库中的资源 `id/title/file_path/source_url`；调用容错解析 `_resolve_resource_file_path`。
+    - 输出每条资源的文件状态、建议路径（若能在主目录/回退目录找到同名文件）。
+    - 适用于Railway迁移/挂载持久化卷后的一次性巡检。
+    """
+    try:
+        report = []
+        total = 0
+        missing = 0
+
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT id, title, file_path, source_url FROM study_resources ORDER BY id")
+                rows = cur.fetchall()
+
+        for row in rows:
+            # 根据游标返回类型兼容元组或字典
+            if isinstance(row, dict):
+                rid = row.get('id')
+                title = row.get('title')
+                raw_path = row.get('file_path')
+                src_url = row.get('source_url')
+            else:
+                rid, title, raw_path, src_url = row[0], row[1], row[2], row[3]
+
+            total += 1
+            resource = StudyResource.get_by_id(int(rid))
+            resolved = _resolve_resource_file_path(resource)
+
+            exists = resolved.exists()
+            if not exists:
+                missing += 1
+            # 生成建议路径：主目录下同名优先
+            basename = Path(str(raw_path)).name if raw_path else None
+            suggested = None
+            if basename:
+                candidates = [UPLOAD_DIR / basename]
+                for d in FALLBACK_DIRS:
+                    candidates.append(d / basename)
+                # 容器常见持久化卷
+                candidates.append(Path('/data/study_resources') / basename)
+                candidates.append(Path('/data/uploads') / basename)
+                for c in candidates:
+                    try:
+                        if c.exists():
+                            suggested = str(c)
+                            break
+                    except Exception:
+                        pass
+
+            report.append({
+                "id": rid,
+                "title": title,
+                "raw_file_path": raw_path,
+                "resolved_path": str(resolved),
+                "exists": exists,
+                "source_url": src_url,
+                "suggested_path": suggested
+            })
+
+        return {
+            "success": True,
+            "summary": {
+                "total": total,
+                "missing": missing,
+                "upload_dir": str(UPLOAD_DIR)
+            },
+            "data": report
+        }
+    except Exception as e:
+        logger.error(f"缺失文件巡检失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"巡检失败: {str(e)}")
+
+@router.post("/admin/import-zip", summary="管理员ZIP批量导入并修复路径")
+async def admin_import_zip_and_fix(
+    zip_file: UploadFile = File(...),
+    overwrite_existing: bool = Form(True),
+    admin_user: dict = Depends(verify_admin_token)
+):
+    """上传ZIP压缩包并批量导入学习资源文件，同时修复数据库中的文件路径
+    函数级注释：
+    - 将ZIP内容解压到 `UPLOAD_DIR/zip_imports/<uuid>`，确保与持久化卷一致；
+    - 按 `original_filename` 或现有 `file_path` 的基本文件名进行匹配，更新 `file_path`；
+    - 返回导入/更新统计与无法匹配的文件列表。
+    """
+    try:
+        # 保存ZIP到内存并解压到临时目录
+        tmp_root = UPLOAD_DIR / "zip_imports" / str(uuid.uuid4())
+        tmp_root.mkdir(parents=True, exist_ok=True)
+
+        # 将上传的zip保存到磁盘（避免大文件内存爆）
+        zip_path = tmp_root / (zip_file.filename or "import.zip")
+        with open(zip_path, "wb") as f:
+            shutil.copyfileobj(zip_file.file, f)
+
+        extracted_dir = tmp_root / "extracted"
+        extracted_dir.mkdir(parents=True, exist_ok=True)
+
+        with ZipFile(str(zip_path), 'r') as zf:
+            zf.extractall(str(extracted_dir))
+
+        # 构建文件名索引：basename -> 绝对路径
+        file_index: Dict[str, Path] = {}
+        for root, _, files in os.walk(extracted_dir):
+            for name in files:
+                p = Path(root) / name
+                file_index[name] = p
+
+        # 查询需要修复的资源（活跃资源）
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT id, original_filename, file_path FROM study_resources WHERE status = 'active' ORDER BY id")
+                rows = cur.fetchall()
+
+        updated: List[Dict[str, Any]] = []
+        unmatched: List[str] = []
+
+        for row in rows:
+            if isinstance(row, dict):
+                rid = row.get('id')
+                original = row.get('original_filename')
+                existing_path = row.get('file_path')
+            else:
+                rid, original, existing_path = row[0], row[1], row[2]
+
+            candidates = []
+            if original:
+                candidates.append(original)
+            if existing_path:
+                candidates.append(Path(str(existing_path)).name)
+            # 去重
+            candidates = [c for i, c in enumerate(candidates) if c and c not in candidates[:i]]
+
+            target_file: Optional[Path] = None
+            for bn in candidates:
+                if bn in file_index:
+                    target_file = file_index[bn]
+                    break
+
+            if not target_file:
+                # 记录无法匹配的文件名，便于人工确认
+                unmatched.append(original or existing_path or f"id:{rid}")
+                continue
+
+            # 将文件移动/复制到主上传目录，形成最终落地路径
+            final_path = UPLOAD_DIR / target_file.name
+            if final_path.exists():
+                if overwrite_existing:
+                    try:
+                        shutil.copy2(str(target_file), str(final_path))
+                    except Exception:
+                        pass
+                # 若不覆盖，保留现有文件，仍回写路径到数据库
+            else:
+                shutil.copy2(str(target_file), str(final_path))
+
+            # 更新数据库中的文件路径
+            try:
+                StudyResource.update_file_path_by_id(int(rid), str(final_path))
+                updated.append({"id": rid, "new_path": str(final_path)})
+            except Exception as ue:
+                logger.warning(f"更新资源路径失败 id={rid}: {ue}")
+
+        return {
+            "success": True,
+            "message": "ZIP批量导入并修复路径完成",
+            "stats": {
+                "import_dir": str(extracted_dir),
+                "upload_dir": str(UPLOAD_DIR),
+                "updated_count": len(updated),
+                "unmatched_count": len(unmatched)
+            },
+            "updated": updated,
+            "unmatched": unmatched
+        }
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="ZIP文件格式不正确或已损坏")
+    except Exception as e:
+        logger.error(f"ZIP批量导入失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"导入失败: {str(e)}")
 
 @router.post("/admin/category", summary="管理员创建分类")
 async def admin_create_category(

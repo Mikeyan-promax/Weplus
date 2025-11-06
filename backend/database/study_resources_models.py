@@ -624,6 +624,37 @@ class StudyResource:
         
         await db_manager.execute_query(query, params)
 
+    def update_file_path(self, new_file_path: str) -> None:
+        """更新当前资源的文件路径
+        函数级注释：
+        - 输入：新的文件路径字符串（建议为绝对路径，指向持久化卷目录）
+        - 动作：更新数据库中的 `file_path` 字段，并刷新 `updated_at`；同时更新实例属性。
+        - 适用场景：迁移或修复路径、批量导入后回写真实存储位置。
+        """
+        if not self.id:
+            raise ValueError("资源未持久化，缺少id，无法更新文件路径")
+        self.file_path = new_file_path
+        self.updated_at = datetime.now()
+        db_manager = PostgreSQLManager()
+        query = "UPDATE study_resources SET file_path = %s, updated_at = %s WHERE id = %s"
+        db_manager.execute_query(query, (self.file_path, self.updated_at, self.id))
+
+    @classmethod
+    def update_file_path_by_id(cls, resource_id: int, new_file_path: str) -> None:
+        """根据资源ID更新文件路径
+        函数级注释：
+        - 输入：资源ID与新文件路径字符串。
+        - 动作：直接执行SQL更新，无需先加载完整模型实例，适合批量修复。
+        - 注意：仅更新 `file_path` 与 `updated_at`，不改动其他字段。
+        """
+        if not resource_id or not isinstance(resource_id, int):
+            raise ValueError("resource_id必须为有效整数")
+        if not new_file_path:
+            raise ValueError("new_file_path不能为空")
+        db_manager = PostgreSQLManager()
+        query = "UPDATE study_resources SET file_path = %s, updated_at = CURRENT_TIMESTAMP WHERE id = %s"
+        db_manager.execute_query(query, (new_file_path, resource_id))
+
 @dataclass
 class UserStudyRecord:
     """用户学习记录模型 - PostgreSQL版本"""
