@@ -106,7 +106,46 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
 
 ---
 
-## 七、发布后联通检查（一次性脚本）
+## 七、启用持久化存储（Persistent Volumes）
+
+> 目的：保证学习资源文件在重部署后仍然存在，避免容器重建导致本地上传文件丢失。
+
+### 1) 在 Railway 服务中添加持久化卷
+- 进入项目 → 选择后端 Web 服务（运行 FastAPI + Nginx 的服务）。
+- 在服务面板中找到存储相关入口（例如 `Storage`/`Volumes`）。
+- 点击 `Add Volume`/`New Volume`，新增一个持久化卷。
+  - Mount Path（挂载路径）：推荐设置为 `/data` 或更具体的 `/data/study_resources`。
+  - 保存并返回服务页面。
+
+> 说明：不同版本 UI 文案可能略有差异，但总体路径为“服务页面 → 存储/卷（Storage/Volumes）→ 添加（Add）”。如未找到，请使用 Railway 的搜索框搜索 “Volumes”。
+
+### 2) 配置后端环境变量指向持久化路径
+- 打开服务 → `Variables` 面板，新增以下变量（至少设置第一条）：
+  - `STUDY_RESOURCES_DIR = /data/study_resources`（学习资源主目录，强烈推荐设置）
+  - 可选：`ADMIN_UPLOAD_DIR = /data/uploads`（后台通用上传目录，如启用后台文件管理）
+  - 可选：`UPLOAD_DIR = /data`（全局基础目录，后端会在其下创建 `study_resources` 子目录）
+- 点击保存变量。
+
+> 后端实现说明：`backend/app/api/study_resources_api.py` 会优先读取 `STUDY_RESOURCES_DIR`，不存在时回退到 `settings.UPLOAD_DIR/study_resources`，最后默认项目内目录。`admin_file_api.py` 会优先读取 `ADMIN_UPLOAD_DIR` 或 `UPLOAD_DIR`。
+
+### 3) 重新部署服务
+- 进入服务 → `Deployments` → 点击 `Redeploy` 或提交代码触发自动部署。
+- 部署完成后，持久化卷将自动挂载到容器的指定路径。
+
+### 4) 验证与迁移旧文件（一次性）
+- 验证持久化配置：
+  - 管理员巡检接口：`GET /api/study-resources/admin/scan-missing`（需管理员 Token），响应中 `summary.upload_dir` 应为 `/data/study_resources`。
+- 迁移旧文件：将本地旧资源打包为 ZIP 并上传修复路径：
+  - Windows PowerShell 示例（注意多命令用 `;;` 连接）：
+    - `curl.exe -X POST -H "Authorization: Bearer <admin_token>" -F "zip_file=@C:\\path\\to\\resources.zip" -F "overwrite_existing=true" https://<your-domain>.railway.app/api/study-resources/admin/import-zip` ;; 
+      `curl.exe -H "Authorization: Bearer <admin_token>" https://<your-domain>.railway.app/api/study-resources/admin/scan-missing`
+- 逐条确认无法匹配的文件名（接口返回 `unmatched` 列表），必要时手动整理压缩包中文件名以匹配数据库 `original_filename` 或 `file_path` 的 basename。
+
+> 提示：启用持久化卷后，新上传的文件会直接保存到卷中；重部署不会丢失。
+
+---
+
+## 八、发布后联通检查（一次性脚本）
 - 仓库内提供脚本：`deploy/checks/railway_post_deploy_check.py`
 - 用法（Windows PowerShell）：
   - `python deploy/checks/railway_post_deploy_check.py --base-url https://<subdomain>.railway.app` ；可串联命令用 `;;`。
@@ -114,7 +153,7 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
 
 ---
 
-## 八、UI 路径速查（Railway 面板）
+## 九、UI 路径速查（Railway 面板）
 - 新建项目：`New Project` → `Deploy from GitHub` → 选仓库
 - 查看构建与发布：服务 → `Deployments`
 - 环境变量：服务 → `Variables` → `New Variable`
@@ -123,7 +162,7 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
 
 ---
 
-## 九、附录：后端环境变量清单（对照）
+## 十、附录：后端环境变量清单（对照）
 - 运行与安全：`SECRET_KEY`、`DEBUG`、`ENABLE_JSON_LOGGING`、`ALLOWED_ORIGINS`、`ADMIN_IP_WHITELIST`
 - 数据库（任选其一或同时）：`DATABASE_URL`；`DB_HOST`、`DB_PORT`、`DB_NAME`、`DB_USER`、`DB_PASSWORD`；`POSTGRES_HOST`、`POSTGRES_PORT`、`POSTGRES_DB`、`POSTGRES_USER`、`POSTGRES_PASSWORD`
 - 模型与外部服务：`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`OPENAI_API_KEY`
