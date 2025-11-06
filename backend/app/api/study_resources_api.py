@@ -305,6 +305,16 @@ class StudyProgressRequest(BaseModel):
     current_position: Optional[int] = Field(None, description="当前位置")
     notes: Optional[str] = Field(None, description="学习笔记")
 
+class BatchDeleteRequest(BaseModel):
+    """
+    管理员批量删除请求模型
+    函数级注释：
+    - 输入：需要批量删除的资源ID列表；
+    - 可扩展：未来可增加 `category_id` 以按分类批量删除，但当前前端按勾选ID列表传参；
+    - 约束：至少包含1个ID，避免误删空请求。
+    """
+    ids: List[int] = Field(..., min_items=1, description="待删除的资源ID列表")
+
 # API端点实现
 
 @router.get("/", summary="获取学习资源列表")
@@ -710,6 +720,81 @@ async def admin_delete_resource(
     except Exception as e:
         logger.error(f"删除资源失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"删除失败: {str(e)}")
+
+@router.post("/admin/resources/batch-delete", summary="管理员批量删除资源")
+async def admin_batch_delete_resources(
+    request: BatchDeleteRequest,
+    admin_user: dict = Depends(verify_admin_token)
+):
+    """
+    管理员批量删除学习资源
+    函数级注释：
+    - 遍历请求中的ID列表，对每项执行安全删除：
+      1) 尝试删除物理文件（存在则删除）；
+      2) 进行软删除（更新状态为 deleted）；
+    - 返回成功删除数量、未找到列表、删除失败列表及其错误信息。
+    - 说明：使用软删除以便后续审计或恢复，避免误删导致不可逆。
+    """
+    try:
+        ids = list(set([int(i) for i in request.ids if isinstance(i, int) or str(i).isdigit()]))
+        if not ids:
+            raise HTTPException(status_code=400, detail="请求ID列表为空或无效")
+
+        success_count = 0
+        not_found: List[int] = []
+        failed: List[Dict[str, Any]] = []
+
+        for rid in ids:
+            try:
+                resource = StudyResource.get_by_id(rid)
+                if not resource:
+                    not_found.append(rid)
+                    continue
+
+                # 删除文件（若存在）
+                raw_path = getattr(resource, 'file_path', None) if not isinstance(resource, dict) else resource.get('file_path')
+                if raw_path:
+                    fp = Path(str(raw_path))
+                    if fp.exists():
+                        try:
+                            fp.unlink()
+                            logger.info(f"批量删除：已删除文件 {fp}")
+                        except Exception as fe:
+                            logger.warning(f"批量删除：删除文件失败 id={rid} path={fp}: {fe}")
+
+                # 软删除数据库记录
+                try:
+                    if isinstance(resource, dict):
+                        tmp = StudyResource(**resource)
+                        tmp.delete()
+                    else:
+                        resource.delete()
+                except Exception as de:
+                    failed.append({"id": rid, "error": str(de)})
+                    continue
+
+                success_count += 1
+
+            except Exception as e:
+                failed.append({"id": rid, "error": str(e)})
+
+        return {
+            "success": True,
+            "message": "批量删除执行完成",
+            "stats": {
+                "requested": len(ids),
+                "deleted": success_count,
+                "not_found": len(not_found),
+                "failed": len(failed)
+            },
+            "not_found": not_found,
+            "failed": failed
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"批量删除失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"批量删除失败: {str(e)}")
 
 @router.get("/admin/scan-missing", summary="管理员缺失文件巡检报告")
 async def admin_scan_missing_resources(admin_user: dict = Depends(verify_admin_token)):

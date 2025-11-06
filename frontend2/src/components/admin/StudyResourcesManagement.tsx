@@ -47,6 +47,8 @@ const StudyResourcesManagement: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [selectedResources, setSelectedResources] = useState<number[]>([]);
+  const [showBatchActions, setShowBatchActions] = useState(false);
   const [uploadForm, setUploadForm] = useState<UploadFormData>({
     title: '',
     description: '',
@@ -183,8 +185,17 @@ const StudyResourcesManagement: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`/api/study-resources/${resourceId}`, {
-        method: 'DELETE'
+      // 使用管理员端点并附带鉴权
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        alert('管理员认证已过期，请重新登录');
+        return;
+      }
+      const response = await fetch(`/api/study-resources/admin/resource/${resourceId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
       });
 
       const data = await response.json();
@@ -198,6 +209,83 @@ const StudyResourcesManagement: React.FC = () => {
     } catch (error) {
       console.error('删除失败:', error);
       alert('删除失败，请检查网络连接');
+    }
+  };
+
+  /**
+   * 选择资源（批量操作）
+   * 函数级注释：
+   * - 点击复选框切换选中状态；
+   * - 同步显示批量操作栏；
+   */
+  const handleSelectResource = (resourceId: number) => {
+    setSelectedResources(prev => {
+      const next = prev.includes(resourceId)
+        ? prev.filter(id => id !== resourceId)
+        : [...prev, resourceId];
+      setShowBatchActions(next.length > 0);
+      return next;
+    });
+  };
+
+  /**
+   * 全选/取消全选（当前列表）
+   * 函数级注释：
+   * - 全选当前页展示的资源；再次点击则清空选择；
+   */
+  const handleSelectAll = () => {
+    if (selectedResources.length === resources.length) {
+      setSelectedResources([]);
+      setShowBatchActions(false);
+    } else {
+      const allIds = resources.map(r => r.id);
+      setSelectedResources(allIds);
+      setShowBatchActions(true);
+    }
+  };
+
+  /**
+   * 执行批量删除（管理员端点）
+   * 函数级注释：
+   * - 将选中的资源ID列表通过JSON传递到后端；
+   * - 使用管理员token鉴权；
+   * - 删除完成后刷新列表并清空选择；
+   */
+  const handleBatchDelete = async () => {
+    if (selectedResources.length === 0) {
+      alert('请先选择要删除的资源');
+      return;
+    }
+    if (!confirm(`确定要批量删除选中的 ${selectedResources.length} 个资源吗？此操作不可恢复。`)) {
+      return;
+    }
+    try {
+      const adminToken = localStorage.getItem('admin_token');
+      if (!adminToken) {
+        alert('管理员认证已过期，请重新登录');
+        return;
+      }
+      const response = await fetch('/api/study-resources/admin/resources/batch-delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ ids: selectedResources })
+      });
+      const data = await response.json();
+      if (data.success) {
+        const del = data?.stats?.deleted ?? selectedResources.length;
+        alert(`批量删除完成！已删除 ${del} 个资源。`);
+        setSelectedResources([]);
+        setShowBatchActions(false);
+        fetchResources();
+      } else {
+        alert(`批量删除失败：${data.detail || '未知错误'}`);
+      }
+    } catch (error) {
+      console.error('批量删除失败:', error);
+      alert('批量删除失败，请检查网络连接');
     }
   };
 
@@ -289,10 +377,38 @@ const StudyResourcesManagement: React.FC = () => {
           </div>
         ) : (
           <>
+            {/* 批量操作栏 */}
+            {showBatchActions && (
+              <div className="batch-actions">
+                <div className="batch-info">
+                  <span>已选择 {selectedResources.length} 个资源</span>
+                  <button className="btn-clear" onClick={() => { setSelectedResources([]); setShowBatchActions(false); }}>
+                    清空选择
+                  </button>
+                </div>
+                <div className="batch-buttons">
+                  <button className="batch-btn batch-delete" onClick={handleBatchDelete}>
+                    🗑️ 批量删除
+                  </button>
+                  <button className="batch-btn batch-select-all" onClick={handleSelectAll}>
+                    ✅ 全选当前页
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="resources-table">
               <table>
                 <thead>
                   <tr>
+                    <th>
+                      <input 
+                        type="checkbox" 
+                        checked={selectedResources.length === resources.length && resources.length > 0}
+                        onChange={handleSelectAll}
+                        aria-label="选择全部"
+                      />
+                    </th>
                     <th>标题</th>
                     <th>分类</th>
                     <th>文件信息</th>
@@ -304,6 +420,14 @@ const StudyResourcesManagement: React.FC = () => {
                 <tbody>
                   {resources && resources.length > 0 ? resources.map(resource => (
                     <tr key={resource.id}>
+                      <td>
+                        <input 
+                          type="checkbox" 
+                          checked={selectedResources.includes(resource.id)}
+                          onChange={() => handleSelectResource(resource.id)}
+                          aria-label={`选择资源-${resource.id}`}
+                        />
+                      </td>
                       <td>
                         <div className="resource-title">
                           <Link to={`/resource/${resource.id}`} className="resource-title-link">
