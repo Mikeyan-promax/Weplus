@@ -372,6 +372,27 @@
   }
 }
 
+/*
+ * 移动端滚动修复（触屏设备）
+ * 目标：在手机/触屏上，任意位置单点滑动即可上下滚动，不受内部容器限制；桌面端保持原策略。
+ */
+@media (hover: none) and (pointer: coarse) {
+  .admin-layout {
+    height: auto;
+    min-height: 100dvh; /* 动态视口高度，适配移动端地址栏变化 */
+  }
+  .admin-main {
+    height: auto;
+    min-height: 100dvh;
+  }
+  .admin-content {
+    /* 恢复主内容区滚动到窗口，避免只有内部页面滚动导致空白区域无法滚动 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
 /* 响应式设计 - 手机 */
 @media (max-width: 768px) {
   .admin-layout {

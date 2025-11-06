@@ -40,3 +40,18 @@ body {
   padding: 0;
   text-align: left;
 }
+
+/*
+ * 移动端全局滚动修复
+ * 目标：保证触屏设备上“任意位置单点滑动即可滚动到顶部/底部”，且不影响桌面端。
+ * 方法：在触屏设备上恢复窗口滚动（body），并开启惯性滚动与垂直手势。
+ */
+@media (hover: none) and (pointer: coarse) {
+  html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto !important; /* 恢复窗口滚动，避免只有内部容器滚动导致点击空白区域无法滚动 */
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
