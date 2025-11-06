@@ -8,6 +8,17 @@
   padding: 20px;
 }
 
+/* 触屏设备滚动修复：允许整个登录页上下滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .admin-login-container {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
 .admin-login-background {
   position: absolute;
   top: 0;

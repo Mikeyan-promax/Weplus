@@ -9,6 +9,16 @@
   overflow: visible;
 }
 
+/* 触屏设备：允许整个聊天页上下滚动，避免内部容器抢占滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .rag-chat {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    min-height: 100dvh;
+  }
+}
+
 /* 聊天头部样式已移除，功能已合并到PageHeader */
 
 @keyframes pulse {

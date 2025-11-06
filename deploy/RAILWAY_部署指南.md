@@ -114,7 +114,7 @@ Railway 提供托管 Postgres，可在项目中添加数据库并获得连接串
 - 进入项目 → 选择后端 Web 服务（运行 FastAPI + Nginx 的服务）。
 - 在服务面板中找到存储相关入口（例如 `Storage`/`Volumes`）。
 - 点击 `Add Volume`/`New Volume`，新增一个持久化卷。
-  - Mount Path（挂载路径）：推荐设置为 `/data` 或更具体的 `/data/study_resources`。
+  - Mount Path（挂载路径）：置为`/data/study_resources`。
   - 保存并返回服务页面。
 
 > 说明：不同版本 UI 文案可能略有差异，但总体路径为“服务页面 → 存储/卷（Storage/Volumes）→ 添加（Add）”。如未找到，请使用 Railway 的搜索框搜索 “Volumes”。

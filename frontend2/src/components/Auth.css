@@ -8,6 +8,17 @@
   padding: 20px;
 }
 
+/* 触屏设备：统一由窗口/容器滚动，避免内部卡片限制滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .auth-container {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
 /* 确保认证页面不显示侧边栏和头部 */
 .auth-container .app {
   width: 100%;

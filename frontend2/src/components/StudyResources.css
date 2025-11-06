@@ -6,6 +6,16 @@
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
+/* 触屏设备：学习资源页启用容器滚动，避免背景层/固定头部阻碍滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .study-resources {
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
 /* 页面头部 */
 .resources-header {
   background: rgba(255, 255, 255, 0.95);

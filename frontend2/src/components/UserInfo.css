@@ -8,6 +8,16 @@
   animation: fadeIn 0.6s ease-out;
 }
 
+/* 触屏设备：用户信息页启用容器滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .user-info {
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
 /* 页面头部 */
 .user-info-header {
   display: flex;

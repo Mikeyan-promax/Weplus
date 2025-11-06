@@ -11,6 +11,16 @@
   padding: 20px 0;
 }
 
+/* 触屏设备：统一启用容器滚动，保证任意触点上下滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .welcome-screen {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    min-height: 100dvh;
+  }
+}
+
 /* 动态背景 */
 .welcome-bg {
   position: absolute;

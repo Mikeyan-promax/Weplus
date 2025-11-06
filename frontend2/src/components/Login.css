@@ -7,6 +7,17 @@
   padding: 20px;
 }
 
+/* 移动端滚动修复：在触屏设备上，允许整个页面上下滚动 */
+@media (hover: none) and (pointer: coarse) {
+  .login-container {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}
+
 .login-card {
   background: white;
   border-radius: 16px;
