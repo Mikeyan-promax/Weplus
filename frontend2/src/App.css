@@ -88,10 +88,12 @@ body {
     margin: 0;
     margin-left: 0; /* 手机端不保留侧边栏空间 */
     border-radius: 0;
-    /* 移动端统一使用窗口滚动，避免内部滚动容器导致空白区域无法滚动 */
+    /* 移动端：主内容容器自身滚动，增强兼容性 */
     height: auto;
     min-height: 100dvh; /* 使用动态视口高度，适配移动端地址栏变化 */
-    overflow-y: visible; /* 交由窗口滚动，避免双滚动条 */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
   
   .page-placeholder {

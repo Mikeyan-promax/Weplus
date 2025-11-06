@@ -55,3 +55,14 @@ body {
     touch-action: pan-y;
   }
 }
+
+/* 移动端宽度兜底：部分浏览器设备模式不准确，增加宽度条件覆盖 */
+@media (max-width: 768px) {
+  html, body {
+    height: auto;
+    min-height: 100dvh;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+  }
+}

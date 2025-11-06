@@ -28,6 +28,12 @@
   overflow: hidden;
 }
 
+/* 防止背景层拦截触摸滚动/点击事件 */
+.admin-login-background,
+.background-pattern {
+  pointer-events: none;
+}
+
 .background-pattern {
   position: absolute;
   top: 0;
