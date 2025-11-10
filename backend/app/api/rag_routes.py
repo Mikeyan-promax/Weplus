@@ -590,23 +590,45 @@ async def list_documents():
 async def delete_document_endpoint(document_id: str):
     """
     删除指定文档
+    
+    行为说明：
+    - 若 `document_id` 可解析为整数，则认为是数据库documents表的主键，调用服务层执行硬删除（含向量、分块、标签和本地文件清理）。
+    - 若 `document_id` 非数字（旧格式，如 `doc_XXXX`），则仅删除向量存储中的分块，并清理内存缓存。
+    返回删除结果与细节。
     """
     try:
-        # 从PostgreSQL向量数据库删除文档
-        delete_result = await postgresql_vector_service.delete_document(document_id)
-        
-        # 从内存缓存中删除（如果存在）
-        if document_id in processed_documents:
-            del processed_documents[document_id]
-        
-        logger.info(f"文档删除成功: {document_id}")
-        logger.info(f"删除结果: {delete_result}")
-        
-        return {
-            "message": "文档删除成功", 
-            "document_id": document_id,
-            "delete_details": delete_result
-        }
+        # 尝试将ID解析为整数，以决定删除策略
+        try:
+            int_id = int(document_id)
+            # 使用服务层执行完整硬删除
+            result = await document_service.delete_document(int_id)
+            if not result.get("success"):
+                raise HTTPException(status_code=400, detail=result.get("error", "删除失败"))
+
+            # 清理内存缓存（新旧ID都尝试）
+            if document_id in processed_documents:
+                del processed_documents[document_id]
+            if str(int_id) in processed_documents:
+                del processed_documents[str(int_id)]
+
+            logger.info(f"文档删除成功（硬删除）: {document_id}")
+            return {
+                "message": "文档删除成功",
+                "document_id": document_id,
+                "delete_details": result
+            }
+        except ValueError:
+            # 旧格式ID：仅删除向量存储
+            delete_result = await postgresql_vector_service.delete_document(document_id)
+            # 清理内存缓存
+            if document_id in processed_documents:
+                del processed_documents[document_id]
+            logger.info(f"文档删除成功（仅向量）: {document_id}")
+            return {
+                "message": "文档向量删除成功",
+                "document_id": document_id,
+                "delete_details": delete_result
+            }
         
     except HTTPException:
         raise

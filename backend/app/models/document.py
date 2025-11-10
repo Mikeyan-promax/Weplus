@@ -52,6 +52,8 @@ def get_file_type(file_path: str) -> str:
         '.pdf': 'pdf',
         '.txt': 'text',
         '.md': 'markdown',
+        '.htm': 'html',
+        '.html': 'html',
         '.doc': 'word',
         '.docx': 'word',
         '.ppt': 'powerpoint',
@@ -75,7 +77,7 @@ def get_file_type(file_path: str) -> str:
 def validate_file_type(file_path: str) -> bool:
     """验证文件类型是否支持"""
     supported_types = {
-        '.pdf', '.txt', '.md', '.doc', '.docx', 
+        '.pdf', '.txt', '.md', '.htm', '.html', '.doc', '.docx', 
         '.ppt', '.pptx', '.xls', '.xlsx',
         '.jpg', '.jpeg', '.png', '.gif',
         '.mp4', '.avi', '.mov',

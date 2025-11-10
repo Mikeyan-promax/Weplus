@@ -176,6 +176,7 @@ const DocumentManagement: React.FC = () => {
    * 处理文件上传（多文件）
    * - 走 `/api/rag/documents/upload` 相对路径
    * - 使用管理员 Token 认证
+   * - 失败时读取后端返回的详细错误（JSON: detail/error/message；或文本）
    */
   const handleFileUpload = async (files: FileList) => {
     if (!files || files.length === 0) return;
@@ -201,13 +202,41 @@ const DocumentManagement: React.FC = () => {
           setUploadProgress(((index + 1) / files.length) * 100);
           return result;
         } else {
-          throw new Error(`上传文件 ${file.name} 失败`);
+          // 优先尝试读取JSON错误
+          let serverMsg = '';
+          try {
+            const data = await response.json();
+            serverMsg = (data?.detail || data?.error || data?.message || JSON.stringify(data));
+          } catch {
+            // 回退为纯文本
+            try {
+              serverMsg = await response.text();
+            } catch {
+              serverMsg = '';
+            }
+          }
+
+          const composed = serverMsg
+            ? `上传失败（HTTP ${response.status}）：${serverMsg}`
+            : `上传失败（HTTP ${response.status} ${response.statusText}）`;
+
+          console.error('上传错误详情', {
+            file: file.name,
+            status: response.status,
+            statusText: response.statusText,
+            message: serverMsg
+          });
+
+          throw new Error(`[${file.name}] ${composed}`);
         }
       });
 
       const results = await Promise.allSettled(uploadPromises);
       const successCount = results.filter(r => r.status === 'fulfilled').length;
       const failCount = results.length - successCount;
+      const failReasons = results
+        .filter(r => r.status === 'rejected')
+        .map(r => (r as PromiseRejectedResult).reason?.message || '未知错误');
 
       if (successCount > 0) {
         // 重新加载文档列表
@@ -215,14 +244,18 @@ const DocumentManagement: React.FC = () => {
         if (failCount === 0) {
           alert(`成功上传 ${successCount} 个文件`);
         } else {
-          alert(`成功上传 ${successCount} 个文件，${failCount} 个文件上传失败`);
+          // 显示第一条失败详情，便于快速定位问题
+          const firstFail = failReasons[0];
+          alert(`成功上传 ${successCount} 个文件，${failCount} 个文件上传失败\n首条失败：${firstFail}`);
         }
       } else {
-        alert('所有文件上传失败');
+        const firstFail = failReasons[0] || '未知错误';
+        alert(`所有文件上传失败\n首条失败：${firstFail}`);
       }
     } catch (error) {
-      console.error('Upload error:', error);
-      alert('文件上传失败');
+      const e = normalizeError(error);
+      console.error('Upload error:', e);
+      alert(`文件上传失败：${e.message}`);
     } finally {
       setUploading(false);
       setUploadProgress(0);

@@ -31,7 +31,7 @@ class DocumentService:
         # 配置参数
         self.upload_dir = "data/uploads"
         self.max_file_size = 50 * 1024 * 1024  # 50MB
-        self.supported_types = ['pdf', 'word', 'text', 'markdown', 'html']
+        self.supported_types = ['pdf', 'word', 'text', 'markdown', 'html', 'powerpoint']
         
         # 确保上传目录存在
         os.makedirs(self.upload_dir, exist_ok=True)
@@ -290,7 +290,15 @@ class DocumentService:
             }
     
     async def delete_document(self, document_id: int) -> Dict[str, Any]:
-        """删除文档"""
+        """删除文档
+        
+        功能说明：
+        - 通过文档ID获取文档记录；
+        - 先从向量存储删除该文档的所有分块向量；
+        - 再执行数据库硬删除（调用实例方法 document.delete），依赖外键进行级联删除分块；
+        - 最后尝试删除本地存储的原始文件。
+        返回结构：{"success": bool, "document_id": int, "vector_result": Any, "timestamp": str}。
+        """
         try:
             document = Document.get_by_id(document_id)
             if not document:
@@ -302,11 +310,8 @@ class DocumentService:
             # 从向量存储中删除
             vector_result = await postgresql_vector_service.delete_document(str(document_id))
             
-            # 删除文档分块
-            DocumentChunk.delete_by_document_id(document_id)
-            
-            # 删除文档记录 - 修复致命缺陷！
-            delete_success = Document.delete_by_id(document_id)
+            # 删除文档记录（实例方法，包含标签清理；分块依赖外键级联或上面的向量表清理）
+            delete_success = document.delete()
             if not delete_success:
                 logger.warning(f"删除文档记录失败: {document_id}")
                 return {
@@ -923,6 +928,8 @@ class DocumentService:
                 return file_content.decode('utf-8', errors='ignore')
             elif file_type == 'html':
                 return await self._extract_html_text(file_content)
+            elif file_type == 'powerpoint':
+                return await self._extract_powerpoint_text(file_content)
             else:
                 raise ValueError(f"不支持的文件类型: {file_type}")
                 
@@ -977,6 +984,99 @@ class DocumentService:
             
         except Exception as e:
             logger.error(f"HTML文本提取失败: {str(e)}")
+            return ""
+
+    async def _extract_powerpoint_text(self, file_content: bytes) -> str:
+        """提取PPTX演示文稿文本
+        
+        - 仅支持 Office Open XML 格式（.pptx）。
+        - 若为旧版 .ppt 格式或解析库缺失，返回空字符串并记录日志。
+        """
+        try:
+            # 延迟导入，避免环境未安装导致模块导入阶段失败
+            try:
+                from pptx import Presentation
+            except ImportError:
+                Presentation = None  # 使用ZIP解析回退
+
+            texts: List[str] = []
+
+            if Presentation is not None:
+                ppt_file = io.BytesIO(file_content)
+                prs = Presentation(ppt_file)
+
+                for slide_idx, slide in enumerate(prs.slides):
+                    # 提取文本框内容
+                    for shape in slide.shapes:
+                        try:
+                            # 文本框/占位符文本
+                            if hasattr(shape, 'has_text_frame') and shape.has_text_frame:
+                                # shape.text 会聚合段落文本
+                                if getattr(shape, 'text', None):
+                                    texts.append(shape.text)
+                                    continue
+                                # 兜底遍历段落与runs
+                                try:
+                                    tf = shape.text_frame
+                                    for p in getattr(tf, 'paragraphs', []):
+                                        # 聚合段落全文
+                                        paragraph_text = ''.join([run.text for run in getattr(p, 'runs', [])])
+                                        if paragraph_text:
+                                            texts.append(paragraph_text)
+                                except Exception:
+                                    pass
+
+                            # 表格中的文本
+                            if hasattr(shape, 'has_table') and shape.has_table:
+                                table = shape.table
+                                for row in table.rows:
+                                    for cell in row.cells:
+                                        try:
+                                            cell_text = getattr(cell, 'text', '')
+                                            if cell_text:
+                                                texts.append(cell_text)
+                                        except Exception:
+                                            continue
+                        except Exception as inner_e:
+                            logger.debug(f"PPTX第{slide_idx+1}页形状解析警告: {inner_e}")
+            else:
+                # 无 python-pptx 时，回退使用 zipfile + XML 解析 a:t 文本节点
+                import zipfile
+                from xml.etree import ElementTree as ET
+
+                try:
+                    zf = zipfile.ZipFile(io.BytesIO(file_content))
+                except Exception as ze:
+                    logger.error(f"PPTX压缩结构解析失败: {ze}")
+                    return ""
+
+                slide_xml_files = [name for name in zf.namelist() if name.startswith('ppt/slides/slide') and name.endswith('.xml')]
+                for name in slide_xml_files:
+                    try:
+                        with zf.open(name) as f:
+                            xml_bytes = f.read()
+                        # 去除命名空间以便简单匹配
+                        try:
+                            root = ET.fromstring(xml_bytes)
+                        except Exception as xe:
+                            logger.debug(f"解析XML失败 {name}: {xe}")
+                            continue
+
+                        # 遍历所有文本节点（命名空间通常为 a:t）
+                        for node in root.iter():
+                            tag = node.tag
+                            if isinstance(tag, str) and tag.endswith('}t'):
+                                val = (node.text or '').strip()
+                                if val:
+                                    texts.append(val)
+                    except Exception as se:
+                        logger.debug(f"读取PPTX幻灯片失败 {name}: {se}")
+
+            content = '\n'.join([t.strip() for t in texts if t and t.strip()])
+            return content.strip()
+        except Exception as e:
+            # 对于老版 .ppt 或损坏文件解析失败
+            logger.error(f"PPTX文本提取失败: {str(e)}")
             return ""
     
     async def _save_chunks(self, document_id: int, chunks: List[str]):
