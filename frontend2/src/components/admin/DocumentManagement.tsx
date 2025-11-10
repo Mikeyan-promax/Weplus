@@ -61,6 +61,8 @@ const DocumentManagement: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadPolicy, setUploadPolicy] = useState<{ max_file_size_mb: number; supported_types: Record<string, string[]> } | null>(null);
+  const [acceptExtensions, setAcceptExtensions] = useState<string>('.pdf,.doc,.docx,.txt,.ppt,.pptx,.xlsx,.md,.htm,.html');
 
   // 检查管理员权限
   useEffect(() => {
@@ -72,6 +74,8 @@ const DocumentManagement: React.FC = () => {
     
     // 模拟加载文档数据
     loadDocuments();
+    // 加载后端支持的文件类型策略
+    loadUploadPolicy();
   }, [navigate]);
 
   /**
@@ -260,6 +264,37 @@ const DocumentManagement: React.FC = () => {
       setUploading(false);
       setUploadProgress(0);
       setShowUploadModal(false);
+    }
+  };
+
+  /**
+   * 加载上传策略（支持的类型与大小限制）
+   * - GET `/api/documents/supported-types`
+   * - 动态生成文件选择框的 accept 属性与提示文案
+   */
+  const loadUploadPolicy = async () => {
+    try {
+      const response = await fetch('/api/documents/supported-types', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('admin_token')}`
+        }
+      });
+      if (!response.ok) {
+        console.warn('获取上传策略失败，使用默认类型');
+        return;
+      }
+      const data = await response.json();
+      const policy = data?.data || data; // 兼容直接返回或包裹在 data 字段
+      if (policy?.supported_types) {
+        setUploadPolicy(policy);
+        // 汇总所有扩展名为 accept 字符串
+        const allExts = Object.values(policy.supported_types).flat();
+        setAcceptExtensions(allExts.join(','));
+      }
+    } catch (error) {
+      console.warn('加载上传策略异常，回退默认类型', error);
     }
   };
 
@@ -534,6 +569,44 @@ const DocumentManagement: React.FC = () => {
     if (fileType.includes('text')) return '📃';
     if (fileType.includes('image')) return '🖼️';
     return '📁';
+  };
+
+  /**
+   * 根据上传策略生成中文提示文案
+   * - 输入：策略中的 supported_types 与最大文件大小
+   * - 输出示例：
+   *   支持：PDF(.pdf)、Word(.doc/.docx)、Excel(.xlsx)、PPT(.ppt/.pptx)、文本(.txt)、Markdown(.md)、HTML(.htm/.html)，最大 50MB
+   */
+  const buildUploadHint = (policy: { max_file_size_mb: number; supported_types: Record<string, string[]> }): string => {
+    const typeLabels: Record<string, string> = {
+      pdf: 'PDF',
+      word: 'Word',
+      excel: 'Excel',
+      powerpoint: 'PPT',
+      text: '文本',
+      markdown: 'Markdown',
+      html: 'HTML',
+    };
+    const order = ['pdf', 'word', 'excel', 'powerpoint', 'text', 'markdown', 'html'];
+    const parts = order
+      .filter((key) => policy.supported_types[key])
+      .map((key) => {
+        const label = typeLabels[key] || key;
+        const exts = policy.supported_types[key]
+          .map((e) => e.replace(/^\./, '').toUpperCase())
+          .join('/');
+        return `${label}(${exts})`;
+      });
+    return `支持：${parts.join('、')}，最大 ${policy.max_file_size_mb}MB`;
+  };
+
+  /**
+   * 构造回退提示（策略未加载时）
+   * - 直接使用当前 acceptExtensions 展示扩展名列表
+   */
+  const buildFallbackHint = (acceptStr: string): string => {
+    const parts = acceptStr.split(',').map((e) => e.trim()).filter(Boolean);
+    return `支持扩展名：${parts.join('、')}（以后台策略为准）`;
   };
 
   if (loading) {
@@ -819,11 +892,15 @@ const DocumentManagement: React.FC = () => {
                 >
                   <div className="upload-icon">📁</div>
                   <p>拖拽文件到此处或点击选择文件</p>
-                  <p className="upload-hint">支持 PDF, DOC, DOCX, TXT, PPT, PPTX 等格式</p>
+                  <p className="upload-hint">
+                    {uploadPolicy
+                      ? buildUploadHint(uploadPolicy)
+                      : buildFallbackHint(acceptExtensions)}
+                  </p>
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.doc,.docx,.txt,.ppt,.pptx"
+                    accept={acceptExtensions}
                     onChange={(e) => {
                       if (e.target.files) {
                         handleFileUpload(e.target.files);

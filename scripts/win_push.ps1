@@ -169,20 +169,11 @@ function Main {
 
   Set-GitProxy -HttpPort $httpP -SocksPort $socksP -UseSocks:$UseSocks -UseOpenSSL:$UseOpenSSL
   if ($OnlyProxy) { Write-Info "仅配置代理已完成；不执行推送"; return }
-
-  try {
-    Push-WithLease -CommitMsg $CommitMsg
-  } finally {
-    # 推送完成后恢复环境，避免代理影响其他场景
-    Clear-GitProxy
-  }
+  
+  # 执行推送并在之后恢复代理设置（不使用 try/finally，避免部分环境解析问题）
+  Push-WithLease -CommitMsg $CommitMsg
+  Clear-GitProxy
 }
 
-try {
-  Main
-  Write-Info "流程完成：已执行代理配置与推送，并恢复环境"
-} catch {
-  Write-Err ("执行失败：" + $_.Exception.Message)
-  throw
-}
-
+try { Main; Write-Info "流程完成：已执行代理配置与推送，并恢复环境" }
+catch { Write-Err ("执行失败：" + $_.Exception.Message) }

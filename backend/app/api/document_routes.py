@@ -85,6 +85,24 @@ class DocumentUpdateRequest(BaseModel):
 
 # ==================== 文档基础操作 ====================
 
+# 支持的文件类型与策略
+@router.get("/supported-types")
+async def get_supported_types():
+    """查询知识库上传支持的文件类型与大小限制"""
+    try:
+        policy = document_service.get_upload_policy()
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "message": "获取支持的文件类型成功",
+                "data": policy
+            }
+        )
+    except Exception as e:
+        logger.error(f"获取支持的文件类型失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取失败: {str(e)}")
+
 # 文档上传
 @router.post("/upload")
 async def upload_document(

@@ -31,13 +31,13 @@ class DocumentService:
         # 配置参数
         self.upload_dir = "data/uploads"
         self.max_file_size = 50 * 1024 * 1024  # 50MB
-        self.supported_types = ['pdf', 'word', 'text', 'markdown', 'html', 'powerpoint']
+        self.supported_types = ['pdf', 'word', 'text', 'markdown', 'html', 'powerpoint', 'excel']
         
         # 确保上传目录存在
         os.makedirs(self.upload_dir, exist_ok=True)
         
         logger.info("文档服务初始化完成")
-    
+
     # ==================== 文档基础操作 ====================
     
     async def upload_document(
@@ -48,6 +48,16 @@ class DocumentService:
     ) -> Dict[str, Any]:
         """
         上传并处理文档
+        
+        函数说明（中文）：
+        - 执行严格的文件校验（大小、类型、扩展名匹配策略）。
+        - 使用内容哈希检测重复；若存在失败/半成品记录，先清理再继续。
+        - 先解析文本，确保可向量化后再创建数据库记录，避免“上传失败但仍保存”。
+        - 若后续流程任一步失败，执行彻底清理（删除数据库记录、向量数据、本地文件）。
+        
+        返回结构：
+        - 成功：{"success": True, "document_id": int, ...}
+        - 失败：{"success": False, "error": str, ...}
         
         Args:
             file_content: 文件内容
@@ -72,58 +82,103 @@ class DocumentService:
             file_type = get_file_type(filename)
             file_size = len(file_content)
             
-            # 检查文档是否已存在
+            # 检查文档是否已存在；若为失败/半成品状态则清理后继续
             existing_doc = Document.get_by_hash(content_hash)
             if existing_doc:
-                return {
-                    "success": False,
-                    "error": "文档已存在",
-                    "document_id": existing_doc.id,
-                    "timestamp": datetime.now().isoformat()
-                }
+                if existing_doc.status in ("failed", "uploaded", "processing"):
+                    try:
+                        # 清理旧的失败或半成品记录
+                        await postgresql_vector_service.delete_document(str(existing_doc.id))
+                    except Exception:
+                        pass
+                    try:
+                        # 删除本地同哈希文件
+                        import glob
+                        for f in glob.glob(os.path.join(self.upload_dir, f"{existing_doc.content_hash}.*")):
+                            try:
+                                os.remove(f)
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                    try:
+                        existing_doc.delete()
+                    except Exception:
+                        pass
+                else:
+                    return {
+                        "success": False,
+                        "error": "文档已存在",
+                        "document_id": existing_doc.id,
+                        "timestamp": datetime.now().isoformat()
+                    }
             
-            # 创建文档记录
-            document = Document.create_document(
-                filename=filename,
-                file_type=file_type,
-                file_size=file_size,
-                content_hash=content_hash,
-                metadata=metadata or {}
-            )
-            
-            # 保存文件到本地
-            file_path = await self._save_file(file_content, filename, content_hash)
-            
-            # 解析文档内容
-            document.update_status("processing")
+            # 先解析文本，确认可向量化；避免创建失败记录
             text_content = await self._extract_text(file_content, file_type)
-            
             if not text_content:
-                document.update_status("failed")
                 return {
                     "success": False,
                     "error": "文档内容解析失败",
                     "timestamp": datetime.now().isoformat()
                 }
             
-            # 文档分块
+            # 文档分块（解析后，未写数据库，避免失败残留）
             chunks = rag_service.chunk_text(text_content)
             
+            # 创建文档记录
+            document = None
+            try:
+                document = Document.create_document(
+                    filename=filename,
+                    file_type=file_type,
+                    file_size=file_size,
+                    content_hash=content_hash,
+                    metadata=metadata or {}
+                )
+            except Exception as e:
+                logger.error(f"创建文档记录失败: {str(e)}")
+                return {
+                    "success": False,
+                    "error": "创建文档记录失败",
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            # 保存文件到本地并进入处理状态
+            file_path = await self._save_file(file_content, filename, content_hash)
+            document.update_status("processing")
+            
             # 保存分块到数据库
-            await self._save_chunks(document.id, chunks)
+            try:
+                await self._save_chunks(document.id, chunks)
+            except Exception as e:
+                # 清理失败上传
+                await self._cleanup_failed_upload(document)
+                return {
+                    "success": False,
+                    "error": f"保存分块失败: {str(e)}",
+                    "timestamp": datetime.now().isoformat()
+                }
             
             # 向量化并存储
-            vector_result = await postgresql_vector_service.add_document(
-                document_id=str(document.id),
-                chunks=chunks,
-                metadata={
-                    "filename": filename,
-                    "file_type": file_type,
-                    "file_size": file_size,
-                    "upload_time": datetime.now().isoformat(),
-                    **(metadata or {})
+            try:
+                vector_result = await postgresql_vector_service.add_document(
+                    document_id=str(document.id),
+                    chunks=chunks,
+                    metadata={
+                        "filename": filename,
+                        "file_type": file_type,
+                        "file_size": file_size,
+                        "upload_time": datetime.now().isoformat(),
+                        **(metadata or {})
+                    }
+                )
+            except Exception as e:
+                await self._cleanup_failed_upload(document)
+                return {
+                    "success": False,
+                    "error": f"向量化或存储失败: {str(e)}",
+                    "timestamp": datetime.now().isoformat()
                 }
-            )
             
             # 更新文档状态
             document.update_status("processed")
@@ -866,7 +921,16 @@ class DocumentService:
     # ==================== 私有辅助方法 ====================
     
     def _validate_file(self, file_content: bytes, filename: str) -> Dict[str, Any]:
-        """验证文件"""
+        """验证文件
+        
+        函数说明（中文）：
+        - 检查文件大小是否超过上限。
+        - 检查文件类型是否在知识库允许的类型范围内。
+        - 严格校验扩展名与策略映射（例如 excel 仅支持 .xlsx）。
+        - 校验文件非空。
+        
+        返回：{"valid": bool, "error": str?}
+        """
         try:
             # 检查文件大小
             if len(file_content) > self.max_file_size:
@@ -876,11 +940,29 @@ class DocumentService:
                 }
             
             # 检查文件类型
-            if not validate_file_type(filename):
-                file_type = get_file_type(filename)
+            file_type = get_file_type(filename)
+            # 先用内部支持类型集合过滤（排除图片/音视频等）
+            # 仅允许可向量化类型（排除图片、音视频等）
+            if file_type not in self.supported_types:
                 return {
                     "valid": False,
-                    "error": f"不支持的文件类型: {file_type}"
+                    "error": f"该文件类型目前不支持向量化: {file_type}"
+                }
+            
+            # 严格校验扩展名映射（与前端展示保持一致）
+            policy = self.get_upload_policy()
+            allowed_exts = policy.get("supported_types", {}).get(file_type, [])
+            ext = os.path.splitext(filename)[1].lower()
+            if allowed_exts and ext not in allowed_exts:
+                # 定制 excel 的报错文案，其他类型统一提示
+                if file_type == "excel":
+                    return {
+                        "valid": False,
+                        "error": "Excel 仅支持 .xlsx，请转换后再上传"
+                    }
+                return {
+                    "valid": False,
+                    "error": f"{file_type} 仅支持: {', '.join(allowed_exts)}"
                 }
             
             # 检查文件内容
@@ -897,6 +979,38 @@ class DocumentService:
                 "valid": False,
                 "error": f"文件验证失败: {str(e)}"
             }
+
+    async def _cleanup_failed_upload(self, document: Document):
+        """失败上传清理函数
+        
+        函数说明（中文）：
+        - 删除向量存储中的该文档条目。
+        - 删除数据库中的文档记录（含标签关联，分块依赖外键级联删除）。
+        - 删除本地存储的原始文件（基于 content_hash 通配符）。
+        """
+        try:
+            # 删除向量数据
+            try:
+                await postgresql_vector_service.delete_document(str(document.id))
+            except Exception:
+                pass
+            # 删除数据库记录
+            try:
+                document.delete()
+            except Exception:
+                pass
+            # 删除本地文件
+            try:
+                import glob
+                for f in glob.glob(os.path.join(self.upload_dir, f"{document.content_hash}.*")):
+                    try:
+                        os.remove(f)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+        except Exception as e:
+            logger.debug(f"失败清理出现异常: {e}")
     
     async def _save_file(self, file_content: bytes, filename: str, content_hash: str) -> str:
         """保存文件到本地"""
@@ -930,6 +1044,8 @@ class DocumentService:
                 return await self._extract_html_text(file_content)
             elif file_type == 'powerpoint':
                 return await self._extract_powerpoint_text(file_content)
+            elif file_type == 'excel':
+                return await self._extract_excel_text(file_content)
             else:
                 raise ValueError(f"不支持的文件类型: {file_type}")
                 
@@ -1078,6 +1194,40 @@ class DocumentService:
             # 对于老版 .ppt 或损坏文件解析失败
             logger.error(f"PPTX文本提取失败: {str(e)}")
             return ""
+
+    async def _extract_excel_text(self, file_content: bytes) -> str:
+        """提取Excel工作簿文本
+        
+        - 依赖 openpyxl 读取 .xlsx 内容（只读遍历所有工作表与单元格）。
+        - 非空行以制表符连接，工作表之间增加标题分隔。
+        """
+        try:
+            try:
+                from openpyxl import load_workbook
+            except ImportError:
+                logger.error("Excel文本提取失败: openpyxl 未安装")
+                return ""
+
+            wb_file = io.BytesIO(file_content)
+            workbook = load_workbook(wb_file, read_only=True, data_only=True)
+            parts: List[str] = []
+
+            for sheet_name in workbook.sheetnames:
+                sheet = workbook[sheet_name]
+                row_texts: List[str] = []
+                for row in sheet.iter_rows(values_only=True):
+                    cells = ["" if (c is None) else str(c) for c in row]
+                    # 跳过全空行
+                    if any(cell.strip() for cell in cells):
+                        row_texts.append("\t".join(cells))
+                if row_texts:
+                    parts.append(f"=== 工作表: {sheet_name} ===\n" + "\n".join(row_texts))
+
+            content = "\n\n".join(parts).strip()
+            return content
+        except Exception as e:
+            logger.error(f"Excel文本提取失败: {str(e)}")
+            return ""
     
     async def _save_chunks(self, document_id: int, chunks: List[str]):
         """保存文档分块到数据库"""
@@ -1108,6 +1258,26 @@ class DocumentService:
         except Exception as e:
             logger.error(f"保存文档分块失败: {str(e)}")
             raise
+
+    # ==================== 支持类型/策略查询 ====================
+    def get_upload_policy(self) -> Dict[str, Any]:
+        """返回知识库上传策略与支持的文件类型
+        
+        - 包含最大文件大小（MB）
+        - 返回可向量化类型及其扩展名列表
+        """
+        return {
+            "max_file_size_mb": int(self.max_file_size / 1024 / 1024),
+            "supported_types": {
+                "pdf": [".pdf"],
+                "word": [".doc", ".docx"],
+                "excel": [".xlsx"],
+                "powerpoint": [".ppt", ".pptx"],
+                "text": [".txt"],
+                "markdown": [".md"],
+                "html": [".htm", ".html"],
+            }
+        }
     
     # 分类相关辅助方法
     def _category_name_exists(self, name: str, parent_id: Optional[int] = None, exclude_id: Optional[int] = None) -> bool:
