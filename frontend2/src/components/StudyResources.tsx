@@ -55,7 +55,11 @@ const StudyResources: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        setCategories(data.data);
+        // 函数级注释：
+        // - 前端容错过滤：隐藏名称为“英语四六级”或代码为 `cet` 的分类；
+        // - 与后端保持一致的最小改动策略，仅在展示层隐藏，不修改数据库。
+        const filtered = (data.data || []).filter((c: any) => c?.name !== '英语四六级' && c?.code !== 'cet');
+        setCategories(filtered);
       }
     } catch (error) {
       console.error('获取分类列表失败:', error);

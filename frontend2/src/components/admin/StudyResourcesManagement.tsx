@@ -112,7 +112,11 @@ const StudyResourcesManagement: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        setCategories(data.data);
+        // 函数级注释：
+        // - 管理员页面同样隐藏“英语四六级”（或代码为 `cet`），避免与“英语四级/英语六级”重复；
+        // - 仅影响展示层，不更改数据库与接口参数。
+        const filtered = (data.data || []).filter((c: any) => c?.name !== '英语四六级' && c?.code !== 'cet');
+        setCategories(filtered);
       }
     } catch (error) {
       console.error('获取分类列表失败:', error);

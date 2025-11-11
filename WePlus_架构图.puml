@@ -1,0 +1,97 @@
+'" WePlus 架构图 (PlantUML) \n 基于当前项目结构自动生成 \n 渲染方法：使用任意 PlantUML 渲染器生成 PNG/SVG "'
+@startuml
+title WePlus 校园智能助手 - 端到端架构
+
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam defaultFontName 微软雅黑
+
+' 用户与前端
+actor 用户 as User
+component "前端 (React + Vite)" as FE
+component "Vite 代理 / 开发" as Proxy
+
+' 反向代理与部署
+component "Nginx (生产)" as Nginx
+node "Railway/容器" as Deploy
+
+' 后端主应用
+package "后端 (FastAPI)" as Backend {
+  component "中间件\nRequestId / RateLimit" as Middlewares
+  component "配置 / 日志\nsettings / setup_logging" as ConfigLog
+
+  package "API 路由" as APIs {
+    component "RAG API\n/api/rag" as RAGAPI
+    component "文档 API\n/api/documents" as DocAPI
+    component "认证 API\n/auth" as AuthAPI
+    component "管理员仪表板\n/api/admin/dashboard" as AdminDashboard
+    component "日志管理\n/api/admin/logs" as AdminLogs
+    component "文件管理\n/api/admin/files" as AdminFiles
+    component "备份管理\n/api/admin/backup" as AdminBackup
+    component "RAG知识库\n/api/admin/rag" as AdminRag
+    component "向量库管理\n/api/admin/vector" as AdminVector
+    component "学习资源\n/api/study-resources" as StudyAPI
+    component "用户 API\n/api/users" as UserAPI
+    component "测试中心\n/api/test" as TestAPI
+  }
+
+  package "服务层" as Services {
+    component "RAG 服务\nDeepSeek 聊天" as RagService
+    component "PostgreSQL 向量服务\npgvector" as VectorService
+    component "文档服务\n解析/分块/嵌入" as DocumentService
+    component "日志服务\n系统/用户/安全/API" as LoggingService
+    component "邮件服务\n验证码/通知" as EmailService
+  }
+}
+
+' 数据库与外部依赖
+database "PostgreSQL" as PG {
+  collections "documents" as TDocuments
+  collections "document_chunks(vector(2560))" as TChunks
+  collections "chat_sessions / chat_messages" as TChats
+  collections "retrieval_logs" as TRetrieval
+  collections "admin_* / study_resources_*" as TAdminStudy
+}
+
+component "DeepSeek API" as DeepSeek
+component "豆包嵌入 (Ark)" as Doubao
+component "Sentry" as Sentry
+component "Prometheus" as Prometheus
+
+' 连接关系
+User --> FE : 浏览与交互
+FE --> Proxy : 开发态代理 /api
+Proxy --> Backend : 反向代理 /api
+Nginx --> Backend : 生产反代 /api
+Deploy --> Backend : 部署承载
+
+Backend --> APIs
+APIs --> Services
+Services --> PG : 读写数据/向量
+RagService --> DeepSeek : 聊天/补全
+VectorService --> Doubao : 生成嵌入 (2560维)
+ConfigLog --> Sentry : 错误上报
+ConfigLog --> Prometheus : 指标暴露
+Middlewares --> APIs : 请求ID/限流保护
+
+' 端点示意
+RAGAPI --> RagService : /chat /chat/stream /search
+DocAPI --> DocumentService : /upload /list /search
+AdminVector --> VectorService : /stats /indexes /rebuild
+AdminLogs --> LoggingService : /query /statistics /export
+AuthAPI --> PG : 注册/登录/令牌
+
+note right of PG
+  - 统一 schema：postgresql_unified_schema.sql
+  - 向量维度：2560 (document_chunks.embedding)
+  - 表：documents, document_chunks, chat_*, retrieval_logs
+end note
+
+note bottom of Backend
+  - CORS 白名单；管理员 IP 白名单
+  - JSON 日志 + X-Request-ID 贯通
+  - /docs 提供 OpenAPI 文档
+end note
+
+@enduml

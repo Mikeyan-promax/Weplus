@@ -1019,7 +1019,8 @@ async def get_categories_for_frontend():
     函数级注释：
     - 返回分类基础信息，并附加每个分类的资源数量 `resource_count`；
     - 统计口径：study_resources 表中 status='active' 的资源；
-    - 解决前端“分类计数为0”的问题。
+    - 解决前端“分类计数为0”的问题；
+    - 为避免与“英语四级/英语六级”重复显示，这里在服务端直接过滤掉名称为“英语四六级”或代码为 `cet` 的分类（仅隐藏，不改动数据库）。
     """
     try:
         with get_db_connection() as conn:
@@ -1068,6 +1069,9 @@ async def get_categories_for_frontend():
                     "is_active": row[7],
                     "resource_count": row[8] if len(row) > 8 else 0
                 })
+
+        # 服务端过滤：隐藏“英语四六级”（或代码为 cet），以满足前端最小改动不显示该分类的需求
+        categories = [c for c in categories if c.get("name") != "英语四六级" and c.get("code") != "cet"]
 
         return {"success": True, "data": categories}
         
@@ -1229,7 +1233,8 @@ async def get_categories():
     """获取所有资源分类（含资源数量）
     函数级注释：
     - 与 /categories 返回一致，包含 resource_count 字段；
-    - 支持旧前端路径复用。
+    - 支持旧前端路径复用；
+    - 同步在服务端过滤掉名称为“英语四六级”或代码为 `cet` 的分类（仅隐藏）。
     """
     try:
         with get_db_connection() as conn:
@@ -1278,6 +1283,9 @@ async def get_categories():
                     "is_active": row[7],
                     "resource_count": row[8] if len(row) > 8 else 0
                 })
+
+        # 服务端过滤：隐藏“英语四六级”（或代码为 cet）
+        categories = [c for c in categories if c.get("name") != "英语四六级" and c.get("code") != "cet"]
 
         return {"success": True, "data": categories}
         

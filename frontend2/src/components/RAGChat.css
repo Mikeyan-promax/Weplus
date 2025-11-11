@@ -2,20 +2,20 @@
 .rag-chat {
   display: flex;
   flex-direction: column;
-  /* 使用最小高度，避免强制固定视窗高度导致嵌套滚动 */
-  min-height: 100vh;
+  /* 固定窗口高度，防止页面随内容抖动 */
+  height: 100vh;
   background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   position: relative;
-  overflow: visible;
+  /* 页面级滚动隐藏，改为内部消息容器滚动 */
+  overflow: hidden;
 }
 
-/* 触屏设备：允许整个聊天页上下滚动，避免内部容器抢占滚动 */
+/* 触屏设备：固定视窗高度，交由消息容器滚动（避免页面抖动） */
 @media (hover: none) and (pointer: coarse) {
   .rag-chat {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
+    height: 100dvh;
+    overflow: hidden;
     touch-action: pan-y;
-    min-height: 100dvh;
   }
 }
 
@@ -55,23 +55,23 @@
 
 /* 开发者后台按钮样式已移动到PageHeader */
 
-/* 消息容器 */
+/* 消息容器：作为唯一滚动区域 */
 .messages-container {
   flex: 1;
-  /* 交由页面统一滚动，避免内部再创建滚动容器 */
-  overflow: visible;
+  /* 允许在flex下正确计算滚动尺寸 */
+  min-height: 0;
+  /* 垂直滚动，禁止横向 */
+  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
   background: rgba(0, 0, 0, 0.3);
-  /* 让高度自适应内容 */
-  height: auto;
 }
 
 .messages-list {
-  /* 统一交由外层滚动 */
-  height: auto;
-  overflow: visible;
+  /* 占满容器宽度；滚动由父容器负责 */
+  min-height: 100%;
   padding: 20px;
-  scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 /* 自定义滚动条 */

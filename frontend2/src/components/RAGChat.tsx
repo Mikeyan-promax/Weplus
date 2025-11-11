@@ -77,15 +77,24 @@ const RAGChat: React.FC = () => {
   };
 
   // 滚动到底部
+  /**
+   * scrollToBottom
+   * 功能：将消息列表滚动到末尾
+   * 说明：为避免流式追加期间页面抖动，仅在非生成中（canStop=false）或非加载中（isLoading=false）时触发。
+   */
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  // 在消息变化时：仅保存历史；当非流式状态时才滚动到底部，防止窗口抖动
   useEffect(() => {
-    scrollToBottom();
     // 保存聊天历史
     saveChatHistory(messages);
-  }, [messages]);
+    // 非生成中、非加载中时允许自动滚动到底部
+    if (!isLoading && !canStop) {
+      scrollToBottom();
+    }
+  }, [messages, isLoading, canStop]);
 
   // 发送消息 - 使用RAG API
   /**

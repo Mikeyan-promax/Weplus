@@ -362,6 +362,32 @@ async def startup_event():
     """应用启动事件"""
     logger.info("🚀 WePlus RAG Campus Assistant API 启动中...")
     logger.info("📚 RAG系统已集成 DeepSeek 和豆包嵌入模型")
+    # 初始化日志服务（仅执行一次，失败不影响主流程）
+    try:
+        logging_service.initialize()
+        logger.info("📝 日志服务初始化完成（已确保日志表存在）")
+    except Exception as e:
+        logger.error(f"日志服务初始化异常: {e}")
+
+    # 启动时自检关键表，缺失时执行完整Schema
+    try:
+        from database.db_manager import db_manager
+        # 以 admin_users 作为哨兵表检测是否已初始化
+        if not db_manager.table_exists("admin_users"):
+            schema_path = os.path.join(os.path.dirname(__file__), "database", "postgresql_complete_schema.sql")
+            if os.path.exists(schema_path):
+                ok = db_manager.create_table_from_sql(schema_path)
+                if ok:
+                    logger.info("📦 已执行完整数据库Schema初始化（首次启动或缺失表）")
+                else:
+                    logger.warning("⚠️ 尝试执行Schema失败，请检查数据库权限与脚本内容")
+            else:
+                logger.warning("⚠️ 未找到完整Schema文件：database/postgresql_complete_schema.sql")
+        else:
+            logger.info("✅ 检测到基础表已存在，跳过Schema初始化")
+    except Exception as e:
+        logger.error(f"启动自检与Schema初始化失败: {e}")
+
     logger.info("✅ 服务器启动完成")
 
 @app.on_event("shutdown")

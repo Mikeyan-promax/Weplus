@@ -69,6 +69,10 @@
   position: relative;
   word-wrap: break-word;
   word-break: break-word;
+  /* 防止横向溢出，始终在容器内换行 */
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   transition: all 0.2s ease;
 }
@@ -272,6 +276,8 @@
   overflow: hidden;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+  /* 代码块容器不超过气泡宽度 */
+  max-width: 100%;
 }
 
 .code-block-header {
@@ -327,6 +333,38 @@
   border-collapse: collapse;
   margin: 12px 0;
   font-size: 13px;
+}
+
+/* 图片与其他媒体不超过气泡宽度 */
+.message-content img,
+.message-content video,
+.message-content iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 兼容 ChatMessage.tsx 使用的容器类名（与现有样式保持一致） */
+.code-block-container {
+  margin: 12px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  max-width: 100%;
+}
+
+.copy-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+  font-size: 12px;
+}
+
+.copy-button:hover {
+  background: #cbd5e0;
 }
 
 .message-table-header {
