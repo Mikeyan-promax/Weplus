@@ -90,6 +90,29 @@ class EmailService:
             self.init_error = str(e)
             logger.error(f"初始化邮件客户端失败: {self.init_error}")
             return False
+
+    def _build_connection(self, port: int, starttls: bool, ssl_tls: bool):
+        """构建邮件连接配置对象
+
+        用途：根据端口与加密模式动态创建配置，便于在发送失败时进行回退尝试。
+        """
+        try:
+            from fastapi_mail import ConnectionConfig
+            return ConnectionConfig(
+                MAIL_USERNAME=self.mail_username,
+                MAIL_PASSWORD=self.mail_password,
+                MAIL_FROM=self.mail_from,
+                MAIL_PORT=port,
+                MAIL_SERVER=self.mail_server,
+                MAIL_FROM_NAME=self.mail_from_name,
+                MAIL_STARTTLS=starttls,
+                MAIL_SSL_TLS=ssl_tls,
+                USE_CREDENTIALS=True,
+                VALIDATE_CERTS=True
+            )
+        except Exception as e:
+            logger.error(f"构建邮件连接配置失败: {e}")
+            return None
     
     def generate_verification_code(self, length: int = 6) -> str:
         """生成验证码"""
@@ -241,13 +264,55 @@ class EmailService:
                     body=html_content,
                     subtype=MessageType.html
                 )
-                await self.fastmail.send_message(message)
-                logger.info(f"验证码邮件已发送到 {email}，用途：{purpose}")
-                return {
-                    "success": True,
-                    "message": "验证码已发送到您的邮箱，请查收",
-                    "code": "EMAIL_SENT"
-                }
+                # 首次尝试：使用当前配置
+                try:
+                    await self.fastmail.send_message(message)
+                    logger.info(f"验证码邮件已发送到 {email}，用途：{purpose}")
+                    return {
+                        "success": True,
+                        "message": "验证码已发送到您的邮箱，请查收",
+                        "code": "EMAIL_SENT"
+                    }
+                except Exception as first_err:
+                    err_msg = str(first_err)
+                    logger.warning(f"首次发送失败，准备回退尝试: {err_msg}")
+
+                    # 依据当前模式选择回退参数
+                    use_ssl_tls = self.mail_ssl_tls
+                    use_starttls = self.mail_starttls
+                    current_port = self.mail_port
+
+                    # 回退策略：465/SSL ↔ 587/STARTTLS 双向尝试
+                    if use_ssl_tls and current_port == 465:
+                        fallback_port, fallback_starttls, fallback_ssl = 587, True, False
+                    else:
+                        fallback_port, fallback_starttls, fallback_ssl = 465, False, True
+
+                    fallback_conf = self._build_connection(fallback_port, fallback_starttls, fallback_ssl)
+                    if fallback_conf is None:
+                        raise first_err
+
+                    try:
+                        from fastapi_mail import FastMail
+                        fallback_client = FastMail(fallback_conf)
+                        await fallback_client.send_message(message)
+                        logger.info(
+                            f"回退发送成功到 {email}（port={fallback_port}, STARTTLS={fallback_starttls}, SSL={fallback_ssl}）"
+                        )
+                        return {
+                            "success": True,
+                            "message": "验证码已发送到您的邮箱，请查收",
+                            "code": "EMAIL_SENT"
+                        }
+                    except Exception as fallback_err:
+                        # 回退失败，返回错误信息
+                        logger.error(f"发送邮件失败（回退亦失败）: {str(fallback_err)}")
+                        return {
+                            "success": False,
+                            "message": "邮件发送失败，请稍后重试",
+                            "code": "SEND_FAILED",
+                            "error": str(fallback_err)
+                        }
             except Exception as send_err:
                 logger.error(f"发送邮件失败（非调试模式）: {str(send_err)}")
                 return {
