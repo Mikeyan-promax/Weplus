@@ -205,7 +205,17 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // 获取用户列表
+  /**
+   * 获取用户列表
+   * 功能：调用后端 `/api/admin/users/` 接口，支持分页与搜索；
+   * 说明：将前端状态筛选（active/inactive）转换为后端所需的 `is_active` 布尔参数；
+   * 参数：
+   *  - page: 页码（默认1）
+   *  - search: 关键词（用户名或邮箱）
+   *  - status: 前端状态筛选（"active" | "inactive" | ''），转换为 is_active=true/false
+   *  - verification: 验证状态（目前后端未使用，保留占位）
+   *  - dateFrom/dateTo/loginMin/loginMax: 高级筛选占位（后端暂未实现）
+   */
   const fetchUsers = async (
     page = 1, 
     search = '', 
@@ -224,7 +234,12 @@ const UserManagement: React.FC = () => {
       });
       
       if (search) params.append('search', search);
-      if (status) params.append('status', status);
+      // 将前端传入的 status(active/inactive) 映射为后端的 is_active 布尔参数
+      if (status === 'active') {
+        params.append('is_active', 'true');
+      } else if (status === 'inactive') {
+        params.append('is_active', 'false');
+      }
       if (verification) params.append('verification', verification);
       if (dateFrom) params.append('date_from', dateFrom);
       if (dateTo) params.append('date_to', dateTo);
@@ -264,42 +279,74 @@ const UserManagement: React.FC = () => {
     }
   };
 
-  // 获取用户统计
+  /**
+   * 获取用户统计
+   * 功能：调用后端“仪表板概览”端点 `/api/admin/dashboard/overview`，
+   *      从返回的系统概览中提取与用户相关的统计信息并适配前端使用的结构。
+   * 说明：后端新仪表板API返回的是对象模型（非统一 success/data 包裹），
+   *      这里做兼容解析：若含有 success 字段则用 data，否则直接用原对象。
+   */
   const fetchStats = async () => {
     try {
-      // 修复API路径，添加正确的斜杠
-      const response = await fetch('/api/admin/users/stats/', {
+      const response = await fetch('/api/admin/dashboard/overview', {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
           'Content-Type': 'application/json',
         },
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('统计数据响应:', data); // 调试日志
-        if (data.success) {
-          setStats(data.data);
+      if (!response.ok) {
+        // 统一处理认证失败与其他HTTP错误
+        if (response.status === 401 || response.status === 403) {
+          throw new Error('认证失败，请重新登录');
         }
-      } else {
         console.warn('获取统计数据失败:', response.status);
+        return;
       }
+
+      const raw = await response.json();
+      console.log('统计数据响应:', raw);
+
+      // 兼容 success/data 与直接对象两种返回格式
+      const overview = (raw && typeof raw === 'object' && 'success' in raw) ? raw.data : raw;
+
+      // 从系统概览中构造前端需要的用户统计结构
+      const total_users = overview?.total_users ?? 0;
+      const active_users = overview?.active_users ?? 0;
+      const inactive_users = Math.max(0, total_users - active_users);
+      const new_users_today = overview?.new_users_today ?? 0;
+
+      setStats({
+        total_users,
+        active_users,
+        inactive_users,
+        new_users_today,
+      });
     } catch (err) {
       console.error('获取统计数据失败:', err);
+      setError(err instanceof Error ? err.message : '获取统计数据失败');
     }
   };
 
-  // 更新用户状态
+  /**
+   * 更新用户状态
+   * 功能：根据目标状态选择后端的激活/禁用端点，保持与后端路径一致。
+   * 说明：后端提供 POST /api/admin/users/{id}/activate 与 /deactivate 两个端点；
+   * 参数：
+   *  - userId: 用户ID
+   *  - isActive: 更新后的目标状态（true=激活；false=禁用）
+   */
   const updateUserStatus = async (userId: number, isActive: boolean) => {
     try {
-      // 修复API路径，添加正确的斜杠
-      const response = await fetch(`/api/admin/users/${userId}/status/`, {
-        method: 'PUT',
+      // 使用后端的 activate/deactivate 端点，避免 404
+      const endpoint = isActive ? 'activate' : 'deactivate';
+      const response = await fetch(`/api/admin/users/${userId}/${endpoint}`, {
+        method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token')}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ is_active: isActive }),
+        // 后端不需要请求体，这里不传 body
       });
 
       if (response.ok) {

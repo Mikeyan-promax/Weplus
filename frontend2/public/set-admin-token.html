@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>设置管理员Token</title>
+    <style>
+      body { font-family: system-ui, sans-serif; padding: 24px; }
+      .card { max-width: 680px; margin: 0 auto; border: 1px solid #eee; border-radius: 8px; padding: 16px; }
+      .ok { color: #0a7; }
+      .err { color: #c00; }
+      code { background: #f7f7f7; padding: 2px 6px; border-radius: 4px; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h2>设置管理员Token</h2>
+      <p>将 URL 中的 <code>admin_token</code> 写入本地存储，并跳转到 <code>/admin/users</code>。</p>
+      <p>示例用法：<br />
+        <code>/set-admin-token.html?admin_token=YOUR_TOKEN</code>
+      </p>
+      <div id="status"></div>
+    </div>
+
+    <script>
+      /**
+       * 写入管理员Token并重定向
+       * 功能：从查询参数中读取 admin_token，写入 localStorage，随后跳转到用户管理页。
+       * 说明：用于开发环境快速注入Token，解决不同端口/源导致的localStorage隔离问题。
+       */
+      (function setTokenAndRedirect() {
+        try {
+          var params = new URLSearchParams(window.location.search);
+          var token = params.get('admin_token') || params.get('token');
+          var statusEl = document.getElementById('status');
+          if (!token) {
+            statusEl.innerHTML = '<p class="err">未找到 admin_token 参数，请在URL中附带 ?admin_token=...</p>';
+            return;
+          }
+          localStorage.setItem('admin_token', token);
+          statusEl.innerHTML = '<p class="ok">✅ 已写入管理员Token，正在跳转...</p>';
+          // 跳转到用户管理页
+          setTimeout(function () { window.location.href = '/admin/users'; }, 600);
+        } catch (e) {
+          console.error('写入管理员Token失败:', e);
+          var statusEl = document.getElementById('status');
+          statusEl.innerHTML = '<p class="err">写入管理员Token失败：' + (e && e.message ? e.message : e) + '</p>';
+        }
+      })();
+    </script>
+  </body>
+  </html>
+
