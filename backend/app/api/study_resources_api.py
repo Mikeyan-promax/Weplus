@@ -811,7 +811,8 @@ async def admin_scan_missing_resources(admin_user: dict = Depends(verify_admin_t
 
         with get_db_connection() as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT id, title, file_path, source_url FROM study_resources ORDER BY id")
+                # 统一以数据库列 name 别名为 title，保持接口兼容
+                cur.execute("SELECT id, name AS title, file_path, source_url FROM study_resources ORDER BY id")
                 rows = cur.fetchall()
 
         for row in rows:

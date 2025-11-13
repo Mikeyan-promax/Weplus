@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 # 数据库连接配置 - 阿里云RDS PostgreSQL
 DB_CONFIG = {
-    'host': os.getenv('DB_HOST', 'pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com'),
+    'host': os.getenv('DB_HOST', 'pgm-2zekusmdjl0o3782ao.pg.rds.aliyuncs.com'),
     'port': os.getenv('DB_PORT', '5432'),
     'database': os.getenv('DB_NAME', 'weplus_db'),
     'user': os.getenv('DB_USER', 'weplus_db'),

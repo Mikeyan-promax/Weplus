@@ -65,6 +65,9 @@
   overflow-x: hidden;
   position: relative;
   background: rgba(0, 0, 0, 0.3);
+  /* 防止滚动回弹与锚点导致的布局跳动 */
+  overscroll-behavior-y: contain;
+  overflow-anchor: none;
 }
 
 .messages-list {

@@ -62,13 +62,13 @@ class PostgreSQLVectorService:
                         
                         # 插入到数据库
                         query = """
-                            INSERT INTO document_chunks (document_id, chunk_index, content, embedding, metadata)
-                            VALUES (%s, %s, %s, %s, %s)
+                            INSERT INTO document_chunks (document_id, chunk_index, content, content_length, embedding, metadata)
+                            VALUES (%s, %s, %s, %s, %s, %s)
                         """
                         
                         cursor.execute(
                             query,
-                            (document_id, i, chunk, embedding, json.dumps(metadata or {}))
+                            (document_id, i, chunk, len(chunk), embedding, json.dumps(metadata or {}))
                         )
                     
                     conn.commit()

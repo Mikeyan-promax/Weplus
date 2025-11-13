@@ -6,7 +6,7 @@ import psycopg2
 from urllib.parse import quote_plus
 
 DB_CONFIG = {
-    'host': 'pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com',
+    'host': 'pgm-2zekusmdjl0o3782ao.pg.rds.aliyuncs.com',
     'port': '5432',
     'database': 'weplus_db',
     'user': 'weplus_db',

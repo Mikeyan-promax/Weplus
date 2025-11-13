@@ -147,17 +147,8 @@ class DocumentService:
             file_path = await self._save_file(file_content, filename, content_hash)
             document.update_status("processing")
             
-            # 保存分块到数据库
-            try:
-                await self._save_chunks(document.id, chunks)
-            except Exception as e:
-                # 清理失败上传
-                await self._cleanup_failed_upload(document)
-                return {
-                    "success": False,
-                    "error": f"保存分块失败: {str(e)}",
-                    "timestamp": datetime.now().isoformat()
-                }
+            # 保存分块到数据库（已改为使用PostgreSQL向量存储，不再重复写入document_chunks记录）
+            # 说明：避免与向量服务写入同一表导致唯一键冲突，这里跳过数据库分块写入，仅依赖向量存储中的document_chunks。
             
             # 向量化并存储
             try:
@@ -895,14 +886,20 @@ class DocumentService:
             
             # 检查数据库
             try:
-                # 简单的数据库连接测试
-                Document.get_stats()
+                # 简单的数据库连接测试（函数级注释）
+                # 为避免模型未实现 get_stats 导致健康检查失败，改为直接执行 SELECT 1
+                from database.config import get_db_connection
+                with get_db_connection() as conn:
+                    with conn.cursor() as cursor:
+                        cursor.execute("SELECT 1")
+                        _ = cursor.fetchone()
                 health_status["database"] = True
             except Exception as e:
                 logger.error(f"数据库检查失败: {str(e)}")
             
             # 检查向量存储
-            vector_health = await postgresql_vector_service.health_check()
+            # 注意：postgresql_vector_service.health_check 为同步方法
+            vector_health = postgresql_vector_service.health_check()
             health_status["vector_store"] = vector_health.get("overall", False)
             
             health_status["overall"] = all([

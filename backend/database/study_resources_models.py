@@ -170,11 +170,14 @@ class ResourceCategory:
     @classmethod
     async def create(cls, name: str, description: str = "", parent_id: int = None,
                     icon: str = "", color: str = "") -> 'ResourceCategory':
-        """创建新分类"""
+        """创建新分类
+        函数级注释：
+        - 兼容历史签名，接受 parent_id 参数但不持久化该字段。
+        - 仅写入基础展示信息（name/description/icon/color）。
+        """
         category = cls(
             name=name,
             description=description,
-            parent_id=parent_id,
             icon=icon,
             color=color
         )
@@ -182,13 +185,13 @@ class ResourceCategory:
         # 使用PostgreSQL管理器插入数据
         db_manager = PostgreSQLManager()
         query = """
-        INSERT INTO resource_categories (name, description, parent_id, icon, color,
+        INSERT INTO resource_categories (name, description, icon, color,
                                        sort_order, is_active, created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
         """
         params = (
-            category.name, category.description, category.parent_id,
+            category.name, category.description,
             category.icon, category.color, category.sort_order,
             category.is_active, category.created_at, category.updated_at
         )
@@ -206,7 +209,9 @@ class ResourceCategory:
         result = await db_manager.execute_query(query, (category_id,), fetch_one=True)
         
         if result:
-            return cls(**result)
+            data = dict(result)
+            data.pop('parent_id', None)
+            return cls(**data)
         return None
     
     @classmethod
@@ -215,63 +220,60 @@ class ResourceCategory:
         db_manager = PostgreSQLManager()
         query = "SELECT * FROM resource_categories WHERE is_active = true ORDER BY sort_order, name"
         results = db_manager.execute_query(query)
-        
-        return [cls(**result) for result in results]
+        cleaned = []
+        for r in results:
+            d = dict(r)
+            d.pop('parent_id', None)
+            cleaned.append(cls(**d))
+        return cleaned
     
-    @classmethod
-    async def get_tree(cls) -> List[Dict[str, Any]]:
-        """获取分类树结构"""
-        categories = await cls.get_all_active()
-        
-        # 构建分类树
-        category_dict = {cat.id: cat.to_dict() for cat in categories}
-        tree = []
-        
-        for cat in categories:
-            cat_dict = category_dict[cat.id]
-            cat_dict['children'] = []
-            
-            if cat.parent_id is None:
-                tree.append(cat_dict)
-            else:
-                parent = category_dict.get(cat.parent_id)
-                if parent:
-                    parent['children'].append(cat_dict)
-        
-        return tree
+@classmethod
+async def get_tree(cls) -> List[Dict[str, Any]]:
+    """获取分类树结构（平铺版）
+    函数级注释：
+    - 历史 parent_id 字段已停止使用；此处返回每个分类的 children 为空数组。
+    - 如需恢复层级，可在数据库与模型层重新加入 parent_id，并更新此方法。
+    """
+    categories = await cls.get_all_active()
+    tree = []
+    for cat in categories:
+        item = cat.to_dict()
+        item['children'] = []
+        tree.append(item)
+    return tree
     
-    async def save(self):
-        """保存分类"""
-        db_manager = PostgreSQLManager()
-        if self.id:
-            # 更新现有分类
-            query = """
-            UPDATE resource_categories SET name = %s, description = %s, parent_id = %s,
-                   icon = %s, color = %s, sort_order = %s, is_active = %s, updated_at = %s
-            WHERE id = %s
-            """
-            params = (
-                self.name, self.description, self.parent_id, self.icon,
-                self.color, self.sort_order, self.is_active, datetime.now(), self.id
-            )
-        else:
-            # 创建新分类
-            query = """
-            INSERT INTO resource_categories (name, description, parent_id, icon, color,
-                                           sort_order, is_active, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            RETURNING id
-            """
-            params = (
-                self.name, self.description, self.parent_id, self.icon,
-                self.color, self.sort_order, self.is_active,
-                self.created_at, self.updated_at
-            )
-            result = await db_manager.execute_query(query, params, fetch_one=True)
-            self.id = result['id']
-            return
-        
-        await db_manager.execute_query(query, params)
+async def save(self):
+    """保存分类"""
+    db_manager = PostgreSQLManager()
+    if self.id:
+        # 更新现有分类
+        query = """
+        UPDATE resource_categories SET name = %s, description = %s,
+               icon = %s, color = %s, sort_order = %s, is_active = %s, updated_at = %s
+        WHERE id = %s
+        """
+        params = (
+            self.name, self.description, self.icon,
+            self.color, self.sort_order, self.is_active, datetime.now(), self.id
+        )
+    else:
+        # 创建新分类
+        query = """
+        INSERT INTO resource_categories (name, description, icon, color,
+                                       sort_order, is_active, created_at, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        RETURNING id
+        """
+        params = (
+            self.name, self.description, self.icon,
+            self.color, self.sort_order, self.is_active,
+            self.created_at, self.updated_at
+        )
+        result = await db_manager.execute_query(query, params, fetch_one=True)
+        self.id = result['id']
+        return
+
+    await db_manager.execute_query(query, params)
 
 @dataclass
 class StudyResource:
@@ -342,7 +344,7 @@ class StudyResource:
         
         # 使用同步的execute_query函数
         query = """
-        INSERT INTO study_resources (title, description, file_type, file_size, file_path,
+        INSERT INTO study_resources (name, description, file_type, file_size, file_path,
                                    original_filename, content_hash, category_id, difficulty_level,
                                    language, tags, metadata, download_count, view_count,
                                    rating_avg, rating_count, status, uploader_id, is_featured,
@@ -392,6 +394,9 @@ class StudyResource:
         if result:
             # 转换字段名和数据类型
             resource_data = dict(result)
+            # 兼容字段：将数据库列 name 映射为模型字段 title
+            if 'name' in resource_data and 'title' not in resource_data:
+                resource_data['title'] = resource_data['name']
             
             # 字段映射：数据库字段 -> 模型字段
             if 'file_type' in resource_data:
@@ -459,7 +464,103 @@ class StudyResource:
             
             return cls(**resource_data)
         return None
-    
+
+    @classmethod
+    def update(cls, resource_id: int, **update_data) -> int:
+        """根据资源ID更新学习资源基础字段
+        函数级注释：
+        - 目的：兼容管理员端更新接口，仅更新表中存在的基础字段；避免写入不存在列。
+        - 输入：resource_id（整数）；可选更新键包括 title、description、category_id、tags、status。
+        - 字段映射：title -> name；其余与数据库列同名。
+        - 特殊处理：tags 支持逗号分隔字符串，统一存为 JSON 数组文本（如 ["英语","真题"]）。
+        - 返回：受影响的行数（通常为1）。
+        """
+        if not isinstance(resource_id, int) or resource_id <= 0:
+            raise ValueError("resource_id 必须为有效的正整数")
+
+        # 允许更新的键映射（API -> DB 列）
+        key_map = {
+            'title': 'name',
+            'name': 'name',
+            'description': 'description',
+            'category_id': 'category_id',
+            'status': 'status',
+            'tags': 'tags',
+        }
+
+        set_parts = []
+        params = []
+
+        for key, value in update_data.items():
+            if key not in key_map:
+                # 忽略表中不存在的字段（如 difficulty_level 等）
+                continue
+            column = key_map[key]
+
+            if column == 'tags':
+                # 将 tags 统一存储为 JSON 数组文本
+                if value is None:
+                    json_text = '[]'
+                elif isinstance(value, str):
+                    # 支持前端提交逗号分隔或已是JSON字符串
+                    value_str = value.strip()
+                    try:
+                        # 若本身是JSON，直接使用
+                        loaded = json.loads(value_str)
+                        if isinstance(loaded, list):
+                            json_text = json.dumps(loaded, ensure_ascii=False)
+                        else:
+                            json_text = '[]'
+                    except Exception:
+                        # 逗号分隔转数组
+                        arr = [v.strip() for v in value_str.split(',') if v.strip()]
+                        json_text = json.dumps(arr, ensure_ascii=False)
+                elif isinstance(value, (list, tuple)):
+                    json_text = json.dumps(list(value), ensure_ascii=False)
+                else:
+                    json_text = '[]'
+                set_parts.append(f"{column} = %s")
+                params.append(json_text)
+            elif column == 'status':
+                # 仅接受预期状态值
+                allowed = {'active', 'inactive', 'deleted'}
+                status_val = value if isinstance(value, str) else 'active'
+                if status_val not in allowed:
+                    status_val = 'active'
+                set_parts.append(f"{column} = %s")
+                params.append(status_val)
+            else:
+                set_parts.append(f"{column} = %s")
+                params.append(value)
+
+        if not set_parts:
+            # 没有可更新的字段
+            return 0
+
+        # 统一更新时间
+        set_parts.append("updated_at = CURRENT_TIMESTAMP")
+
+        set_clause = ", ".join(set_parts)
+        query = f"UPDATE study_resources SET {set_clause} WHERE id = %s"
+        params.append(resource_id)
+
+        db_manager = PostgreSQLManager()
+        return db_manager.execute_query(query, params)
+
+    @classmethod
+    def delete(cls, resource_id: int) -> int:
+        """根据资源ID软删除学习资源
+        函数级注释：
+        - 动作：将 status 更新为 'deleted' 并刷新 updated_at。
+        - 说明：软删除保留记录，避免破坏外键关系；前端列表通过 status 筛选隐藏。
+        - 返回：受影响的行数（通常为1）。
+        """
+        if not isinstance(resource_id, int) or resource_id <= 0:
+            raise ValueError("resource_id 必须为有效的正整数")
+        db_manager = PostgreSQLManager()
+        query = "UPDATE study_resources SET status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = %s"
+        return db_manager.execute_query(query, (resource_id,))
+
     @classmethod
     def get_paginated(cls, page: int = 1, limit: int = 10,
                            category_id: int = None, resource_type: ResourceType = None,
@@ -487,7 +588,7 @@ class StudyResource:
         
         if search_query:
             search_pattern = f"%{search_query}%"
-            where_conditions.append("(title ILIKE %s OR description ILIKE %s)")
+            where_conditions.append("(name ILIKE %s OR description ILIKE %s)")
             params.extend([search_pattern, search_pattern])
         
         where_clause = "WHERE " + " AND ".join(where_conditions)
@@ -500,7 +601,7 @@ class StudyResource:
         # 获取分页数据
         query = f"""
         SELECT * FROM study_resources {where_clause}
-        ORDER BY is_featured DESC, created_at DESC
+        ORDER BY upload_time DESC, updated_at DESC
         LIMIT %s OFFSET %s
         """
         params.extend([limit, offset])
@@ -510,6 +611,9 @@ class StudyResource:
         for result in results:
             # 转换为字典格式，保持与前端兼容
             resource_dict = dict(result)
+            # 兼容映射：数据库列 name -> 前端期望 title
+            if 'name' in resource_dict:
+                resource_dict['title'] = resource_dict.get('name')
             
             # 处理资源类型
             if 'file_type' in resource_dict:
@@ -581,7 +685,7 @@ class StudyResource:
         if self.id:
             # 更新现有资源
             query = """
-            UPDATE study_resources SET title = %s, description = %s, content = %s,
+            UPDATE study_resources SET name = %s, description = %s, content = %s,
                    resource_type = %s, category_id = %s, difficulty_level = %s,
                    file_path = %s, file_size = %s, file_hash = %s, thumbnail_path = %s,
                    duration = %s, tags = %s, keywords = %s, author = %s, source_url = %s,
@@ -601,7 +705,7 @@ class StudyResource:
         else:
             # 创建新资源
             query = """
-            INSERT INTO study_resources (title, description, content, resource_type, category_id,
+            INSERT INTO study_resources (name, description, content, resource_type, category_id,
                                        difficulty_level, file_path, file_size, file_hash,
                                        thumbnail_path, duration, tags, keywords, author,
                                        source_url, is_active, is_featured, estimated_time,

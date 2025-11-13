@@ -176,11 +176,12 @@ async def get_documents_list(
             params = []
             
             if search:
-                where_conditions.append("(filename ILIKE %s OR doc_metadata->>'title' ILIKE %s)")
+                # 统一使用 metadata 字段，兼容新库
+                where_conditions.append("(filename ILIKE %s OR metadata->>'title' ILIKE %s)")
                 params.extend([f"%{search}%", f"%{search}%"])
             
             if category_id:
-                where_conditions.append("doc_metadata->>'category' = %s")
+                where_conditions.append("metadata->>'category' = %s")
                 params.append(str(category_id))
             
             where_clause = " WHERE " + " AND ".join(where_conditions) if where_conditions else ""
@@ -193,7 +194,7 @@ async def get_documents_list(
             # 查询文档列表
             query = f"""
                 SELECT id, filename, file_type, file_size, upload_time, 
-                       content_hash, doc_metadata, status, created_at, updated_at
+                       content_hash, metadata, status, created_at, updated_at
                 FROM documents
                 {where_clause}
                 ORDER BY created_at DESC
@@ -207,8 +208,8 @@ async def get_documents_list(
             # 转换为前端期望的格式
             document_list = []
             for row in rows:
-                doc_id, filename, file_type, file_size, upload_time, content_hash, doc_metadata, status, created_at, updated_at = row
-                metadata = doc_metadata or {}
+                doc_id, filename, file_type, file_size, upload_time, content_hash, metadata, status, created_at, updated_at = row
+                metadata = metadata or {}
                 
                 document_list.append({
                     "id": doc_id,

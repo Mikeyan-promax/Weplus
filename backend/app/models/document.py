@@ -449,12 +449,10 @@ class Document:
                             file_size BIGINT NOT NULL,
                             upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             content_hash VARCHAR(255) UNIQUE NOT NULL,
-                            doc_metadata JSONB DEFAULT '{}',
+                            metadata JSONB DEFAULT '{}',
                             status VARCHAR(50) DEFAULT 'uploaded',
-                            category_id INTEGER,
                             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                            FOREIGN KEY (category_id) REFERENCES categories (id)
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                         )
                     ''')
                     
@@ -506,8 +504,8 @@ class Document:
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute('''
-                        INSERT INTO documents (filename, file_type, file_size, upload_time, content_hash, doc_metadata, status, category_id)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                        INSERT INTO documents (filename, file_type, file_size, upload_time, content_hash, metadata, status)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
                         RETURNING id
                     ''', (
                         filename,
@@ -516,8 +514,7 @@ class Document:
                         datetime.utcnow(),
                         content_hash,
                         json.dumps(metadata or {}),
-                        "uploaded",
-                        category_id
+                        "uploaded"
                     ))
                     doc.id = cursor.fetchone()[0]
                     
@@ -547,7 +544,7 @@ class Document:
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         SELECT id, filename, file_type, file_size, upload_time, 
-                               content_hash, doc_metadata, status, category_id
+                               content_hash, metadata, status
                         FROM documents WHERE id = %s
                     ''', (doc_id,))
                     row = cursor.fetchone()
@@ -560,7 +557,7 @@ class Document:
                         return cls(
                             id=row[0], filename=row[1], file_type=row[2], file_size=row[3],
                             upload_time=row[4], content_hash=row[5], doc_metadata=metadata,
-                            status=row[7], category_id=row[8]
+                            status=row[7]
                         )
                     return None
         except Exception as e:
@@ -576,7 +573,7 @@ class Document:
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         SELECT id, filename, file_type, file_size, upload_time, 
-                               content_hash, doc_metadata, status, category_id
+                               content_hash, metadata, status
                         FROM documents WHERE content_hash = %s
                     ''', (content_hash,))
                     row = cursor.fetchone()
@@ -589,7 +586,7 @@ class Document:
                         return cls(
                             id=row[0], filename=row[1], file_type=row[2], file_size=row[3],
                             upload_time=row[4], content_hash=row[5], doc_metadata=metadata,
-                            status=row[7], category_id=row[8]
+                            status=row[7]
                         )
                     return None
         except Exception as e:
@@ -625,7 +622,7 @@ class Document:
                     
                     cursor.execute(f'''
                         SELECT id, filename, file_type, file_size, upload_time, 
-                               content_hash, doc_metadata, status, category_id
+                               content_hash, metadata, status
                         FROM documents {where_clause}
                         ORDER BY upload_time DESC
                         LIMIT %s OFFSET %s
@@ -641,7 +638,7 @@ class Document:
                         doc = cls(
                             id=row[0], filename=row[1], file_type=row[2], file_size=row[3],
                             upload_time=row[4], content_hash=row[5], doc_metadata=metadata,
-                            status=row[7], category_id=row[8]
+                            status=row[7]
                         )
                         documents.append(doc)
                     
@@ -659,9 +656,9 @@ class Document:
                 with conn.cursor() as cursor:
                     cursor.execute('''
                         SELECT id, filename, file_type, file_size, upload_time, 
-                               content_hash, doc_metadata, status, category_id
+                               content_hash, metadata, status
                         FROM documents 
-                        WHERE filename ILIKE %s OR doc_metadata::text ILIKE %s
+                        WHERE filename ILIKE %s OR metadata::text ILIKE %s
                         ORDER BY upload_time DESC
                         LIMIT %s OFFSET %s
                     ''', (f'%{query}%', f'%{query}%', limit, offset))
@@ -709,7 +706,7 @@ class Document:
             with get_db_connection() as conn:
                 with conn.cursor() as cursor:
                     cursor.execute('''
-                        UPDATE documents SET doc_metadata = %s WHERE id = %s
+                        UPDATE documents SET metadata = %s WHERE id = %s
                     ''', (json.dumps(metadata), self.id))
                     conn.commit()
                     

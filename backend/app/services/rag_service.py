@@ -654,5 +654,100 @@ class RAGService:
             logger.error(f"获取RAG统计信息失败: {str(e)}")
             return {}
 
+    async def health_check(self) -> Dict[str, Any]:
+        """RAG服务健康检查
+
+        功能：
+        - 验证 DeepSeek 聊天API是否可用（轻量调用 models.list）
+        - 验证豆包嵌入API是否可用（轻量生成一次小文本嵌入）
+        - 调用 PostgreSQL 向量服务健康检查（含数据库与 pgvector 扩展）
+        - 汇总缓存与模型配置，计算 overall 总体健康状态
+
+        返回：
+        - Dict，包含 deepseek_api、embedding_api、vector_store、database、pgvector、cache、model_config、overall、timestamp 等字段。
+        """
+        status: Dict[str, Any] = {
+            "rag_service": True,
+            "deepseek_api": False,
+            "embedding_api": False,
+            "vector_store": False,
+            "database": False,
+            "pgvector": False,
+            "cache": {
+                "embedding_cache_size": len(self.embedding_cache),
+                "query_cache_size": len(self.query_cache),
+                "cache_ttl": self.cache_ttl,
+                "max_cache_size": self.max_cache_size
+            },
+            "model_config": {
+                "chat_model": self.chat_model,
+                "embedding_model": self.embedding_model,
+                "max_context_length": self.max_context_length,
+                "chunk_size": self.chunk_size,
+                "top_k_retrieval": self.top_k_retrieval
+            },
+            "timestamp": datetime.now().isoformat()
+        }
+
+        # 检查 DeepSeek 聊天API（使用轻量列表模型调用，避免高成本）
+        try:
+            def _probe_deepseek() -> bool:
+                try:
+                    # 轻量 GET /v1/models 调用
+                    _ = self.deepseek_client.models.list()
+                    return True
+                except Exception as e:
+                    logger.error(f"DeepSeek API检查失败: {str(e)}")
+                    return False
+
+            status["deepseek_api"] = await asyncio.to_thread(_probe_deepseek)
+        except Exception as e:
+            logger.error(f"DeepSeek API探测异常: {str(e)}")
+            status["deepseek_api"] = False
+
+        # 检查豆包嵌入API（使用极小输入生成一次嵌入）
+        try:
+            def _probe_embedding() -> bool:
+                try:
+                    # 轻量嵌入生成；如失败则返回 False
+                    _ = self.embedding_client.embeddings.create(
+                        model=self.embedding_model,
+                        input="healthcheck"
+                    )
+                    return True
+                except Exception as e:
+                    logger.error(f"嵌入API检查失败: {str(e)}")
+                    return False
+
+            status["embedding_api"] = await asyncio.to_thread(_probe_embedding)
+        except Exception as e:
+            logger.error(f"嵌入API探测异常: {str(e)}")
+            status["embedding_api"] = False
+
+        # 检查向量存储与数据库/pgvector 扩展
+        try:
+            from .postgresql_vector_service import postgresql_vector_service
+            # 注意：postgresql_vector_service.health_check 为同步方法
+            vector_health = postgresql_vector_service.health_check()
+            status["vector_store"] = bool(vector_health.get("overall", False))
+            status["database"] = bool(vector_health.get("database", False))
+            status["pgvector"] = bool(vector_health.get("pgvector", False))
+        except Exception as e:
+            logger.error(f"向量存储健康检查失败: {str(e)}")
+            status["vector_store"] = False
+            status["database"] = False
+            status["pgvector"] = False
+
+        # 计算总体健康：RAG需要聊天API、嵌入API与向量/数据库均可用
+        status["overall"] = all([
+            status.get("rag_service"),
+            status.get("deepseek_api"),
+            status.get("embedding_api"),
+            status.get("vector_store"),
+            status.get("database")
+        ])
+
+        return status
+
 # 创建全局实例
 rag_service = RAGService()

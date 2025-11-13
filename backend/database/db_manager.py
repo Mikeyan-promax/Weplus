@@ -28,7 +28,7 @@ class DatabaseManager:
     def _load_config(self) -> Dict[str, str]:
         """从环境变量加载数据库配置"""
         return {
-            'host': os.getenv('DB_HOST', 'pgm-2ze58b40mdfqec4zwo.pg.rds.aliyuncs.com'),
+            'host': os.getenv('DB_HOST', 'pgm-2zekusmdjl0o3782ao.pg.rds.aliyuncs.com'),
             'port': os.getenv('DB_PORT', '5432'),
             'database': os.getenv('DB_NAME', 'weplus_db'),
             'user': os.getenv('DB_USER', 'weplus_db'),

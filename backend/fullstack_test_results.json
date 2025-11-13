@@ -1,0 +1,753 @@
+{
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 4,
+    "success_rate": 66.66666666666666,
+    "test_time": "2025-11-12T20:55:14.671363"
+  },
+  "detailed_results": [
+    {
+      "name": "Backend Health",
+      "success": true,
+      "results": {
+        "/": {
+          "status": 200,
+          "data": {
+            "message": "WePlus RAG Campus Assistant API",
+            "version": "2.0.0",
+            "status": "running",
+            "features": [
+              "DeepSeek聊天API集成",
+              "豆包嵌入模型集成",
+              "文档处理和向量化",
+              "智能检索和问答",
+              "多轮对话支持"
+            ],
+            "endpoints": {
+              "chat": "/api/rag/chat",
+              "document_upload": "/api/rag/documents/upload",
+              "document_process": "/api/rag/documents/process",
+              "health_check": "/api/rag/health",
+              "system_stats": "/api/rag/stats"
+            },
+            "timestamp": "2025-11-12T20:55:07.479932"
+          }
+        },
+        "/health": {
+          "status": 200,
+          "data": {
+            "status": "healthy",
+            "timestamp": "2025-11-12T20:55:07.493959",
+            "service": "WePlus RAG API",
+            "version": "2.0.0"
+          }
+        },
+        "/healthz": {
+          "status": 200,
+          "data": {
+            "ok": true,
+            "app": "WePlus API",
+            "version": "1.0.0"
+          }
+        },
+        "/api/healthz": {
+          "status": 200,
+          "data": {
+            "ok": true,
+            "app": "WePlus API",
+            "version": "1.0.0"
+          }
+        },
+        "/readyz": {
+          "status": 200,
+          "data": {
+            "ready": true,
+            "dependencies": [
+              "db",
+              "vector",
+              "email"
+            ],
+            "timestamp": "2025-11-12T20:55:07.541060"
+          }
+        }
+      }
+    },
+    {
+      "name": "Admin Login",
+      "success": true,
+      "response": {
+        "status": 200,
+        "data": {
+          "success": true,
+          "data": {
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImVtYWlsIjoiYWRtaW5Ad2VwbHVzLmNvbSIsImV4cCI6MTc2Mjk1MzkwN30.AYuWgNQQ-IJ_JbfL1SFJ4bGcvumuFoOr5ndXa3q4MSE",
+            "token_type": "bearer",
+            "expires_in": 1800,
+            "user": {
+              "email": "admin@weplus.com",
+              "username": "admin",
+              "role": "super_admin",
+              "permissions": [
+                "user_management",
+                "document_management",
+                "backup_management"
+              ]
+            }
+          },
+          "message": "登录成功"
+        }
+      },
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJzdXBlcl9hZG1pbiIsImVtYWlsIjoiYWRtaW5Ad2VwbHVzLmNvbSIsImV4cCI6MTc2Mjk1MzkwN30.AYuWgNQQ-IJ_JbfL1SFJ4bGcvumuFoOr5ndXa3q4MSE"
+    },
+    {
+      "name": "Admin Readonly Endpoints",
+      "success": false,
+      "passed": 13,
+      "total": 14,
+      "checks": [
+        {
+          "name": "测试中心-汇总",
+          "url": "http://127.0.0.1:8000/api/test/summary",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "success": true,
+              "timestamp": "2025-11-12T12:55:11.522594Z",
+              "app": {
+                "name": "WePlus API",
+                "version": "1.0.0",
+                "debug": false
+              },
+              "services": {
+                "database": {
+                  "ok": true
+                },
+                "logging": {
+                  "ok": true
+                },
+                "email": {
+                  "configured": true,
+                  "from": "17396187221@163.com",
+                  "debug_mode": false
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "仪表板-健康",
+          "url": "http://127.0.0.1:8000/api/admin/dashboard/health",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "database_status": "异常",
+              "storage_status": "正常",
+              "memory_usage": 82.4,
+              "cpu_usage": 8.7,
+              "disk_usage": 74.6,
+              "active_connections": 25,
+              "error_rate_24h": 0.5,
+              "response_time_avg": 120.5
+            }
+          }
+        },
+        {
+          "name": "仪表板-总览",
+          "url": "http://127.0.0.1:8000/api/admin/dashboard/overview",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "total_users": 0,
+              "active_users": 0,
+              "new_users_today": 0,
+              "total_files": 0,
+              "total_file_size": 0,
+              "total_documents": 0,
+              "active_documents": 0,
+              "system_uptime": "未知",
+              "last_backup_time": null,
+              "storage_usage_percent": 0.0
+            }
+          }
+        },
+        {
+          "name": "仪表板-完整数据",
+          "url": "http://127.0.0.1:8000/api/admin/dashboard",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "system_overview": {
+                "total_users": 0,
+                "active_users": 0,
+                "new_users_today": 0,
+                "total_files": 0,
+                "total_file_size": 0,
+                "total_documents": 0,
+                "active_documents": 0,
+                "system_uptime": "未知",
+                "last_backup_time": null,
+                "storage_usage_percent": 0.0
+              },
+              "user_statistics": {
+                "total_users": 0,
+                "verified_users": 0,
+                "unverified_users": 0,
+                "active_users_7d": 0,
+                "active_users_30d": 0,
+                "new_registrations_7d": 0,
+                "new_registrations_30d": 0,
+                "user_growth_trend": [],
+                "top_active_users": []
+              },
+              "file_statistics": {
+                "total_files": 0,
+                "total_size": 0,
+                "files_by_type": {},
+                "files_by_category": {},
+                "upload_trend_7d": [],
+                "top_uploaders": [],
+                "storage_by_user": [],
+                "processing_status": {}
+              },
+              "document_statistics": {
+                "total_documents": 0,
+                "active_documents": 0,
+                "vectorized_documents": 0,
+                "documents_by_category": {},
+                "documents_by_source": {},
+                "recent_additions": 0,
+                "search_frequency": {},
+                "top_accessed_documents": []
+              },
+              "system_health": {
+                "database_status": "异常",
+                "storage_status": "正常",
+                "memory_usage": 82.3,
+                "cpu_usage": 8.1,
+                "disk_usage": 74.6,
+                "active_connections": 25,
+                "error_rate_24h": 0.5,
+                "response_time_avg": 120.5
+              },
+              "recent_activities": [
+                {
+                  "id": 1,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T20:55:13.596672"
+                },
+                {
+                  "id": 2,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T20:45:13.598682"
+                },
+                {
+                  "id": 3,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T20:35:13.598682"
+                },
+                {
+                  "id": 4,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T20:25:13.598682"
+                },
+                {
+                  "id": 5,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T20:15:13.598682"
+                },
+                {
+                  "id": 6,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T20:05:13.598682"
+                },
+                {
+                  "id": 7,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T19:55:13.598682"
+                },
+                {
+                  "id": 8,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T19:45:13.598682"
+                },
+                {
+                  "id": 9,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T19:35:13.598682"
+                },
+                {
+                  "id": 10,
+                  "user_id": 1,
+                  "action": "登录系统",
+                  "resource_type": "用户",
+                  "resource_id": 1,
+                  "details": {
+                    "ip": "192.168.1.100",
+                    "browser": "Chrome"
+                  },
+                  "ip_address": "192.168.1.100",
+                  "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                  "timestamp": "2025-11-12T19:25:13.598682"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "用户-分页",
+          "url": "http://127.0.0.1:8000/api/admin/users?page=1&limit=5",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "success": true,
+              "data": {
+                "users": [],
+                "total": 0,
+                "page": 1,
+                "limit": 5,
+                "total_pages": 0
+              },
+              "message": "成功获取用户列表，共 0 个用户"
+            }
+          }
+        },
+        {
+          "name": "RAG-统计",
+          "url": "http://127.0.0.1:8000/api/admin/rag/stats",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "total_documents": 0,
+              "total_chunks": 0,
+              "total_sessions": 0,
+              "total_messages": 0,
+              "documents_by_category": {},
+              "recent_activity": {}
+            }
+          }
+        },
+        {
+          "name": "RAG-文档列表",
+          "url": "http://127.0.0.1:8000/api/admin/rag/documents?page=1&limit=5",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "documents": [],
+              "total": 0,
+              "page": 1,
+              "limit": 5,
+              "total_pages": 0
+            }
+          }
+        },
+        {
+          "name": "向量DB-统计",
+          "url": "http://127.0.0.1:8000/api/admin/vector/stats",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "total_vectors": 0,
+              "total_documents": 0,
+              "index_size": 0.0,
+              "last_updated": "2025-11-12T20:55:14.095526",
+              "embedding_model": "豆包嵌入模型",
+              "vector_dimension": 2560,
+              "collections": [
+                {
+                  "name": "document_chunks",
+                  "type": "PostgreSQL",
+                  "document_count": 0,
+                  "vector_count": 0,
+                  "size_mb": 0.0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "备份-列表",
+          "url": "http://127.0.0.1:8000/api/admin/backup/list",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "backups": [],
+              "total": 0,
+              "statistics": {
+                "total_backups": 0,
+                "successful_backups": 0,
+                "failed_backups": 0,
+                "total_size": 0,
+                "total_size_mb": 0.0,
+                "backup_types": {},
+                "last_backup_time": null,
+                "oldest_backup_time": null
+              }
+            }
+          }
+        },
+        {
+          "name": "备份-健康",
+          "url": "http://127.0.0.1:8000/api/admin/backup/health",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "success": true,
+              "data": {
+                "backup_service": "healthy",
+                "backup_directory_exists": true,
+                "backup_directory_writable": true,
+                "last_check": "2025-11-12T20:55:14.163166"
+              }
+            }
+          }
+        },
+        {
+          "name": "日志-表清单",
+          "url": "http://127.0.0.1:8000/api/admin/logs/tables",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "tables": {
+                "system_logs": {
+                  "name": "系统日志",
+                  "description": "系统事件、错误和操作记录",
+                  "fields": [
+                    "id",
+                    "level",
+                    "category",
+                    "message",
+                    "details",
+                    "user_id",
+                    "timestamp"
+                  ]
+                },
+                "user_action_logs": {
+                  "name": "用户操作日志",
+                  "description": "用户在系统中的操作记录",
+                  "fields": [
+                    "id",
+                    "user_id",
+                    "action",
+                    "resource_type",
+                    "resource_id",
+                    "success",
+                    "timestamp"
+                  ]
+                },
+                "security_logs": {
+                  "name": "安全日志",
+                  "description": "安全相关事件记录",
+                  "fields": [
+                    "id",
+                    "event_type",
+                    "user_id",
+                    "ip_address",
+                    "risk_level",
+                    "blocked",
+                    "timestamp"
+                  ]
+                },
+                "api_access_logs": {
+                  "name": "API访问日志",
+                  "description": "API接口访问记录",
+                  "fields": [
+                    "id",
+                    "method",
+                    "endpoint",
+                    "user_id",
+                    "response_status",
+                    "response_time",
+                    "timestamp"
+                  ]
+                }
+              },
+              "total_tables": 4
+            }
+          }
+        },
+        {
+          "name": "学习资源-分类",
+          "url": "http://127.0.0.1:8000/api/study-resources/categories",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "success": true,
+              "data": [
+                {
+                  "id": 2,
+                  "name": "雅思托福",
+                  "code": "ielts_toefl",
+                  "description": "雅思和托福考试资源",
+                  "icon": "globe",
+                  "color": "#50C878",
+                  "sort_order": 2,
+                  "is_active": true,
+                  "resource_count": 0
+                },
+                {
+                  "id": 3,
+                  "name": "考研资料",
+                  "code": "postgraduate",
+                  "description": "研究生入学考试资源",
+                  "icon": "graduation-cap",
+                  "color": "#FF6B6B",
+                  "sort_order": 3,
+                  "is_active": true,
+                  "resource_count": 0
+                },
+                {
+                  "id": 4,
+                  "name": "编程学习",
+                  "code": "programming",
+                  "description": "编程和技术学习资源",
+                  "icon": "code",
+                  "color": "#9B59B6",
+                  "sort_order": 4,
+                  "is_active": true,
+                  "resource_count": 0
+                },
+                {
+                  "id": 5,
+                  "name": "其他资源",
+                  "code": "others",
+                  "description": "其他学习资源",
+                  "icon": "folder",
+                  "color": "#95A5A6",
+                  "sort_order": 99,
+                  "is_active": true,
+                  "resource_count": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "学习资源-列表",
+          "url": "http://127.0.0.1:8000/api/study-resources/resources",
+          "status": 500,
+          "success": false,
+          "response": {
+            "status": 500,
+            "data": {
+              "detail": "获取失败: column \"is_featured\" does not exist\nLINE 3:         ORDER BY is_featured DESC, created_at DESC\n                         ^\n"
+            }
+          }
+        },
+        {
+          "name": "文件-统计概览",
+          "url": "http://127.0.0.1:8000/api/admin/files/stats/summary",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "total_files": 0,
+              "total_size": 0,
+              "files_by_type": {},
+              "files_by_category": {},
+              "upload_trend_7d": [],
+              "top_uploaders": [],
+              "storage_by_user": [],
+              "processing_status": {}
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Backend Basic APIs",
+      "success": false,
+      "checks": [
+        {
+          "name": "文档列表(前端需要)",
+          "url": "http://127.0.0.1:8000/api/documents/list",
+          "status": 403,
+          "success": false,
+          "response": {
+            "status": 403,
+            "data": {
+              "detail": "Not authenticated"
+            }
+          }
+        },
+        {
+          "name": "RAG健康检查",
+          "url": "http://127.0.0.1:8000/api/rag/health",
+          "status": 500,
+          "success": false,
+          "response": {
+            "status": 500,
+            "data": {
+              "detail": "健康检查失败: 'RAGService' object has no attribute 'health_check'"
+            }
+          }
+        },
+        {
+          "name": "RAG统计",
+          "url": "http://127.0.0.1:8000/api/rag/stats",
+          "status": 200,
+          "success": true,
+          "response": {
+            "status": 200,
+            "data": {
+              "system_stats": {
+                "total_documents": 0,
+                "total_chunks": 0,
+                "total_content_length": 0,
+                "average_chunks_per_doc": 0,
+                "rag_service_config": {
+                  "chunk_size": 1000,
+                  "chunk_overlap": 200,
+                  "top_k_retrieval": 5,
+                  "max_context_length": 128000
+                }
+              },
+              "timestamp": "2025-11-12T20:55:14.613076"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Frontend Pages",
+      "success": true,
+      "results": {
+        "/": {
+          "status": 200,
+          "data": {
+            "raw": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend2</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n  </body>\n</html>\n"
+          }
+        },
+        "/admin/login": {
+          "status": 200,
+          "data": {
+            "raw": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend2</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n  </body>\n</html>\n"
+          }
+        },
+        "/admin/study-resources": {
+          "status": 200,
+          "data": {
+            "raw": "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <script type=\"module\">import { injectIntoGlobalHook } from \"/@react-refresh\";\ninjectIntoGlobalHook(window);\nwindow.$RefreshReg$ = () => {};\nwindow.$RefreshSig$ = () => (type) => type;</script>\n\n    <script type=\"module\" src=\"/@vite/client\"></script>\n\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/vite.svg\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>frontend2</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n  </body>\n</html>\n"
+          }
+        }
+      }
+    },
+    {
+      "name": "Frontend→Backend Proxy",
+      "success": true,
+      "response": {
+        "status": 200,
+        "data": {
+          "ok": true,
+          "app": "WePlus API",
+          "version": "1.0.0"
+        }
+      }
+    }
+  ]
+}

@@ -14,7 +14,18 @@ export interface ChatMessageProps {
   message: Message;
 }
 
+/**
+ * ChatMessage 组件（渲染单条聊天消息）
+ * 功能说明：
+ * - 根据 sender 渲染用户/助手不同气泡与头像
+ * - ReactMarkdown 渲染 Markdown（链接、表格、代码、数学公式）
+ * - 优化排版：行间距、字间距、标题尺寸、长网址换行、表格与代码不超宽
+ */
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+  /**
+   * 格式化时间戳为“HH:MM”
+   * 仅展示到分钟，保持聊天时间戳简洁
+   */
   const formatTime = (timestamp: Date) => {
     return timestamp.toLocaleTimeString('zh-CN', {
       hour: '2-digit',
@@ -22,7 +33,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
     });
   };
 
-  // 复制到剪贴板的函数
+  /**
+   * 复制到剪贴板
+   * 用于代码块复制按钮；失败时在控制台提示错误
+   */
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text).then(() => {
       // 可以添加一个简单的提示
@@ -83,9 +97,16 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                       "\\QQ": "\\mathbb{Q}",
                       "\\CC": "\\mathbb{C}"
                     }
-                  }]
-                ]}
+                }]
+              ]}
                 components={{
+                  // 压缩Markdown标题的字号与间距，保持一致性与紧凑感
+                  h1: ({ children }) => <h1 className="message-heading h1">{children}</h1>,
+                  h2: ({ children }) => <h2 className="message-heading h2">{children}</h2>,
+                  h3: ({ children }) => <h3 className="message-heading h3">{children}</h3>,
+                  h4: ({ children }) => <h4 className="message-heading h4">{children}</h4>,
+                  h5: ({ children }) => <h5 className="message-heading h5">{children}</h5>,
+                  h6: ({ children }) => <h6 className="message-heading h6">{children}</h6>,
                   // 自定义代码块渲染，添加复制按钮
                   code: ({ node, inline, className, children, ...props }: any) => {
                     const match = /language-(\w+)/.exec(className || '');

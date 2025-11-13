@@ -48,7 +48,8 @@
 
 /* 消息气泡包装器 */
 .message-bubble-wrapper {
-  max-width: calc(100% - 80px);
+  /* 桌面端限制单条消息最大宽度为 780px，移动端自动为容器宽度 */
+  max-width: min(780px, calc(100% - 80px));
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -103,10 +104,11 @@
 
 /* 助手消息气泡 */
 .assistant-bubble {
-  background: #ffffff;
+  background: #fafafa;
   color: #2d3748;
-  border: 1px solid #e2e8f0;
-  border-bottom-left-radius: 4px;
+  border: 1px solid rgba(0,0,0,0.08);
+  border-bottom-left-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 
 .assistant-bubble::after {
@@ -117,7 +119,7 @@
   width: 0;
   height: 0;
   border: 8px solid transparent;
-  border-right-color: #ffffff;
+  border-right-color: #fafafa;
   border-bottom: none;
   border-left: none;
 }
@@ -130,7 +132,7 @@
   width: 0;
   height: 0;
   border: 9px solid transparent;
-  border-right-color: #e2e8f0;
+  border-right-color: rgba(0,0,0,0.08);
   border-bottom: none;
   border-left: none;
 }
@@ -144,8 +146,10 @@
 
 /* 消息内容 */
 .message-content {
-  line-height: 1.5;
-  font-size: 14px;
+  /* 全局内容排版优化：适度的行间距与字间距 */
+  line-height: 1.55;
+  font-size: 15px;
+  letter-spacing: 0.1px;
 }
 
 .user-message-text {
@@ -213,7 +217,7 @@
 
 /* Markdown 样式 */
 .message-paragraph {
-  margin: 0 0 8px 0;
+  margin: 0 0 6px 0;
 }
 
 .message-paragraph:last-child {
@@ -238,6 +242,9 @@
   text-decoration: none;
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s ease;
+  /* 长网址自动换行避免超宽 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 .message-link:hover {
@@ -330,9 +337,12 @@
 /* 表格样式 */
 .message-table {
   width: 100%;
+  max-width: 100%;
   border-collapse: collapse;
   margin: 12px 0;
   font-size: 13px;
+  display: block;
+  overflow-x: auto;
 }
 
 /* 图片与其他媒体不超过气泡宽度 */
@@ -419,11 +429,12 @@
   
   .message-bubble {
     padding: 10px 14px;
-    font-size: 14px;
+    font-size: 15px;
   }
   
   .message-content {
-    font-size: 14px;
+    font-size: 15px;
+    letter-spacing: 0.05px;
   }
 }
 
@@ -432,7 +443,7 @@
   .assistant-bubble {
     background: #2d3748;
     color: #e2e8f0;
-    border-color: #4a5568;
+    border-color: rgba(255,255,255,0.12);
   }
   
   .assistant-bubble::after {
@@ -440,7 +451,7 @@
   }
   
   .assistant-bubble::before {
-    border-right-color: #4a5568;
+    border-right-color: rgba(255,255,255,0.12);
   }
   
   .typing-bubble {
@@ -469,7 +480,7 @@
   
   .code-block-header {
     background: #2d3748;
-    border-color: #4a5568;
+    border-color: rgba(255,255,255,0.12);
   }
   
   .code-language {
@@ -681,4 +692,20 @@
   .math-inline .katex {
     font-size: 0.9em !important;
   }
+}
+/* Markdown 标题样式：压缩尺寸与间距，提高可读性 */
+.message-heading {
+  font-weight: 700;
+  color: #2d3748;
+  margin: 8px 0 6px;
+}
+.message-heading.h1 { font-size: 1.25rem; }
+.message-heading.h2 { font-size: 1.15rem; }
+.message-heading.h3 { font-size: 1.05rem; }
+.message-heading.h4 { font-size: 1rem; }
+.message-heading.h5 { font-size: 0.95rem; }
+.message-heading.h6 { font-size: 0.9rem; }
+
+@media (prefers-color-scheme: dark) {
+  .message-heading { color: #e2e8f0; }
 }
