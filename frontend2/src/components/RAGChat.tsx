@@ -128,13 +128,14 @@ const RAGChat: React.FC = () => {
     }
 
     // 创建AI消息占位符
-    const assistantMessageId = (Date.now() + 1).toString();
-    const assistantMessage: Message = {
-      id: assistantMessageId,
-      content: '',
-      sender: 'assistant',
-      timestamp: new Date()
-    };
+  const assistantMessageId = (Date.now() + 1).toString();
+  const assistantMessage: Message = {
+    id: assistantMessageId,
+    content: '',
+    sender: 'assistant',
+    timestamp: new Date(),
+    isStreaming: true
+  };
 
     setMessages(prev => [...prev, assistantMessage]);
 
@@ -155,6 +156,10 @@ const RAGChat: React.FC = () => {
             setIsLoading(false);
             setCanStop(false);
             setAbortController(null);
+            // 取消时关闭紧凑样式
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
+            ));
             return;
           }
           
@@ -167,6 +172,10 @@ const RAGChat: React.FC = () => {
           setIsLoading(false);
           setCanStop(false);
           setAbortController(null);
+          // 出错时关闭紧凑样式
+          setMessages(prev => prev.map(msg => 
+            msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
+          ));
           return;
         }
 
@@ -175,6 +184,10 @@ const RAGChat: React.FC = () => {
           setIsLoading(false);
           setCanStop(false);
           setAbortController(null);
+          // 流式完成后关闭紧凑样式
+          setMessages(prev => prev.map(msg => 
+            msg.id === assistantMessageId ? { ...msg, isStreaming: false } : msg
+          ));
           return;
         }
 
@@ -186,6 +199,7 @@ const RAGChat: React.FC = () => {
             if (targetIndex !== -1) {
               newMessages[targetIndex] = {
                 ...newMessages[targetIndex],
+                // 保留原始Markdown内容，避免被压缩规则影响渲染效果
                 content: newMessages[targetIndex].content + response.content
               };
             }
@@ -225,7 +239,7 @@ const RAGChat: React.FC = () => {
         if (lastMessage && lastMessage.sender === 'assistant') {
           return prev.map((msg, index) => 
             index === prev.length - 1 
-              ? { ...msg, content: msg.content + '\n\n[回答已停止]' }
+              ? { ...msg, content: msg.content + '\n\n[回答已停止]', isStreaming: false }
               : msg
           );
         }

@@ -146,14 +146,100 @@
 
 /* 消息内容 */
 .message-content {
-  /* 全局内容排版优化：适度的行间距与字间距 */
-  line-height: 1.55;
+  /* 全局内容排版优化：适度的行间距与字间距（缩小行距以适配流式输出） */
+  line-height: 1.4;
   font-size: 15px;
   letter-spacing: 0.1px;
 }
 
+/* 流式阶段紧凑样式：进一步缩小行距与内边距，仅在助手消息生成中启用 */
+/* 说明：在流式阶段适度缩小内边距，减少气泡整体高度 */
+.assistant-bubble.streaming {
+  padding: 8px 12px;
+}
+
+/* 说明：在流式阶段进一步缩短整体行距（从 1.26 → 1.10），
+   仅在生成中生效，结束后自动恢复普通样式，避免过度紧凑影响阅读 */
+.message-content.streaming {
+  line-height: 1.10;
+}
+
+/* 说明：段落间距在流式阶段继续缩小，避免逐段追加带来过多空白 */
+.message-content.streaming .message-paragraph {
+  margin-bottom: 1px;
+}
+
+.message-content.streaming .message-heading.h1,
+.message-content.streaming .message-heading.h2,
+.message-content.streaming .message-heading.h3,
+.message-content.streaming .message-heading.h4,
+.message-content.streaming .message-heading.h5,
+.message-content.streaming .message-heading.h6 {
+  margin: 2px 0 2px 0;
+  line-height: 1.16; /* 标题在流式阶段更紧凑（从 1.24 → 1.16） */
+}
+
+/* 说明：列表整体上下边距缩小，减少长列表的垂直占用 */
+.message-content.streaming .message-list {
+  margin: 1px 0; /* 流式阶段进一步压缩列表上下间距 */
+}
+
+/* 说明：列表项之间的间距缩小，便于在流式时紧凑呈现 */
+.message-content.streaming .message-list-item {
+  margin: 0; /* 流式阶段列表项之间去除额外间距，依赖行距控制 */
+}
+
+/* 流式阶段避免 li 内的 p 引入额外间距（关键修正） */
+.message-content.streaming .message-list-item > .message-paragraph,
+.message-content.streaming .message-list-item p:last-child {
+  margin-bottom: 0;
+}
+
+/* 流式阶段列表与后续段落/标题过渡更紧凑 */
+.message-content.streaming .message-list + .message-paragraph,
+.message-content.streaming .message-list + .message-heading {
+  margin-top: 1px;
+}
+
+/* 流式阶段列表末尾为最后一个块元素时，移除底部空白 */
+.message-content.streaming .message-list:last-child {
+  margin-bottom: 0;
+}
+
+/* 流式阶段嵌套列表的缩进与间距进一步收紧 */
+.message-content.streaming .message-list-item .message-list {
+  margin: 2px 0 0 16px;
+}
+
+/* 说明：引用块在流式阶段的上下间距与内边距适度收紧 */
+.message-content.streaming blockquote {
+  margin: 4px 0;
+  padding: 6px 10px;
+}
+
+/* 说明：代码块在流式阶段略微收紧行距，但保持可读性 */
+.message-content.streaming .code-block-wrapper pre {
+  line-height: 1.2;
+}
+
 .user-message-text {
   font-weight: 500;
+}
+
+/* 引用块（普通阶段）：左侧强调线与浅底色，提高区块可读性 */
+.message-blockquote {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border-left: 3px solid #2196f3;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+}
+
+/* 分割线（普通阶段）：淡色细线与适度上下间距 */
+.message-divider {
+  border: none;
+  border-top: 1px solid rgba(0,0,0,0.12);
+  margin: 10px 0;
 }
 
 /* 时间戳 */
@@ -217,7 +303,19 @@
 
 /* Markdown 样式 */
 .message-paragraph {
-  margin: 0 0 6px 0;
+  /* 缩小段落底部间距，避免流式段落叠加时产生过大空白 */
+  margin: 0 0 4px 0;
+}
+
+/* 缩小Markdown标题的上下间距，兼顾可读性与紧凑布局 */
+.message-heading.h1,
+.message-heading.h2,
+.message-heading.h3,
+.message-heading.h4,
+.message-heading.h5,
+.message-heading.h6 {
+  margin: 4px 0 4px 0;
+  line-height: 1.35;
 }
 
 .message-paragraph:last-child {
@@ -235,6 +333,36 @@
 
 .message-list-item {
   margin: 4px 0;
+}
+
+/* 关键修正：避免 li 内部的 p 产生双重间距（li 的 margin 与 p 的 margin 叠加）*/
+.message-list-item > .message-paragraph {
+  margin-bottom: 0;
+}
+.message-list-item p:last-child {
+  margin-bottom: 0;
+}
+
+/* 列表与后续段落/标题的过渡优化（普通阶段） */
+.message-list + .message-paragraph,
+.message-list + .message-heading {
+  margin-top: 4px; /* 过渡适度紧凑，避免视觉跳跃 */
+}
+
+/* 列表末尾为最后一个块元素时，移除多余底部空白 */
+.message-list:last-child {
+  margin-bottom: 0;
+}
+
+/* 嵌套列表缩进与间距优化（普通阶段） */
+.message-list-item .message-list {
+  margin: 4px 0 0 18px;
+}
+
+/* 列表内部的文本不需要 pre-wrap，避免因容器白空格设置导致额外断行 */
+.message-content ul,
+.message-content ol {
+  white-space: normal;
 }
 
 .message-link {
@@ -510,6 +638,15 @@
   
   .message-link:hover {
     border-bottom-color: #63b3ed;
+  }
+
+  /* 深色模式下的引用块与分割线优化 */
+  .message-blockquote {
+    background: rgba(255, 255, 255, 0.05);
+    border-left-color: #64b5f6;
+  }
+  .message-divider {
+    border-top-color: rgba(255,255,255,0.18);
   }
 }
 

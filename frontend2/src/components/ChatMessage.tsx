@@ -68,6 +68,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   const isUser = message.sender === 'user';
   const isAssistant = message.sender === 'assistant';
+  const bubbleClass = `message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'} ${isAssistant && message.isStreaming ? 'streaming' : ''}`;
+  const contentClass = `message-content ${isAssistant && message.isStreaming ? 'streaming' : ''}`;
 
   return (
     <div className={`chat-message-container ${isUser ? 'user' : 'assistant'}`}>
@@ -79,8 +81,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       )}
       
       <div className="message-bubble-wrapper">
-        <div className={`message-bubble ${isUser ? 'user-bubble' : 'assistant-bubble'}`}>
-          <div className="message-content">
+        <div className={bubbleClass}>
+          <div className={contentClass}>
             {isAssistant ? (
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
@@ -107,7 +109,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                   h4: ({ children }) => <h4 className="message-heading h4">{children}</h4>,
                   h5: ({ children }) => <h5 className="message-heading h5">{children}</h5>,
                   h6: ({ children }) => <h6 className="message-heading h6">{children}</h6>,
-                  // 自定义代码块渲染，添加复制按钮
+                  // 自定义代码渲染（含代码块与内联代码）
+                  // 函数说明：
+                  // - 代码块：保留原始格式与语法高亮，提供复制按钮；禁止随意换行，提供横向滚动容器。
+                  // - 内联代码：加上突出显示样式（inline-code），与周围文本区分。
                   code: ({ node, inline, className, children, ...props }: any) => {
                     const match = /language-(\w+)/.exec(className || '');
                     const language = match ? match[1] : '';
@@ -135,27 +140,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                        );
                      }
                      
-                     // 行内代码或数学公式
+                     // 行内代码：统一应用突出样式
                      if (inline) {
-                       // 检查是否是数学公式
-                       const content = String(children);
-                       if (content.startsWith('$') && content.endsWith('$') && content.length > 2) {
-                         const mathContent = content.slice(1, -1);
-                         return (
-                           <span 
-                             className="math-inline"
-                             onClick={() => copyToClipboard(mathContent)}
-                             title="点击复制公式"
-                             style={{ cursor: 'pointer' }}
-                           >
-                             <code {...props}>{children}</code>
-                           </span>
-                         );
-                       }
+                       const combinedClass = ['inline-code', className].filter(Boolean).join(' ');
+                       return <code className={combinedClass} {...props}>{children}</code>;
                      }
                      
                      return <code className={className} {...props}>{children}</code>;
                   },
+                  // 引用块：特殊样式区分，提升可读性
+                  blockquote: ({ children }) => <blockquote className="message-blockquote">{children}</blockquote>,
+                  // 分割线：风格统一，适当上下间距
+                  hr: () => <hr className="message-divider" />,
                   // 自定义段落样式
                   p: ({ children }) => <p className="message-paragraph">{children}</p>,
                   // 自定义列表样式
