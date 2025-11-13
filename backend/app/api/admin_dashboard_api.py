@@ -15,8 +15,7 @@ from pathlib import Path
 from app.core.config import settings
 
 # 导入数据库模型
-from database.admin_models import AdminUser, UserRole, FileRecord, FileType, ProcessingStatus
-from database.rag_models import Document, DocumentChunk, ChatSession, ChatMessage, RetrievalLog
+from database.admin_models import UserRole, FileRecord, FileType, ProcessingStatus, AdminUser
 from database.config import get_db_connection
 from app.api.admin_user_api import require_admin
 
@@ -169,43 +168,33 @@ def _default_document_statistics() -> DocumentStatistics:
 def get_system_overview() -> SystemOverview:
     """获取系统概览数据"""
     try:
-        # 用户统计
-        total_users = AdminUser.count(is_deleted=False)
-        active_users = AdminUser.count(is_deleted=False, is_active=True)
-        
-        # 今日新用户
-        today = datetime.now().date()
-        new_users_today = AdminUser.count_by_date_range(
-            start_date=today,
-            end_date=today + timedelta(days=1),
-            is_deleted=False
-        )
-        
-        # 文件统计
-        total_files = FileRecord.count(is_deleted=False)
-        total_file_size = FileRecord.get_total_size() or 0
-        
-        # 文档统计
-        total_documents = Document.count(is_deleted=False)
-        active_documents = Document.count(is_deleted=False, is_active=True)
-        
-        # 系统运行时间（模拟）
-        system_uptime = "72小时15分钟"
-        
-        # 最后备份时间（模拟）
-        last_backup_time = datetime.now() - timedelta(hours=6)
-        
-        # 存储使用率（基于文件大小）
-        storage_usage_percent = min(85.0, (total_file_size / (1024**3)) * 10)  # 简化计算
-        
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM users")
+            total_users = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM users WHERE is_active = TRUE")
+            active_users = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM users WHERE created_at >= date_trunc('day', now()) AND created_at < date_trunc('day', now()) + interval '1 day'")
+            new_users_today = cur.fetchone()[0]
+            try:
+                cur.execute("SELECT COUNT(*), COALESCE(SUM(file_size), 0) FROM file_records")
+                file_row = cur.fetchone()
+                total_files = file_row[0]
+                total_file_size = file_row[1]
+            except Exception:
+                total_files = 0
+                total_file_size = 0
+        system_uptime = "未知"
+        last_backup_time = None
+        storage_usage_percent = 0.0
         return SystemOverview(
             total_users=total_users,
             active_users=active_users,
             new_users_today=new_users_today,
             total_files=total_files,
             total_file_size=total_file_size,
-            total_documents=total_documents,
-            active_documents=active_documents,
+            total_documents=0,
+            active_documents=0,
             system_uptime=system_uptime,
             last_backup_time=last_backup_time,
             storage_usage_percent=storage_usage_percent
@@ -218,60 +207,37 @@ def get_system_overview() -> SystemOverview:
         return _default_system_overview()
 
 def get_user_statistics() -> UserStatistics:
-    """获取用户统计数据"""
     try:
-        # 基础用户统计
-        total_users = AdminUser.count(is_deleted=False)
-        verified_users = AdminUser.count(is_deleted=False, is_verified=True)
-        unverified_users = total_users - verified_users
-        
-        # 活跃用户统计（模拟数据，因为没有活动日志表）
-        active_users_7d = max(0, int(total_users * 0.3))  # 30%的用户在7天内活跃
-        active_users_30d = max(0, int(total_users * 0.6))  # 60%的用户在30天内活跃
-        
-        # 新注册用户
-        seven_days_ago = datetime.now() - timedelta(days=7)
-        thirty_days_ago = datetime.now() - timedelta(days=30)
-        
-        new_registrations_7d = AdminUser.count_by_date_range(
-            start_date=seven_days_ago.date(),
-            end_date=datetime.now().date(),
-            is_deleted=False
-        )
-        
-        new_registrations_30d = AdminUser.count_by_date_range(
-            start_date=thirty_days_ago.date(),
-            end_date=datetime.now().date(),
-            is_deleted=False
-        )
-        
-        # 用户增长趋势（最近7天）
-        user_growth_trend = []
-        for i in range(7):
-            date = datetime.now().date() - timedelta(days=6-i)
-            count = AdminUser.count_by_date_range(
-                start_date=date,
-                end_date=date + timedelta(days=1),
-                is_deleted=False
-            )
-            user_growth_trend.append({
-                "date": date.isoformat(),
-                "count": count
-            })
-        
-        # 最活跃用户（基于最近登录时间）
-        recent_users = AdminUser.get_recent_active_users(limit=10)
-        top_active_users = [
-            {
-                "user_id": user.user_id,
-                "username": user.username,
-                "email": user.email,
-                "last_login": user.last_login.isoformat() if user.last_login else None,
-                "login_count": user.login_count or 0
-            }
-            for user in recent_users
-        ]
-        
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) FROM users")
+            total_users = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM users WHERE is_verified = TRUE")
+            verified_users = cur.fetchone()[0]
+            unverified_users = max(0, total_users - verified_users)
+            active_users_7d = max(0, int(total_users * 0.3))
+            active_users_30d = max(0, int(total_users * 0.6))
+            cur.execute("SELECT COUNT(*) FROM users WHERE created_at >= now() - interval '7 days'")
+            new_registrations_7d = cur.fetchone()[0]
+            cur.execute("SELECT COUNT(*) FROM users WHERE created_at >= now() - interval '30 days'")
+            new_registrations_30d = cur.fetchone()[0]
+            user_growth_trend = []
+            for i in range(7):
+                cur.execute("SELECT COUNT(*) FROM users WHERE created_at::date = (now()::date - interval '%s day')", (6 - i,))
+                count = cur.fetchone()[0]
+                date = (datetime.now().date() - timedelta(days=6 - i)).isoformat()
+                user_growth_trend.append({"date": date, "count": count})
+            cur.execute("SELECT id, username, email, last_login FROM users ORDER BY last_login DESC NULLS LAST LIMIT 10")
+            rows = cur.fetchall()
+            top_active_users = []
+            for r in rows:
+                top_active_users.append({
+                    "user_id": r[0],
+                    "username": r[1],
+                    "email": r[2],
+                    "last_login": r[3].isoformat() if r[3] else None,
+                    "login_count": 0
+                })
         return UserStatistics(
             total_users=total_users,
             verified_users=verified_users,
@@ -283,7 +249,6 @@ def get_user_statistics() -> UserStatistics:
             user_growth_trend=user_growth_trend,
             top_active_users=top_active_users
         )
-        
     except Exception as e:
         logger.error(f"获取用户统计数据失败: {e}")
         if not settings.ADMIN_API_SAFE_MODE:

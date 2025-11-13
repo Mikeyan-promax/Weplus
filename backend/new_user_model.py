@@ -76,7 +76,7 @@ class NewUser:
         # 构建基础查询
         base_query = """
             SELECT id, email, username, password_hash, is_active, is_verified,
-                   created_at, updated_at, last_login, login_count, profile
+                   created_at, updated_at, last_login, profile
             FROM users
         """
         
@@ -139,7 +139,6 @@ class NewUser:
                     created_at=result['created_at'],
                     updated_at=result['updated_at'],
                     last_login=result['last_login'],
-                    login_count=result['login_count'],
                     profile=json.loads(result['profile']) if result['profile'] else {}
                 )
                 users.append(user)
