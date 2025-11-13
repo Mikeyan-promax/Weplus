@@ -76,7 +76,7 @@ class NewUser:
         # 构建基础查询
         base_query = """
             SELECT id, email, username, password_hash, is_active, is_verified,
-                   created_at, updated_at, last_login, login_count, profile
+                   created_at, updated_at, last_login, profile
             FROM users
         """
         
@@ -129,6 +129,18 @@ class NewUser:
             # 转换为User对象
             users = []
             for result in results:
+                # 兼容不同数据库Schema：users表可能不存在login_count列
+                # 此处将登录次数默认置为0；若未来添加该字段，可在SELECT中追加并读取
+                profile_value = result['profile']
+                if isinstance(profile_value, str):
+                    try:
+                        profile_value = json.loads(profile_value) if profile_value else {}
+                    except Exception:
+                        # 无法解析时回退为空对象
+                        profile_value = {}
+                else:
+                    profile_value = profile_value or {}
+
                 user = cls(
                     id=result['id'],
                     email=result['email'],
@@ -139,8 +151,8 @@ class NewUser:
                     created_at=result['created_at'],
                     updated_at=result['updated_at'],
                     last_login=result['last_login'],
-                    login_count=result['login_count'],
-                    profile=json.loads(result['profile']) if result['profile'] else {}
+                    login_count=0,
+                    profile=profile_value
                 )
                 users.append(user)
                 print(f"  - 用户 {user.id}: {user.username} ({user.email})")
