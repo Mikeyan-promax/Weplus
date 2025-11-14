@@ -55,11 +55,52 @@ const StudyResources: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        // 函数级注释：
-        // - 前端容错过滤：隐藏名称为“英语四六级”或代码为 `cet` 的分类；
-        // - 与后端保持一致的最小改动策略，仅在展示层隐藏，不修改数据库。
-        const filtered = ((data.data || []) as Category[]).filter((c: Category) => c?.name !== '英语四六级' && c?.code !== 'cet');
-        setCategories(filtered);
+        const categoriesData = (data.data || []) as Category[];
+        const mapped = categoriesData.map((c) => {
+          const code = (c.code || '').toLowerCase();
+          let name = c.name;
+          let icon = c.icon || '📁';
+          switch (code) {
+            case 'cet4':
+              name = '英语四级';
+              icon = '📘';
+              break;
+            case 'cet6':
+              name = '英语六级';
+              icon = '📙';
+              break;
+            case 'cet':
+              name = '英语四级-英语六级';
+              icon = '🎓';
+              break;
+            case 'ielts':
+              name = '雅思备考资料';
+              icon = '🌍';
+              break;
+            case 'postgraduate':
+              name = '考研资料';
+              icon = '📖';
+              break;
+            case 'professional':
+              name = '专业课程资料';
+              icon = '📚';
+              break;
+            case 'software':
+              name = '软件技能学习';
+              icon = '💻';
+              break;
+            case 'academic':
+              name = '学术论文写作指导';
+              icon = '✍️';
+              break;
+            default:
+              break;
+          }
+          return { ...c, name, icon } as Category;
+        });
+        // 若存在旧合并分类 'cet'，与新版 cet4/cet6 同时出现时，优先展示拆分后的两项，隐藏旧项
+        const finalList = mapped.filter(cat => (cat.code || '').toLowerCase() !== 'cet');
+        setCategories(finalList);
       }
     } catch (error) {
       console.error('获取分类列表失败:', error);

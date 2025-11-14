@@ -112,11 +112,51 @@ const StudyResourcesManagement: React.FC = () => {
       const data = await response.json();
       
       if (data.success) {
-        // 函数级注释：
-        // - 管理员页面同样隐藏“英语四六级”（或代码为 `cet`），避免与“英语四级/英语六级”重复；
-        // - 仅影响展示层，不更改数据库与接口参数。
-        const filtered = (data.data || []).filter((c: any) => c?.name !== '英语四六级' && c?.code !== 'cet');
-        setCategories(filtered);
+        const categoriesData = (data.data || []) as Category[];
+        const mapped = categoriesData.map((c) => {
+          const code = (c as any).code?.toLowerCase?.() || '';
+          let name = c.name;
+          let icon = c.icon || '';
+          switch (code) {
+            case 'cet4':
+              name = '英语四级';
+              icon = '📘';
+              break;
+            case 'cet6':
+              name = '英语六级';
+              icon = '📙';
+              break;
+            case 'cet':
+              name = '英语四级-英语六级';
+              icon = '🎓';
+              break;
+            case 'ielts':
+              name = '雅思备考资料';
+              icon = '🌍';
+              break;
+            case 'postgraduate':
+              name = '考研资料';
+              icon = '📖';
+              break;
+            case 'professional':
+              name = '专业课程资料';
+              icon = '📚';
+              break;
+            case 'software':
+              name = '软件技能学习';
+              icon = '💻';
+              break;
+            case 'academic':
+              name = '学术论文写作指导';
+              icon = '✍️';
+              break;
+            default:
+              break;
+          }
+          return { ...c, name, icon } as Category;
+        });
+        const finalList = mapped.filter(cat => (cat.code || '').toLowerCase() !== 'cet');
+        setCategories(finalList);
       }
     } catch (error) {
       console.error('获取分类列表失败:', error);

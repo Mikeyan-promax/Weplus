@@ -298,6 +298,7 @@ class RatingRequest(BaseModel):
     """评分请求模型"""
     rating: float = Field(..., ge=1, le=5, description="评分(1-5)")
     review: Optional[str] = Field(None, description="评价内容")
+    comment: Optional[str] = Field(None, description="兼容字段：评论内容")
 
 class StudyProgressRequest(BaseModel):
     """学习进度请求模型"""
@@ -306,14 +307,9 @@ class StudyProgressRequest(BaseModel):
     notes: Optional[str] = Field(None, description="学习笔记")
 
 class BatchDeleteRequest(BaseModel):
-    """
-    管理员批量删除请求模型
-    函数级注释：
-    - 输入：需要批量删除的资源ID列表；
-    - 可扩展：未来可增加 `category_id` 以按分类批量删除，但当前前端按勾选ID列表传参；
-    - 约束：至少包含1个ID，避免误删空请求。
-    """
-    ids: List[int] = Field(..., min_items=1, description="待删除的资源ID列表")
+    """管理员批量删除请求模型（兼容 ids/resource_ids 两种字段）"""
+    ids: Optional[List[int]] = Field(default=None, description="待删除的资源ID列表")
+    resource_ids: Optional[List[int]] = Field(default=None, description="兼容字段：资源ID列表")
 
 # API端点实现
 
@@ -651,10 +647,13 @@ async def admin_update_resource(
 ):
     """管理员更新学习资源信息"""
     try:
-        # 检查资源是否存在
-        resource = StudyResource.get_by_id(resource_id)
-        if not resource:
-            raise HTTPException(status_code=404, detail="资源不存在")
+        # 检查资源是否存在（使用原生SQL避免模型不兼容问题）
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT 1 FROM study_resources WHERE id = %s", (resource_id,))
+            exists = cur.fetchone()
+            if not exists:
+                raise HTTPException(status_code=404, detail="资源不存在")
         
         # 构建更新数据
         update_data = {}
@@ -693,29 +692,28 @@ async def admin_delete_resource(
     resource_id: int,
     admin_user: dict = Depends(verify_admin_token)
 ):
-    """管理员删除学习资源"""
+    """管理员删除学习资源（硬删除 + 文件清理）"""
     try:
-        # 检查资源是否存在
-        resource = StudyResource.get_by_id(resource_id)
-        if not resource:
-            raise HTTPException(status_code=404, detail="资源不存在")
-        
-        # 删除文件
-        if resource.get('file_path'):
-            file_path = Path(resource['file_path'])
-            if file_path.exists():
-                file_path.unlink()
-                logger.info(f"已删除文件: {file_path}")
-        
-        # 删除数据库记录
-        StudyResource.delete(resource_id)
-        
-        return {
-            "success": True,
-            "message": "资源删除成功",
-            "resource_id": resource_id,
-            "deleted_by": admin_user.get('sub', 'admin')
-        }
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT file_path FROM study_resources WHERE id = %s", (resource_id,))
+            row = cur.fetchone()
+            if not row:
+                raise HTTPException(status_code=404, detail="资源不存在")
+            file_path = row[0]
+            cur.execute("DELETE FROM resource_ratings WHERE resource_id = %s", (resource_id,))
+            cur.execute("DELETE FROM resource_comments WHERE resource_id = %s", (resource_id,))
+            cur.execute("DELETE FROM resource_downloads WHERE resource_id = %s", (resource_id,))
+            cur.execute("DELETE FROM study_resources WHERE id = %s", (resource_id,))
+            conn.commit()
+        try:
+            if file_path:
+                fp = Path(str(file_path))
+                if fp.exists():
+                    fp.unlink(missing_ok=True)
+        except Exception as fe:
+            logger.warning(f"删除文件失败 id={resource_id} path={file_path}: {fe}")
+        return {"success": True, "deleted": 1, "message": "资源删除成功", "resource_id": resource_id}
         
     except Exception as e:
         logger.error(f"删除资源失败: {str(e)}")
@@ -726,67 +724,50 @@ async def admin_batch_delete_resources(
     request: BatchDeleteRequest,
     admin_user: dict = Depends(verify_admin_token)
 ):
-    """
-    管理员批量删除学习资源
-    函数级注释：
-    - 遍历请求中的ID列表，对每项执行安全删除：
-      1) 尝试删除物理文件（存在则删除）；
-      2) 进行软删除（更新状态为 deleted）；
-    - 返回成功删除数量、未找到列表、删除失败列表及其错误信息。
-    - 说明：使用软删除以便后续审计或恢复，避免误删导致不可逆。
-    """
+    """管理员批量删除学习资源（硬删除 + 文件清理 + 兼容请求字段）"""
     try:
-        ids = list(set([int(i) for i in request.ids if isinstance(i, int) or str(i).isdigit()]))
+        raw_ids = request.ids if request.ids is not None else (request.resource_ids or [])
+        ids = list(set([int(i) for i in raw_ids if isinstance(i, int) or str(i).isdigit()]))
         if not ids:
-            raise HTTPException(status_code=400, detail="请求ID列表为空或无效")
+            return {"success": True, "deleted": 0, "message": "批量删除执行完成：无有效ID"}
 
-        success_count = 0
+        deleted = 0
         not_found: List[int] = []
         failed: List[Dict[str, Any]] = []
 
-        for rid in ids:
-            try:
-                resource = StudyResource.get_by_id(rid)
-                if not resource:
-                    not_found.append(rid)
-                    continue
-
-                # 删除文件（若存在）
-                raw_path = getattr(resource, 'file_path', None) if not isinstance(resource, dict) else resource.get('file_path')
-                if raw_path:
-                    fp = Path(str(raw_path))
-                    if fp.exists():
-                        try:
-                            fp.unlink()
-                            logger.info(f"批量删除：已删除文件 {fp}")
-                        except Exception as fe:
-                            logger.warning(f"批量删除：删除文件失败 id={rid} path={fp}: {fe}")
-
-                # 软删除数据库记录
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            for rid in ids:
                 try:
-                    if isinstance(resource, dict):
-                        tmp = StudyResource(**resource)
-                        tmp.delete()
-                    else:
-                        resource.delete()
-                except Exception as de:
-                    failed.append({"id": rid, "error": str(de)})
-                    continue
-
-                success_count += 1
-
-            except Exception as e:
-                failed.append({"id": rid, "error": str(e)})
+                    cur.execute("SELECT file_path FROM study_resources WHERE id = %s", (rid,))
+                    row = cur.fetchone()
+                    if not row:
+                        not_found.append(rid)
+                        continue
+                    file_path = row[0]
+                    # 删除关联记录
+                    cur.execute("DELETE FROM resource_ratings WHERE resource_id = %s", (rid,))
+                    cur.execute("DELETE FROM resource_comments WHERE resource_id = %s", (rid,))
+                    cur.execute("DELETE FROM resource_downloads WHERE resource_id = %s", (rid,))
+                    # 删除主记录
+                    cur.execute("DELETE FROM study_resources WHERE id = %s", (rid,))
+                    deleted += 1
+                    # 删除文件
+                    try:
+                        if file_path:
+                            fp = Path(str(file_path))
+                            if fp.exists():
+                                fp.unlink(missing_ok=True)
+                    except Exception as fe:
+                        logger.warning(f"批量删除：删除文件失败 id={rid} path={file_path}: {fe}")
+                except Exception as e:
+                    failed.append({"id": rid, "error": str(e)})
+            conn.commit()
 
         return {
             "success": True,
             "message": "批量删除执行完成",
-            "stats": {
-                "requested": len(ids),
-                "deleted": success_count,
-                "not_found": len(not_found),
-                "failed": len(failed)
-            },
+            "deleted": deleted,
             "not_found": not_found,
             "failed": failed
         }
@@ -1110,6 +1091,195 @@ async def get_resources_for_frontend(
         logger.error(f"获取资源列表失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"获取失败: {str(e)}")
 
+@router.get("/resources", summary="获取学习资源列表（别名端点）")
+async def get_resources_alias(
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    category_id: Optional[int] = Query(None, description="分类ID"),
+    difficulty_level: Optional[str] = Query(None, description="难度级别"),
+    resource_type: Optional[str] = Query(None, description="资源类型"),
+    is_featured: Optional[bool] = Query(None, description="是否推荐")
+):
+    """别名端点：兼容前端已写死的 /resources 路径"""
+    return await get_resources(page=page, page_size=page_size, category_id=category_id,
+                               difficulty_level=difficulty_level, resource_type=resource_type,
+                               is_featured=is_featured)
+
+class CommentCreateRequest(BaseModel):
+    """评论创建请求模型"""
+    content: str = Field(..., description="评论内容")
+    parent_id: Optional[int] = Field(None, description="父评论ID")
+
+class CommentListResponse(BaseModel):
+    """评论列表响应模型"""
+    success: bool
+    data: List[Dict[str, Any]]
+    page: int
+    page_size: int
+    total: int
+
+@router.get("/{resource_id}/comments", summary="获取资源评论列表")
+async def get_resource_comments(
+    resource_id: int,
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(20, ge=1, le=100, description="每页数量"),
+    status: str = Query("active", description="状态筛选")
+):
+    """获取指定资源的评论列表"""
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            offset = (page - 1) * page_size
+            cur.execute(
+                """
+                SELECT id, resource_id, user_id, user_name, content, parent_id,
+                       status, is_pinned, created_at, updated_at
+                FROM resource_comments
+                WHERE resource_id = %s AND status = %s
+                ORDER BY is_pinned DESC, created_at DESC
+                LIMIT %s OFFSET %s
+                """,
+                (resource_id, status, page_size, offset)
+            )
+            rows = cur.fetchall()
+            cur.execute(
+                "SELECT COUNT(*) FROM resource_comments WHERE resource_id = %s AND status = %s",
+                (resource_id, status)
+            )
+            total = cur.fetchone()[0]
+        comments = []
+        for r in rows:
+            comments.append({
+                "id": r[0],
+                "resource_id": r[1],
+                "user_id": r[2],
+                "user_name": r[3] or "",
+                "content": r[4],
+                "parent_id": r[5],
+                "status": r[6],
+                "is_pinned": bool(r[7]),
+                "created_at": r[8].isoformat() if r[8] else None,
+                "updated_at": r[9].isoformat() if r[9] else None,
+            })
+        return {
+            "success": True,
+            "data": comments,
+            "page": page,
+            "page_size": page_size,
+            "total": total
+        }
+    except Exception as e:
+        logger.error(f"获取评论失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取评论失败: {str(e)}")
+
+@router.post("/{resource_id}/comments", summary="新增资源评论")
+async def create_resource_comment(
+    resource_id: int,
+    req: CommentCreateRequest,
+    user_id: Optional[str] = Form(None),
+    user_name: Optional[str] = Form(None)
+):
+    """为指定资源新增评论（支持父评论）"""
+    try:
+        # 简单校验资源存在（使用原生SQL避免模型不兼容问题）
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT 1 FROM study_resources WHERE id = %s", (resource_id,))
+            exists = cur.fetchone()
+            if not exists:
+                raise HTTPException(status_code=404, detail="资源不存在")
+
+            cur.execute(
+                """
+                INSERT INTO resource_comments (resource_id, user_id, user_name, content, parent_id, status, is_pinned)
+                VALUES (%s, %s, %s, %s, %s, 'active', FALSE)
+                RETURNING id, created_at
+                """,
+                (resource_id, user_id or "", user_name or "", req.content, req.parent_id)
+            )
+            row = cur.fetchone()
+            conn.commit()
+
+        return {
+            "success": True,
+            "message": "评论已发布",
+            "data": {
+                "id": row[0],
+                "created_at": row[1].isoformat() if row[1] else None
+            }
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"发布评论失败: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"发布评论失败: {str(e)}")
+
+class CommentCompatRequest(BaseModel):
+    """兼容前端旧路径的评论请求模型"""
+    resource_id: int
+    content: str
+    parent_id: Optional[int] = None
+    user_id: Optional[str] = None
+    user_name: Optional[str] = None
+
+@router.get("/resource/{resource_id}/comments", summary="获取资源评论列表（兼容端点）")
+async def get_resource_comments_compat(
+    resource_id: int,
+    page: int = 1,
+    limit: int = 10
+):
+    """兼容端点：/api/study-resources/resource/{id}/comments"""
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            offset = (page - 1) * limit
+            cur.execute(
+                """
+                SELECT id, resource_id, user_id, user_name, content, parent_id,
+                       status, is_pinned, created_at, updated_at
+                FROM resource_comments
+                WHERE resource_id = %s AND status = %s
+                ORDER BY is_pinned DESC, created_at DESC
+                LIMIT %s OFFSET %s
+                """,
+                (resource_id, "active", limit, offset)
+            )
+            rows = cur.fetchall()
+            cur.execute(
+                "SELECT COUNT(*) FROM resource_comments WHERE resource_id = %s AND status = %s",
+                (resource_id, "active")
+            )
+            total = cur.fetchone()[0]
+        comments = []
+        for r in rows:
+            comments.append({
+                "id": r[0],
+                "resource_id": r[1],
+                "user_id": r[2],
+                "user_name": r[3] or "",
+                "content": r[4],
+                "parent_id": r[5],
+                "status": r[6],
+                "is_pinned": bool(r[7]),
+                "created_at": r[8].isoformat() if r[8] else None,
+                "updated_at": r[9].isoformat() if r[9] else None,
+            })
+        return {
+            "comments": comments,
+            "has_more": (page * limit) < total,
+            "page": page,
+            "page_size": limit
+        }
+    except Exception as e:
+        logger.error(f"获取评论失败(兼容): {str(e)}")
+        raise HTTPException(status_code=500, detail=f"获取评论失败: {str(e)}")
+
+@router.post("/comments", summary="新增资源评论（兼容端点）")
+async def create_resource_comment_compat(req: CommentCompatRequest):
+    """兼容端点：/api/study-resources/comments"""
+    base_req = CommentCreateRequest(content=req.content, parent_id=req.parent_id)
+    return await create_resource_comment(req.resource_id, base_req, user_id=req.user_id, user_name=req.user_name)
+
 @router.get("/{resource_id}", summary="获取资源详情")
 async def get_resource(resource_id: int):
     """获取指定资源的详细信息
@@ -1334,7 +1504,7 @@ async def rate_resource(resource_id: int, request: RatingRequest, user_id: int =
         
         # 更新评分
         study_record.rating = request.rating
-        study_record.review = request.review or ""
+        study_record.review = (request.review or request.comment) or ""
         study_record.save()
         
         return {
@@ -1348,26 +1518,81 @@ async def rate_resource(resource_id: int, request: RatingRequest, user_id: int =
         logger.error(f"评分失败: {str(e)}")
         raise HTTPException(status_code=500, detail=f"评分失败: {str(e)}")
 
+class RatingCompatRequest(BaseModel):
+    """兼容前端旧路径的评分请求模型"""
+    resource_id: int
+    rating: float
+    comment: Optional[str] = None
+    user_id: Optional[int] = 1
+
+@router.post("/ratings", summary="提交评分（兼容端点）")
+async def rate_resource_compat(req: RatingCompatRequest):
+    """兼容端点：/api/study-resources/ratings（直接写入user_study_records）"""
+    try:
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            # 资源存在性校验
+            cur.execute("SELECT 1 FROM study_resources WHERE id = %s", (req.resource_id,))
+            exists = cur.fetchone()
+            if not exists:
+                raise HTTPException(status_code=404, detail="资源不存在")
+
+            # 写入评分（resource_ratings 表）
+            cur.execute(
+                """
+                INSERT INTO resource_ratings (resource_id, user_id, rating, created_at, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                ON CONFLICT (resource_id, user_id)
+                DO UPDATE SET rating = EXCLUDED.rating, updated_at = CURRENT_TIMESTAMP
+                RETURNING id
+                """,
+                (req.resource_id, str(req.user_id or 1), int(round(req.rating)))
+            )
+            conn.commit()
+        return {"success": True, "message": "评分成功"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"评分失败(兼容): {str(e)}")
+        raise HTTPException(status_code=500, detail=f"评分失败: {str(e)}")
+
 @router.get("/{resource_id}/ratings", summary="获取资源评分")
 async def get_resource_ratings(resource_id: int):
-    """获取资源的评分信息"""
+    """获取资源的评分信息（基于 resource_ratings 表）"""
     try:
-        resource = StudyResource.get_by_id(resource_id)
-        if not resource:
-            raise HTTPException(status_code=404, detail="资源不存在")
-        
-        # 获取评分统计
-        ratings = UserStudyRecord.get_ratings_by_resource(resource_id)
-        
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            # 存在性校验
+            cur.execute("SELECT 1 FROM study_resources WHERE id = %s", (resource_id,))
+            exists = cur.fetchone()
+            if not exists:
+                raise HTTPException(status_code=404, detail="资源不存在")
+
+            # 统计平均与数量
+            cur.execute("SELECT COALESCE(AVG(rating), 0), COUNT(*) FROM resource_ratings WHERE resource_id = %s", (resource_id,))
+            avg_count = cur.fetchone()
+            avg_rating = float(avg_count[0]) if avg_count and avg_count[0] is not None else 0.0
+            rating_count = int(avg_count[1]) if avg_count and avg_count[1] is not None else 0
+
+            # 获取评分明细
+            cur.execute("SELECT user_id, rating, created_at, updated_at FROM resource_ratings WHERE resource_id = %s ORDER BY updated_at DESC", (resource_id,))
+            rows = cur.fetchall()
+        ratings = []
+        for r in rows:
+            ratings.append({
+                "user_id": r[0],
+                "rating": int(r[1]),
+                "created_at": r[2].isoformat() if r[2] else None,
+                "updated_at": r[3].isoformat() if r[3] else None
+            })
         return {
             "success": True,
             "data": {
-                "average_rating": resource.rating,
-                "rating_count": resource.rating_count,
+                "average_rating": avg_rating,
+                "rating_count": rating_count,
                 "ratings": ratings
             }
         }
-        
     except HTTPException:
         raise
     except Exception as e:

@@ -91,8 +91,17 @@ const ResourceDetail: React.FC = () => {
       // 后端实际路由为 /api/study-resources/{resource_id}/ratings
       const response = await fetch(`/api/study-resources/${id}/ratings`);
       if (response.ok) {
-        const data = await response.json();
-        setRating(data.ratings);
+        const res = await response.json();
+        const avg = res?.data?.average_rating ?? 0;
+        const count = res?.data?.rating_count ?? 0;
+        const ratingsList: Array<{ user_id: string; rating: number }> = (res?.data?.ratings ?? []);
+        const dist: { [key: number]: number } = {};
+        for (let i = 1; i <= 5; i++) dist[i] = 0;
+        ratingsList.forEach(r => {
+          const star = Math.min(5, Math.max(1, Math.round(r.rating)));
+          dist[star] = (dist[star] || 0) + 1;
+        });
+        setRating({ average: Number(avg), total: Number(count), distribution: dist });
       }
     } catch (error) {
       console.error('获取评分统计失败:', error);
@@ -105,12 +114,17 @@ const ResourceDetail: React.FC = () => {
       const response = await fetch(`/api/study-resources/resource/${id}/comments?page=${page}&limit=10`);
       if (response.ok) {
         const data = await response.json();
-        if (append) {
-          setComments(prev => [...prev, ...data.comments]);
-        } else {
-          setComments(data.comments);
-        }
-        setHasMoreComments(data.has_more);
+        const list: Comment[] = (data?.comments || []).map((c: any) => ({
+          id: c.id,
+          content: c.content,
+          user_id: Number(c.user_id || 0),
+          username: c.user_name || '',
+          created_at: c.created_at || '',
+          parent_id: c.parent_id || undefined,
+          replies: []
+        }));
+        if (append) setComments(prev => [...prev, ...list]); else setComments(list);
+        setHasMoreComments(Boolean(data?.has_more));
         setCommentsPage(page);
       }
     } catch (error) {

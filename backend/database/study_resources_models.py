@@ -338,27 +338,35 @@ class StudyResource:
     @classmethod
     def create(cls, title: str, description: str = "", file_type: str = "text",
                     category_id: int = None, file_path: str = "", file_size: int = 0,
-                    original_filename: str = "", content_hash: str = "",
-                    difficulty_level: str = "beginner", **kwargs) -> 'StudyResource':
-        """创建新学习资源 - 匹配PostgreSQL表结构"""
-        
-        # 使用同步的execute_query函数
+                    original_filename: str = "", **kwargs) -> 'StudyResource':
+        """创建新学习资源 - 与当前PostgreSQL表结构对齐
+        函数级注释：
+        - 映射字段：title→name，original_filename→file_name；
+        - 仅写入现有列：name, description, file_name, file_path, file_type, file_size, category_id,
+          status, upload_time, updated_at, metadata, tags, keywords, download_count, view_count, rating_avg, rating_count；
+        - 其余字段（content_hash/difficulty_level/language/uploader_id/is_featured）不在当前表结构，避免写入导致错误。
+        """
+        # 规范化标签/关键词文本
+        tags_text = kwargs.get('tags', '[]')
+        metadata_text = kwargs.get('metadata', '{}')
+        keywords_text = kwargs.get('keywords', '[]')
+
         query = """
-        INSERT INTO study_resources (name, description, file_type, file_size, file_path,
-                                   original_filename, content_hash, category_id, difficulty_level,
-                                   language, tags, metadata, download_count, view_count,
-                                   rating_avg, rating_count, status, uploader_id, is_featured,
-                                   created_at, updated_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        RETURNING id
+        INSERT INTO study_resources (
+            name, description, file_name, file_path, file_type, file_size, category_id,
+            status, upload_time, updated_at, metadata, tags, keywords,
+            download_count, view_count, rating_avg, rating_count
+        ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s, %s, %s,
+            %s, %s, %s, %s
+        ) RETURNING id
         """
         params = (
-            title, description, file_type, file_size, file_path,
-            original_filename, content_hash, category_id, difficulty_level,
-            kwargs.get('language', 'zh'), kwargs.get('tags', ''),
-            kwargs.get('metadata', '{}'), 0, 0, 0.00, 0,
-            kwargs.get('status', 'active'), kwargs.get('uploader_id'),
-            kwargs.get('is_featured', False), datetime.now(), datetime.now()
+            title, description, original_filename, file_path, file_type, file_size, category_id,
+            kwargs.get('status', 'active'), datetime.now(), datetime.now(),
+            metadata_text, tags_text, keywords_text,
+            0, 0, 0.00, 0
         )
         
         result = execute_query(query, params, fetch_one=True)
@@ -374,11 +382,11 @@ class StudyResource:
         resource.file_size = file_size
         resource.category_id = category_id
         resource.difficulty_level = DifficultyLevel.BEGINNER
-        resource.file_hash = content_hash
+        resource.file_hash = ''
         resource.author = kwargs.get('author', '')
         resource.source_url = kwargs.get('source_url', '')
         resource.is_active = True
-        resource.is_featured = kwargs.get('is_featured', False)
+        resource.is_featured = False
         resource.created_at = datetime.now()
         resource.updated_at = datetime.now()
         
@@ -392,77 +400,54 @@ class StudyResource:
         result = db_manager.execute_query(query, (resource_id,), fetch_one=True)
         
         if result:
-            # 转换字段名和数据类型
-            resource_data = dict(result)
-            # 兼容字段：将数据库列 name 映射为模型字段 title
-            if 'name' in resource_data and 'title' not in resource_data:
-                resource_data['title'] = resource_data['name']
-            
-            # 字段映射：数据库字段 -> 模型字段
-            if 'file_type' in resource_data:
-                resource_data['resource_type'] = ResourceType.OTHER  # 默认类型
-                del resource_data['file_type']
-            
-            # 处理枚举字段
-            if 'difficulty_level' in resource_data:
+            # 转换字段名与类型，构造严格匹配数据类的实例
+            row = dict(result)
+            title = row.get('name', '')
+            file_type = row.get('file_type', '')
+            # JSON字段处理
+            tags = []
+            if isinstance(row.get('tags'), str):
                 try:
-                    resource_data['difficulty_level'] = DifficultyLevel(resource_data['difficulty_level'])
-                except ValueError:
-                    resource_data['difficulty_level'] = DifficultyLevel.BEGINNER
-            
-            # 处理JSON字段
-            if resource_data.get('tags'):
+                    tags = json.loads(row['tags'])
+                except Exception:
+                    tags = []
+            keywords = []
+            if isinstance(row.get('keywords'), str):
                 try:
-                    resource_data['tags'] = json.loads(resource_data['tags']) if isinstance(resource_data['tags'], str) else resource_data['tags']
-                except:
-                    resource_data['tags'] = []
-            else:
-                resource_data['tags'] = []
-            
-            if resource_data.get('keywords'):
-                try:
-                    resource_data['keywords'] = json.loads(resource_data['keywords']) if isinstance(resource_data['keywords'], str) else resource_data['keywords']
-                except:
-                    resource_data['keywords'] = []
-            else:
-                resource_data['keywords'] = []
-            
-            if resource_data.get('prerequisites'):
-                try:
-                    resource_data['prerequisites'] = json.loads(resource_data['prerequisites']) if isinstance(resource_data['prerequisites'], str) else resource_data['prerequisites']
-                except:
-                    resource_data['prerequisites'] = []
-            else:
-                resource_data['prerequisites'] = []
-            
-            # 处理不存在的字段，设置默认值
-            defaults = {
-                'content': '',
-                'file_hash': resource_data.get('content_hash', ''),
-                'thumbnail_path': '',
-                'duration': 0,
-                'author': '',
-                'source_url': '',
-                'rating': float(resource_data.get('rating_avg', 0.0)),
-                'rating_count': resource_data.get('rating_count', 0),
-                'published_at': None,
-                'estimated_time': 0,
-                'is_active': resource_data.get('status') == 'active',
-            }
-            
-            for key, default_value in defaults.items():
-                if key not in resource_data:
-                    resource_data[key] = default_value
-            
-            # 移除数据库特有字段，只保留StudyResource模型需要的字段
-            db_only_fields = [
-                'content_hash', 'rating_avg', 'uploader_id', 'status', 
-                'original_filename', 'language', 'metadata'
-            ]
-            for field in db_only_fields:
-                resource_data.pop(field, None)
-            
-            return cls(**resource_data)
+                    keywords = json.loads(row['keywords'])
+                except Exception:
+                    keywords = []
+            # 构造实例
+            inst = cls(
+                id=row.get('id'),
+                title=title,
+                description=row.get('description', ''),
+                content='',
+                resource_type=ResourceType.from_extension(file_type) if file_type else ResourceType.OTHER,
+                category_id=row.get('category_id'),
+                difficulty_level=DifficultyLevel.BEGINNER,
+                file_path=row.get('file_path', ''),
+                file_size=row.get('file_size', 0),
+                file_hash='',
+                thumbnail_path='',
+                duration=0,
+                tags=tags,
+                keywords=keywords,
+                author='',
+                source_url=row.get('source_url', ''),
+                is_active=(row.get('status', 'active') == 'active'),
+                is_featured=False,
+                view_count=row.get('view_count', 0),
+                download_count=row.get('download_count', 0),
+                rating=float(row.get('rating_avg', 0.0) or 0.0),
+                rating_count=row.get('rating_count', 0) or 0,
+                created_at=row.get('upload_time'),
+                updated_at=row.get('updated_at'),
+                published_at=None,
+                estimated_time=0,
+                prerequisites=[],
+            )
+            return inst
         return None
 
     @classmethod
