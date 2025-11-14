@@ -113,7 +113,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                   // 函数说明：
                   // - 代码块：保留原始格式与语法高亮，提供复制按钮；禁止随意换行，提供横向滚动容器。
                   // - 内联代码：加上突出显示样式（inline-code），与周围文本区分。
-                  code: ({ node, inline, className, children, ...props }: any) => {
+                  code: ({ inline, className, children, ...props }: { inline?: boolean; className?: string; children?: React.ReactNode } & React.HTMLAttributes<HTMLElement>) => {
                     const match = /language-(\w+)/.exec(className || '');
                     const language = match ? match[1] : '';
                      const codeContent = String(children).replace(/\n$/, '');

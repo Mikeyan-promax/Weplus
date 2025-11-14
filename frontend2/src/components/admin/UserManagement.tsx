@@ -13,7 +13,7 @@ interface User {
   updated_at: string;
   last_login: string | null;
   login_count: number;
-  profile: any;
+  profile: Record<string, unknown> | null;
   // 保留旧字段以兼容现有代码
   status?: string;
   password_created_at?: string;
@@ -47,7 +47,7 @@ const UserManagement: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [_stats, setStats] = useState<UserStats | null>(null); // 统计数据（当前未直接用于渲染）
+  const [, setStats] = useState<UserStats | null>(null); // 统计数据（当前未直接用于渲染）
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [verificationFilter, setVerificationFilter] = useState('');

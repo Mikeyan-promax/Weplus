@@ -184,10 +184,10 @@ const Register: React.FC = () => {
       } else {
         // 处理验证错误
         if (response.status === 422) {
-          const errorDetail = data.detail;
+          const errorDetail: unknown = data.detail;
           if (Array.isArray(errorDetail)) {
-            // Pydantic验证错误
-            const errorMessages = errorDetail.map((err: any) => err.msg).join(', ');
+            interface PydanticError { loc: Array<string | number>; msg: string; type: string }
+            const errorMessages = (errorDetail as PydanticError[]).map((err) => err.msg).join(', ');
             setError(errorMessages);
           } else if (typeof errorDetail === 'string') {
             setError(errorDetail);
