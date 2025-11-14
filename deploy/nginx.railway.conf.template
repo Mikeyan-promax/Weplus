@@ -34,8 +34,9 @@ http {
             try_files $uri $uri/ /index.html;
         }
 
-        # 上传大小限制（预览/上传文件）
-        client_max_body_size 50m;
+        # 上传大小与缓冲优化（预览/上传文件）
+        client_max_body_size 100m;
+        client_body_buffer_size 128k;
 
         # 后端 API 反向代理
         # 去掉 proxy_pass 末尾斜杠以保留 /api 前缀
@@ -52,6 +53,16 @@ http {
             proxy_connect_timeout 60;
             # SSE/流式响应优化（禁用缓冲）
             proxy_buffering off;
+            # 关闭请求体缓冲，避免上传被写入 /var/lib/nginx/body 临时文件
+            proxy_request_buffering off;
+        }
+
+        # 学习资源静态直出：统一对外访问路径 /files/*
+        location /files/ {
+            alias /data/study_resources/;
+            add_header Cache-Control "public, max-age=604800";
+            sendfile on;
+            tcp_nopush on;
         }
     }
 }

@@ -499,6 +499,11 @@ async def admin_upload_resource(
         keywords_list = [kw.strip() for kw in keywords.split(',')] if keywords else []
         
         # 创建资源记录
+        # 构造公共直链（Railway环境建议配置 FILES_PUBLIC_BASE_URL）
+        public_url = None
+        if FILES_PUBLIC_BASE_URL:
+            public_url = f"{FILES_PUBLIC_BASE_URL}/{unique_filename}"
+
         resource = StudyResource.create(
             title=title,
             description=description or "",
@@ -507,16 +512,14 @@ async def admin_upload_resource(
             file_path=str(file_path),
             file_size=file_size,
             original_filename=file.filename,
-            content_hash=hashlib.md5(file.filename.encode()).hexdigest(),
             difficulty_level=difficulty_level,
             tags=','.join(tags_list) if tags_list else '',
             metadata=json.dumps({
                 'author': author,
-                'source_url': source_url,
+                'source_url': public_url or source_url or '',
                 'keywords': keywords_list,
                 'uploaded_by': admin_user.get('sub', 'admin')
-            }),
-            uploader_id=1  # 管理员用户ID
+            })
         )
         
         resource_id = resource.id
@@ -1295,7 +1298,7 @@ async def get_resource(resource_id: int):
         
         # 增加查看次数（异步执行，统计失败不影响主流程）
         try:
-            await resource.increment_view_count()
+            resource.increment_view_count()
         except Exception as inc_err:
             logger.warning(f"增加查看次数失败 id={resource_id}: {inc_err}")
         
@@ -1380,7 +1383,7 @@ async def download_resource(resource_id: int):
 
         # 增加下载次数（在返回文件前执行，保证统计准确）
         try:
-            await resource.increment_download_count()
+            resource.increment_download_count()
         except Exception as inc_err:
             logger.warning(f"增加下载次数失败 id={resource_id}: {inc_err}")
         # 规范化下载文件名：标题 + 扩展名（不带双点）
@@ -1678,3 +1681,4 @@ async def process_uploaded_file(resource_id: int, file_path: Path):
             
     except Exception as e:
         logger.error(f"文件处理失败: {str(e)}")
+FILES_PUBLIC_BASE_URL = os.getenv('FILES_PUBLIC_BASE_URL', '').rstrip('/')

@@ -628,30 +628,28 @@ class StudyResource:
         
         return resources, total
     
-    async def increment_view_count(self):
+    def increment_view_count(self):
         """增加查看次数"""
-        self.view_count += 1
+        self.view_count = (self.view_count or 0) + 1
         db_manager = PostgreSQLManager()
         query = "UPDATE study_resources SET view_count = %s WHERE id = %s"
-        await db_manager.execute_query(query, (self.view_count, self.id))
+        db_manager.execute_query(query, (self.view_count, self.id))
     
-    async def increment_download_count(self):
+    def increment_download_count(self):
         """增加下载次数"""
-        self.download_count += 1
+        self.download_count = (self.download_count or 0) + 1
         db_manager = PostgreSQLManager()
         query = "UPDATE study_resources SET download_count = %s WHERE id = %s"
-        await db_manager.execute_query(query, (self.download_count, self.id))
+        db_manager.execute_query(query, (self.download_count, self.id))
     
-    async def update_rating(self, new_rating: float):
+    def update_rating(self, new_rating: float):
         """更新评分"""
-        # 计算新的平均评分
-        total_rating = self.rating * self.rating_count + new_rating
-        self.rating_count += 1
+        total_rating = (self.rating or 0.0) * (self.rating_count or 0) + new_rating
+        self.rating_count = (self.rating_count or 0) + 1
         self.rating = total_rating / self.rating_count
-        
         db_manager = PostgreSQLManager()
         query = "UPDATE study_resources SET rating = %s, rating_count = %s WHERE id = %s"
-        await db_manager.execute_query(query, (self.rating, self.rating_count, self.id))
+        db_manager.execute_query(query, (self.rating, self.rating_count, self.id))
     
     def delete(self):
         """删除资源（软删除）"""
