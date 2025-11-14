@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-free": "^7.1.0",
     "@types/react-router-dom": "^5.3.3",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.23.24",
