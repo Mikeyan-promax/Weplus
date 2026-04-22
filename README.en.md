@@ -116,6 +116,7 @@ If you find this project helpful, feel free to Star it to receive notifications 
 - **Semantic Search**: pgvector-based vector similarity search for accurate retrieval
 - **Streaming Response**: Server-Sent Events for real-time typewriter effect
 - **Multi-turn Dialogue**: Context-aware conversation with memory
+<img width="1919" height="1034" alt="image" src="https://github.com/user-attachments/assets/26d40e26-76f5-4201-a64d-163148b43c1d" />
 
 ### 📚 Learning Resource Management
 
@@ -123,14 +124,14 @@ If you find this project helpful, feel free to Star it to receive notifications 
 - **Tag & Category**: Flexible classification system
 - **Community Features**: Rating, comments, favorites
 - **Online Preview**: View documents without downloading
-
+<img width="3025" height="1903" alt="屏幕截图 2025-11-08 145953" src="https://github.com/user-attachments/assets/eff42d14-522b-4f2b-84b8-f840e9a931de" />
 ### 👥 User System
 
 - **JWT Authentication**: Token-based auth with auto-refresh
 - **Email Verification**: Prevent bot registrations
 - **Role-based Access**: User / Admin two-tier permissions
 - **Security**: bcrypt hashing, rate limiting, IP whitelist
-
+<img width="1510" height="870" alt="image" src="https://github.com/user-attachments/assets/bd43cdbc-2992-43de-8a89-bcbccc16e684" />
 ### 🛠️ Admin Dashboard
 
 - **System Overview**: Real-time statistics and charts
