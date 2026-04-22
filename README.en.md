@@ -513,6 +513,10 @@ alembic downgrade -1
 
 [MIT](LICENSE) © WePlus Contributors
 
+## Official Certificate of Excellent Project Completion from the School
+<img width="1875" height="819" alt="屏幕截图 2026-04-22 163339" src="https://github.com/user-attachments/assets/54e0587e-e062-4a53-b825-e5b6ff1fe032" />
+<img width="1903" height="779" alt="屏幕截图 2026-04-22 163355" src="https://github.com/user-attachments/assets/30626bdf-293b-4764-bb89-638c7a3d958b" />
+<img width="1706" height="736" alt="屏幕截图 2026-04-22 163404" src="https://github.com/user-attachments/assets/9d7382a1-20c5-4b77-864b-5a3d430f3cf5" />
 ---
 
 <p align="center">
