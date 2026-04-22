@@ -43,8 +43,7 @@
 WePlus 是一个基于 **RAG（检索增强生成）** 技术的校园智能助手平台，集成 DeepSeek 大语言模型和 pgvector 向量搜索引擎，为校园用户提供智能问答、文档管理、学习资源共享等服务。
 
 > 🎯 **设计目标**：打造一个功能完整、可直接部署的全栈 Web 应用，展示现代 Web 开发的最佳实践。
-> <img width="3112" height="1937" alt="屏幕截图 2025-11-08 145751" src="https://github.com/user-attachments/assets/46b0bbf1-3928-49f3-b120-7ac3107c3402" />
-
+> <img width="2500" height="1500" alt="屏幕截图 2025-11-08 145751" src="https://github.com/user-attachments/assets/46b0bbf1-3928-49f3-b120-7ac3107c3402" />
 
 ### 适用场景
 
