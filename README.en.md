@@ -43,7 +43,7 @@
 **WePlus** is a full-stack campus smart assistant platform powered by **RAG (Retrieval-Augmented Generation)** technology. It integrates LLM capabilities with pgvector vector search to provide intelligent Q&A, document management, and learning resource sharing for campus users.
 
 > 🎯 **Design Goal**: Build a production-ready full-stack web application showcasing modern web development best practices.
-
+> <img width="3112" height="1937" alt="屏幕截图 2025-11-08 145751" src="https://github.com/user-attachments/assets/4e860a48-8972-4bc8-abb2-390418e269db" />
 ### Use Cases
 
 | Scenario | Description |
@@ -52,6 +52,7 @@
 | 📄 **Document Intelligence** | Upload PDF/Word/Excel for auto-parsing and semantic search |
 | 📚 **Resource Sharing** | Upload, categorize, rate, and preview learning resources |
 | 🔧 **Admin Console** | User management, system monitoring, audit logs, backup |
+
 
 ---
 
@@ -83,6 +84,7 @@
 | 👤 User Center | Register, login, and manage profile |
 | 🛠️ Admin Panel | Dashboard, user management, audit logs |
 
+> <img width="3023" height="1839" alt="屏幕截图 2025-11-08 145914" src="https://github.com/user-attachments/assets/f2fd4d5c-0c36-4aa6-9011-3e5577f513a2" />
 ---
 
 ## What's New
