@@ -332,7 +332,7 @@ One-click deploy to Railway with auto-build.
 | `OPENAI_API_KEY` | OpenAI / DeepSeek API key |
 
 > 📖 See [Deployment Guide](docs/部署指南.md) for details.
-
+<img width="3044" height="1920" alt="railway部署界面" src="https://github.com/user-attachments/assets/67903cba-cc8d-4839-871b-23056f4c25a6" />
 ---
 
 ## Project Structure
