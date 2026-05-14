@@ -544,6 +544,7 @@ alembic downgrade -1
 <img width="1875" height="819" alt="屏幕截图 2026-04-22 163339" src="https://github.com/user-attachments/assets/54e0587e-e062-4a53-b825-e5b6ff1fe032" />
 <img width="1903" height="779" alt="屏幕截图 2026-04-22 163355" src="https://github.com/user-attachments/assets/30626bdf-293b-4764-bb89-638c7a3d958b" />
 <img width="1706" height="736" alt="屏幕截图 2026-04-22 163404" src="https://github.com/user-attachments/assets/9d7382a1-20c5-4b77-864b-5a3d430f3cf5" />
+<img width="2106" height="3156" alt="0d5543d527134fdd72b87e6fc7fa5c48" src="https://github.com/user-attachments/assets/52def591-9e88-497b-b754-d9a76ba48f8a" />
 
 
 ---
